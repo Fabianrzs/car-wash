@@ -7,7 +7,9 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
+import Alert from "@/components/ui/Alert";
 import { formatCurrency } from "@/lib/utils";
+import { fetchApi } from "@/lib/api";
 import { Plus, Clock, Pencil } from "lucide-react";
 
 interface ServiceType {
@@ -23,12 +25,13 @@ export default function ServicesPage() {
   const router = useRouter();
   const [services, setServices] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/services")
-      .then((r) => r.json())
-      .then((data) => { setServices(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    fetchApi<ServiceType[]>("/api/services")
+      .then((data) => setServices(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="flex justify-center p-12"><Spinner size="lg" /></div>;
@@ -40,6 +43,8 @@ export default function ServicesPage() {
           <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
         </Button>
       </PageHeader>
+
+      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((s) => (

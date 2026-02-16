@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 
-export async function generateOrderNumber(): Promise<string> {
+export async function generateOrderNumber(tenantId: string): Promise<string> {
   const today = new Date();
   const datePrefix = format(today, "yyyyMMdd");
 
@@ -10,6 +10,7 @@ export async function generateOrderNumber(): Promise<string> {
 
   const lastOrder = await prisma.serviceOrder.findFirst({
     where: {
+      tenantId,
       createdAt: {
         gte: startOfDay,
         lt: endOfDay,

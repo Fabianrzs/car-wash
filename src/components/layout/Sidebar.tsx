@@ -12,6 +12,9 @@ import {
   Droplets,
   Menu,
   X,
+  Settings,
+  UserPlus,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,10 +22,16 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Clientes", href: "/clients", icon: Users },
-  { name: "Vehículos", href: "/vehicles", icon: Car },
+  { name: "Vehiculos", href: "/vehicles", icon: Car },
   { name: "Servicios", href: "/services", icon: Sparkles },
-  { name: "Órdenes", href: "/orders", icon: ClipboardList },
+  { name: "Ordenes", href: "/orders", icon: ClipboardList },
   { name: "Reportes", href: "/reports", icon: BarChart3 },
+];
+
+const configNavigation = [
+  { name: "Ajustes", href: "/settings", icon: Settings },
+  { name: "Equipo", href: "/team", icon: UserPlus },
+  { name: "Facturacion", href: "/billing", icon: CreditCard },
 ];
 
 export default function Sidebar() {
@@ -68,6 +77,38 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="flex flex-col gap-1 p-4">
           {navigation.map((item) => {
+            const isActive =
+              pathname === item.href || pathname?.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                )}
+              >
+                <item.icon
+                  className={cn(
+                    "h-5 w-5 shrink-0",
+                    isActive ? "text-blue-700" : "text-gray-400"
+                  )}
+                />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+
+          {/* Separator */}
+          <div className="my-2 border-t border-gray-200" />
+          <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Configuracion
+          </p>
+
+          {configNavigation.map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(item.href + "/");
             return (

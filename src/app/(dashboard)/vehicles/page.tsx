@@ -6,8 +6,10 @@ import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
+import Alert from "@/components/ui/Alert";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import { fetchApi } from "@/lib/api";
 import { Plus, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Vehicle {
@@ -25,19 +27,25 @@ export default function VehiclesPage() {
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchVehicles = async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page) });
-    if (search) params.set("search", search);
-    const res = await fetch(`/api/vehicles?${params}`);
-    const data = await res.json();
-    setVehicles(data.vehicles || []);
-    setTotalPages(data.pages || 1);
-    setLoading(false);
+    setError("");
+    try {
+      const params = new URLSearchParams({ page: String(page) });
+      if (search) params.set("search", search);
+      const data = await fetchApi<{ vehicles: Vehicle[]; pages: number }>(`/api/vehicles?${params}`);
+      setVehicles(data.vehicles || []);
+      setTotalPages(data.pages || 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar vehiculos");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchVehicles(); }, [page, search]);
@@ -49,6 +57,8 @@ export default function VehiclesPage() {
           <Plus className="mr-2 h-4 w-4" /> Nuevo Vehiculo
         </Button>
       </PageHeader>
+
+      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mt-6">
         <div className="mb-4 max-w-sm">

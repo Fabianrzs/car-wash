@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Droplets } from "lucide-react";
 import Input from "@/components/ui/Input";
@@ -10,7 +9,6 @@ import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,8 +29,18 @@ export default function LoginForm() {
       if (result?.error) {
         setError("Credenciales inválidas. Verifica tu correo y contraseña.");
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        const res = await fetch("/api/auth/session");
+        const session = await res.json();
+        if (session?.user?.globalRole === "SUPER_ADMIN") {
+          window.location.href = "/admin";
+        } else if (session?.user?.tenantSlug) {
+          const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
+          const protocol = window.location.protocol;
+          const dashboardUrl = `${protocol}//${session.user.tenantSlug}.${appDomain}/dashboard`;
+          window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
     } catch {
       setError("Ocurrió un error. Intenta de nuevo.");
@@ -89,15 +97,20 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500">
-        ¿No tienes una cuenta?{" "}
-        <Link
-          href="/register"
-          className="font-medium text-blue-600 hover:text-blue-500"
-        >
-          Regístrate
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <p>
+          ¿No tienes una cuenta?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
+            Registrate
+          </Link>
+        </p>
+        <Link href="/" className="font-medium text-gray-600 hover:text-gray-800">
+          Volver al inicio
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

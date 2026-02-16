@@ -35,7 +35,7 @@ export default function DashboardError({
           Algo salio mal
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Ocurrio un error inesperado. Intenta de nuevo.
+          {error.message || "Ocurrio un error inesperado. Intenta de nuevo."}
         </p>
         <button
           onClick={reset}

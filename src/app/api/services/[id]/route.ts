@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { serviceTypeSchema } from "@/lib/validations";
+import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
 
 export async function GET(
   request: Request,
@@ -13,10 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
 
-    const service = await prisma.serviceType.findUnique({
-      where: { id },
+    const service = await prisma.serviceType.findFirst({
+      where: { id, tenantId },
     });
 
     if (!service) {
@@ -28,6 +30,7 @@ export async function GET(
 
     return NextResponse.json(service);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener servicio:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -46,7 +49,10 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    const { tenantId } = await requireTenant(request.headers);
+    const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+
+    if (tenantUser.role === "EMPLOYEE") {
       return NextResponse.json(
         { error: "No tienes permisos para realizar esta accion" },
         { status: 403 }
@@ -57,8 +63,8 @@ export async function PUT(
     const body = await request.json();
     const validatedData = serviceTypeSchema.parse(body);
 
-    const existingService = await prisma.serviceType.findUnique({
-      where: { id },
+    const existingService = await prisma.serviceType.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingService) {
@@ -71,6 +77,7 @@ export async function PUT(
     const duplicateName = await prisma.serviceType.findFirst({
       where: {
         name: validatedData.name,
+        tenantId,
         id: { not: id },
       },
     });
@@ -95,6 +102,7 @@ export async function PUT(
 
     return NextResponse.json(service);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de servicio invalidos", details: error },
@@ -120,7 +128,10 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    const { tenantId } = await requireTenant(request.headers);
+    const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+
+    if (tenantUser.role === "EMPLOYEE") {
       return NextResponse.json(
         { error: "No tienes permisos para realizar esta accion" },
         { status: 403 }
@@ -129,8 +140,8 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const existingService = await prisma.serviceType.findUnique({
-      where: { id },
+    const existingService = await prisma.serviceType.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingService) {
@@ -149,6 +160,7 @@ export async function DELETE(
       message: "Servicio desactivado correctamente",
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al desactivar servicio:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

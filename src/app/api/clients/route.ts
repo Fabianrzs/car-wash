@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { clientSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { Prisma } from "@/generated/prisma/client";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -12,17 +13,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const search = searchParams.get("search") || "";
     const frequent = searchParams.get("frequent") || searchParams.get("isFrequent");
 
-    const where: Prisma.ClientWhereInput = {};
+    const where: Prisma.ClientWhereInput = { tenantId };
 
     if (search) {
       const searchTerms = search.trim().split(/\s+/);
       if (searchTerms.length > 1) {
-        // Busqueda por nombre completo: "Juan Perez" busca firstName=Juan AND lastName=Perez
         where.OR = [
           {
             AND: [
@@ -68,6 +70,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener clientes:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -83,6 +86,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const body = await request.json();
     const validatedData = clientSchema.parse(body);
 
@@ -95,11 +100,13 @@ export async function POST(request: Request) {
         address: validatedData.address || null,
         notes: validatedData.notes || null,
         isFrequent: validatedData.isFrequent,
+        tenant: { connect: { id: tenantId } },
       },
     });
 
     return NextResponse.json(client, { status: 201 });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de cliente invalidos", details: error },

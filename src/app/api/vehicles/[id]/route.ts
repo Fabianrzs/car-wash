@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { vehicleSchema } from "@/lib/validations";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(
   request: Request,
@@ -13,10 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
 
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { id },
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id, tenantId },
       include: {
         client: {
           select: {
@@ -39,6 +41,7 @@ export async function GET(
 
     return NextResponse.json(vehicle);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener vehiculo:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -57,12 +60,13 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
     const body = await request.json();
     const validatedData = vehicleSchema.parse(body);
 
-    const existingVehicle = await prisma.vehicle.findUnique({
-      where: { id },
+    const existingVehicle = await prisma.vehicle.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingVehicle) {
@@ -75,6 +79,7 @@ export async function PUT(
     const duplicatePlate = await prisma.vehicle.findFirst({
       where: {
         plate: validatedData.plate,
+        tenantId,
         id: { not: id },
       },
     });
@@ -95,7 +100,7 @@ export async function PUT(
         year: validatedData.year ?? null,
         color: validatedData.color || null,
         vehicleType: validatedData.vehicleType,
-        clientId: validatedData.clientId,
+        client: { connect: { id: validatedData.clientId } },
       },
       include: {
         client: {
@@ -110,6 +115,7 @@ export async function PUT(
 
     return NextResponse.json(vehicle);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de vehiculo invalidos", details: error },
@@ -135,10 +141,11 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
 
-    const existingVehicle = await prisma.vehicle.findUnique({
-      where: { id },
+    const existingVehicle = await prisma.vehicle.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingVehicle) {
@@ -151,6 +158,7 @@ export async function DELETE(
     const activeOrders = await prisma.serviceOrder.count({
       where: {
         vehicleId: id,
+        tenantId,
         status: {
           in: ["PENDING", "IN_PROGRESS"],
         },
@@ -175,6 +183,7 @@ export async function DELETE(
       message: "Vehiculo eliminado correctamente",
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al eliminar vehiculo:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

@@ -7,9 +7,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
+import Alert from "@/components/ui/Alert";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { fetchApi } from "@/lib/api";
 import { Plus, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 const STATUS_TABS = [
@@ -35,6 +37,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -42,14 +45,19 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page) });
-    if (search) params.set("search", search);
-    if (status) params.set("status", status);
-    const res = await fetch(`/api/orders?${params}`);
-    const data = await res.json();
-    setOrders(data.orders || []);
-    setTotalPages(data.pages || 1);
-    setLoading(false);
+    setError("");
+    try {
+      const params = new URLSearchParams({ page: String(page) });
+      if (search) params.set("search", search);
+      if (status) params.set("status", status);
+      const data = await fetchApi<{ orders: Order[]; pages: number }>(`/api/orders?${params}`);
+      setOrders(data.orders || []);
+      setTotalPages(data.pages || 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar ordenes");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchOrders(); }, [page, search, status]);
@@ -64,6 +72,8 @@ export default function OrdersPage() {
           <Plus className="mr-2 h-4 w-4" /> Nueva Orden
         </Button>
       </PageHeader>
+
+      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mt-6">
         <div className="mb-4 flex flex-wrap items-center gap-2">

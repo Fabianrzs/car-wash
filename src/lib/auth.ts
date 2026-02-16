@@ -1,12 +1,30 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import authConfig from "@/lib/auth.config";
 
+function getCookieDomain(): string {
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
+  const host = appDomain.replace(/:\d+$/, "");
+  if (host === "localhost") return ".localhost";
+  const parts = host.split(".");
+  if (parts.length <= 2) return `.${host}`;
+  return `.${parts.slice(-2).join(".")}`;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
+  },
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        domain: getCookieDomain(),
+      },
+    },
   },
   pages: {
     signIn: "/login",
@@ -15,14 +33,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.globalRole = user.globalRole;
+        token.tenantSlug = user.tenantSlug;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.globalRole = token.globalRole as string;
+        session.user.tenantSlug = token.tenantSlug as string | undefined;
       }
       return session;
     },

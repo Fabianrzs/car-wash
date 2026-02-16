@@ -5,6 +5,7 @@ import { orderSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { generateOrderNumber } from "@/lib/order-number";
 import { Prisma } from "@/generated/prisma/client";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -13,13 +14,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
     const clientId = searchParams.get("clientId") || "";
 
-    const where: Prisma.ServiceOrderWhereInput = {};
+    const where: Prisma.ServiceOrderWhereInput = { tenantId };
 
     if (status) {
       where.status = status as any;
@@ -77,6 +80,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener ordenes:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -91,6 +95,8 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+
+    const { tenantId } = await requireTenant(request.headers);
 
     const body = await request.json();
 
@@ -109,7 +115,7 @@ export async function POST(request: Request) {
     const validatedData = orderSchema.parse(validationInput);
 
     const order = await prisma.$transaction(async (tx) => {
-      const orderNumber = await generateOrderNumber();
+      const orderNumber = await generateOrderNumber(tenantId);
 
       const serviceTypeIds = validatedData.items.map(
         (item) => item.serviceTypeId
@@ -117,6 +123,7 @@ export async function POST(request: Request) {
       const serviceTypes = await tx.serviceType.findMany({
         where: {
           id: { in: serviceTypeIds },
+          tenantId,
           isActive: true,
         },
       });
@@ -136,7 +143,7 @@ export async function POST(request: Request) {
         totalAmount += subtotal;
 
         return {
-          serviceTypeId: item.serviceTypeId,
+          serviceType: { connect: { id: item.serviceTypeId } },
           quantity: item.quantity,
           unitPrice,
           subtotal,
@@ -149,9 +156,10 @@ export async function POST(request: Request) {
           status: "PENDING",
           totalAmount,
           notes: validatedData.notes || null,
-          clientId: validatedData.clientId,
-          vehicleId: validatedData.vehicleId,
-          createdById: session.user.id,
+          client: { connect: { id: validatedData.clientId } },
+          vehicle: { connect: { id: validatedData.vehicleId } },
+          createdBy: { connect: { id: session.user.id } },
+          tenant: { connect: { id: tenantId } },
           items: {
             create: orderItems,
           },
@@ -190,6 +198,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de orden invalidos", details: error },

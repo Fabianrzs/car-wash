@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { clientSchema } from "@/lib/validations";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(
   request: Request,
@@ -13,10 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
 
-    const client = await prisma.client.findUnique({
-      where: { id },
+    const client = await prisma.client.findFirst({
+      where: { id, tenantId },
       include: {
         vehicles: true,
         orders: {
@@ -43,6 +45,7 @@ export async function GET(
 
     return NextResponse.json(client);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener cliente:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -61,12 +64,13 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
     const body = await request.json();
     const validatedData = clientSchema.parse(body);
 
-    const existingClient = await prisma.client.findUnique({
-      where: { id },
+    const existingClient = await prisma.client.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingClient) {
@@ -91,6 +95,7 @@ export async function PUT(
 
     return NextResponse.json(client);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de cliente invalidos", details: error },
@@ -116,10 +121,11 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
     const { id } = await params;
 
-    const existingClient = await prisma.client.findUnique({
-      where: { id },
+    const existingClient = await prisma.client.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingClient) {
@@ -132,6 +138,7 @@ export async function DELETE(
     const activeOrders = await prisma.serviceOrder.count({
       where: {
         clientId: id,
+        tenantId,
         status: {
           in: ["PENDING", "IN_PROGRESS"],
         },
@@ -154,6 +161,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Cliente eliminado correctamente" });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al eliminar cliente:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

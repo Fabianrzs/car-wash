@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { serviceTypeSchema } from "@/lib/validations";
 import { Prisma } from "@/generated/prisma/client";
+import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -11,10 +12,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const { searchParams } = new URL(request.url);
     const active = searchParams.get("active");
 
-    const where: Prisma.ServiceTypeWhereInput = {};
+    const where: Prisma.ServiceTypeWhereInput = { tenantId };
 
     if (active === "true") {
       where.isActive = true;
@@ -27,6 +30,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(services);
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener servicios:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -42,7 +46,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    const { tenantId } = await requireTenant(request.headers);
+    const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+
+    if (tenantUser.role === "EMPLOYEE") {
       return NextResponse.json(
         { error: "No tienes permisos para realizar esta accion" },
         { status: 403 }
@@ -52,8 +59,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = serviceTypeSchema.parse(body);
 
-    const existingService = await prisma.serviceType.findUnique({
-      where: { name: validatedData.name },
+    const existingService = await prisma.serviceType.findFirst({
+      where: { name: validatedData.name, tenantId },
     });
 
     if (existingService) {
@@ -70,11 +77,13 @@ export async function POST(request: Request) {
         price: validatedData.price,
         duration: validatedData.duration,
         isActive: validatedData.isActive,
+        tenant: { connect: { id: tenantId } },
       },
     });
 
     return NextResponse.json(service, { status: 201 });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de servicio invalidos", details: error },

@@ -8,10 +8,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
+    // Check email not taken
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
-
     if (existingUser) {
       return NextResponse.json(
         { error: "Ya existe un usuario con ese email" },
@@ -19,23 +19,73 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check slug available
+    const existingTenant = await prisma.tenant.findUnique({
+      where: { slug: validatedData.businessSlug },
+    });
+    if (existingTenant) {
+      return NextResponse.json(
+        { error: "El slug del lavadero ya esta en uso" },
+        { status: 400 }
+      );
+    }
+
+    // Find plan
+    let planId: string | null = null;
+    let isTrial = false;
+    if (validatedData.planSlug) {
+      const plan = await prisma.plan.findUnique({
+        where: { slug: validatedData.planSlug },
+      });
+      if (plan) {
+        planId = plan.id;
+        isTrial = Number(plan.price) === 0;
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name: validatedData.name,
-        email: validatedData.email,
-        password: hashedPassword,
-      },
+    // Create User + Tenant + TenantUser in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: validatedData.name,
+          email: validatedData.email,
+          password: hashedPassword,
+        },
+      });
+
+      const tenant = await tx.tenant.create({
+        data: {
+          name: validatedData.businessName,
+          slug: validatedData.businessSlug,
+          ...(planId ? { plan: { connect: { id: planId } } } : {}),
+          trialEndsAt: isTrial ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+        },
+      });
+
+      await tx.tenantUser.create({
+        data: {
+          user: { connect: { id: user.id } },
+          tenant: { connect: { id: tenant.id } },
+          role: "OWNER",
+        },
+      });
+
+      return { user, tenant };
     });
 
     return NextResponse.json(
       {
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+        },
+        tenant: {
+          id: result.tenant.id,
+          name: result.tenant.name,
+          slug: result.tenant.slug,
         },
       },
       { status: 201 }
@@ -48,6 +98,7 @@ export async function POST(request: Request) {
       );
     }
 
+    console.error("Error en registro:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

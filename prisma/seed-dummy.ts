@@ -47,11 +47,20 @@ function randomDate(daysBack: number): Date {
 async function main() {
   console.log("Generando datos dummy...");
 
-  // Get admin user and services
-  const admin = await prisma.user.findFirst({ where: { role: "ADMIN" } });
-  if (!admin) throw new Error("No admin user found. Run the main seed first.");
+  // Get demo tenant
+  const demoTenant = await prisma.tenant.findUnique({ where: { slug: "demo" } });
+  if (!demoTenant) throw new Error("No demo tenant found. Run the main seed first.");
+  const tenantId = demoTenant.id;
 
-  const services = await prisma.serviceType.findMany({ where: { isActive: true } });
+  // Get admin user (tenant owner)
+  const adminTenantUser = await prisma.tenantUser.findFirst({
+    where: { tenantId, role: "OWNER" },
+    include: { user: true },
+  });
+  if (!adminTenantUser) throw new Error("No admin user found. Run the main seed first.");
+  const admin = adminTenantUser.user;
+
+  const services = await prisma.serviceType.findMany({ where: { tenantId, isActive: true } });
   if (services.length === 0) throw new Error("No services found. Run the main seed first.");
 
   // Create 15 clients
@@ -64,6 +73,7 @@ async function main() {
         phone: randomPhone(),
         email: `${firstNames[i].toLowerCase()}${i}@email.com`,
         isFrequent: Math.random() > 0.6,
+        tenantId,
         createdAt: randomDate(60),
       },
     });
@@ -87,6 +97,7 @@ async function main() {
           color: randomItem(colors),
           vehicleType: randomItem([...vehicleTypes]),
           clientId,
+          tenantId,
         },
       });
       vIds.push(vehicle.id);
@@ -157,6 +168,7 @@ async function main() {
         clientId,
         vehicleId,
         createdById: admin.id,
+        tenantId,
         items: { create: orderItems },
       },
     });

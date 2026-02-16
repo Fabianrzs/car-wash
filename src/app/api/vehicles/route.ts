@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { vehicleSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { Prisma } from "@/generated/prisma/client";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -12,12 +13,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const search = searchParams.get("search") || "";
     const clientId = searchParams.get("clientId") || "";
 
-    const where: Prisma.VehicleWhereInput = {};
+    const where: Prisma.VehicleWhereInput = { tenantId };
 
     if (search) {
       where.plate = { contains: search, mode: "insensitive" };
@@ -53,6 +56,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al obtener vehiculos:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -68,11 +72,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { tenantId } = await requireTenant(request.headers);
+
     const body = await request.json();
     const validatedData = vehicleSchema.parse(body);
 
-    const existingVehicle = await prisma.vehicle.findUnique({
-      where: { plate: validatedData.plate },
+    const existingVehicle = await prisma.vehicle.findFirst({
+      where: { plate: validatedData.plate, tenantId },
     });
 
     if (existingVehicle) {
@@ -90,7 +96,8 @@ export async function POST(request: Request) {
         year: validatedData.year ?? null,
         color: validatedData.color || null,
         vehicleType: validatedData.vehicleType,
-        clientId: validatedData.clientId,
+        client: { connect: { id: validatedData.clientId } },
+        tenant: { connect: { id: tenantId } },
       },
       include: {
         client: {
@@ -105,6 +112,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(vehicle, { status: 201 });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de vehiculo invalidos", details: error },

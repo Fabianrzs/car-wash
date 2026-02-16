@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
+import Alert from "@/components/ui/Alert";
 import {
   Table,
   TableHeader,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/Table";
 import PageHeader from "@/components/layout/PageHeader";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
+import { fetchApi } from "@/lib/api";
 
 interface Client {
   id: string;
@@ -36,6 +38,7 @@ export default function ClientsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filterFrequent, setFilterFrequent] = useState(false);
   const [page, setPage] = useState(1);
@@ -47,6 +50,7 @@ export default function ClientsPage() {
 
   async function fetchClients() {
     setLoading(true);
+    setError("");
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -55,14 +59,11 @@ export default function ClientsPage() {
       if (search) params.set("search", search);
       if (filterFrequent) params.set("isFrequent", "true");
 
-      const res = await fetch(`/api/clients?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setClients(data.clients || data);
-        setTotalPages(data.pages || data.totalPages || 1);
-      }
-    } catch (error) {
-      console.error("Error fetching clients:", error);
+      const data = await fetchApi<{ clients: Client[]; pages?: number; totalPages?: number }>(`/api/clients?${params}`);
+      setClients(data.clients || []);
+      setTotalPages(data.pages || data.totalPages || 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar clientes");
     } finally {
       setLoading(false);
     }
@@ -86,6 +87,8 @@ export default function ClientsPage() {
           </Button>
         </Link>
       </PageHeader>
+
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">

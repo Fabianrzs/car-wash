@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { requireTenant, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -8,6 +9,8 @@ export async function GET(request: Request) {
     if (!session) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+
+    const { tenantId } = await requireTenant(request.headers);
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "daily";
@@ -48,6 +51,7 @@ export async function GET(request: Request) {
     }
 
     const dateFilter = {
+      tenantId,
       createdAt: {
         gte: startDate,
         lte: endDate,
@@ -180,6 +184,7 @@ export async function GET(request: Request) {
       topServices,
     });
   } catch (error) {
+    try { return handleTenantError(error); } catch {}
     console.error("Error al generar reporte:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

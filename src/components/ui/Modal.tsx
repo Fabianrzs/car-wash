@@ -57,7 +57,7 @@ export default function Modal({
     <dialog
       ref={dialogRef}
       className={cn(
-        "w-full max-w-lg rounded-xl border-0 bg-white p-0 shadow-xl backdrop:bg-black/50",
+        "fixed inset-0 m-auto w-full max-w-lg rounded-xl border-0 bg-white p-0 shadow-xl backdrop:bg-black/50",
         className
       )}
       onClick={handleBackdropClick}

@@ -6,6 +6,7 @@ import { DollarSign, ClipboardList, Clock, Users } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
+import Alert from "@/components/ui/Alert";
 import {
   Table,
   TableHeader,
@@ -17,6 +18,7 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
+import { fetchApi } from "@/lib/api";
 
 interface ReportStats {
   totalIncome: number;
@@ -53,26 +55,20 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [dailyRes, ordersRes] = await Promise.all([
-          fetch("/api/reports?period=daily"),
-          fetch("/api/orders?page=1&status="),
+        const [dailyData, ordersData] = await Promise.all([
+          fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
+          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch(() => null),
         ]);
 
-        if (dailyRes.ok) {
-          const data = await dailyRes.json();
-          setStats(data);
-        }
-
-        if (ordersRes.ok) {
-          const data = await ordersRes.json();
-          setRecentOrders((data.orders || data).slice(0, 10));
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        if (dailyData) setStats(dailyData);
+        if (ordersData) setRecentOrders((ordersData.orders || []).slice(0, 10));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar datos");
       } finally {
         setLoading(false);
       }
@@ -95,6 +91,8 @@ export default function DashboardPage() {
         title="Panel de Control"
         description="Resumen general del negocio"
       />
+
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
