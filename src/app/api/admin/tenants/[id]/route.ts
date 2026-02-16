@@ -24,6 +24,11 @@ export async function GET(
         _count: {
           select: { clients: true, serviceOrders: true, vehicles: true, serviceTypes: true },
         },
+        invoices: {
+          orderBy: { createdAt: "desc" },
+          take: 10,
+          include: { plan: { select: { name: true } } },
+        },
       },
     });
 
@@ -51,6 +56,21 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Determine trialEndsAt
+    let trialEndsAt: Date | null | undefined = undefined;
+    if (body.trialEndsAt !== undefined) {
+      trialEndsAt = body.trialEndsAt ? new Date(body.trialEndsAt) : null;
+    } else if (body.planId !== undefined && body.planId) {
+      // Auto-set 30-day trial when assigning a free plan (if not specified)
+      const plan = await prisma.plan.findUnique({ where: { id: body.planId } });
+      if (plan && Number(plan.price) === 0 && !plan.stripePriceId) {
+        trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+      }
+    } else if (body.planId === null) {
+      trialEndsAt = null;
+    }
+
     const tenant = await prisma.tenant.update({
       where: { id },
       data: {
@@ -59,6 +79,7 @@ export async function PUT(
         phone: body.phone,
         address: body.address,
         isActive: body.isActive,
+        ...(trialEndsAt !== undefined ? { trialEndsAt } : {}),
         ...(body.planId !== undefined
           ? body.planId
             ? { plan: { connect: { id: body.planId } } }

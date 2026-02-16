@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { vehicleSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireActivePlan, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     }
 
     const { tenantId } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole);
 
     const body = await request.json();
     const validatedData = vehicleSchema.parse(body);

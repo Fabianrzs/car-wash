@@ -31,11 +31,33 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         const tenantId = session.metadata?.tenantId;
         if (tenantId && session.customer && session.subscription) {
+          // Look up the plan by the subscription's price ID
+          const stripe = getStripe();
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+          const priceId = subscription.items.data[0]?.price?.id;
+
+          let planId: string | undefined;
+          if (priceId) {
+            const plan = await prisma.plan.findFirst({
+              where: { stripePriceId: priceId },
+            });
+            if (plan) {
+              planId = plan.id;
+            }
+          }
+
           await prisma.tenant.update({
             where: { id: tenantId },
             data: {
               stripeCustomerId: session.customer as string,
               stripeSubscriptionId: session.subscription as string,
+              isActive: true,
+              ...(planId
+                ? {
+                    plan: { connect: { id: planId } },
+                    trialEndsAt: null,
+                  }
+                : {}),
             },
           });
         }
@@ -68,6 +90,7 @@ export async function POST(request: Request) {
             data: {
               isActive: false,
               stripeSubscriptionId: null,
+              plan: { disconnect: true },
             },
           });
         }

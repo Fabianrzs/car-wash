@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { serviceTypeSchema } from "@/lib/validations";
 import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, requireActivePlan, handleTenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     }
 
     const { tenantId } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole);
     const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
     if (tenantUser.role === "EMPLOYEE") {
