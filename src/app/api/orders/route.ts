@@ -96,8 +96,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
-    await requireActivePlan(tenantId, session.user.globalRole);
+    const { tenantId, tenant } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole, tenant);
 
     const body = await request.json();
 
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     const validatedData = orderSchema.parse(validationInput);
 
     const order = await prisma.$transaction(async (tx) => {
-      const orderNumber = await generateOrderNumber(tenantId);
+      const orderNumber = await generateOrderNumber(tenantId, tx);
 
       const serviceTypeIds = validatedData.items.map(
         (item) => item.serviceTypeId

@@ -22,6 +22,7 @@ export async function PATCH(
 
     const existingOrder = await prisma.serviceOrder.findFirst({
       where: { id, tenantId },
+      select: { id: true, status: true },
     });
 
     if (!existingOrder) {

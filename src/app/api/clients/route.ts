@@ -86,8 +86,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
-    await requireActivePlan(tenantId, session.user.globalRole);
+    const { tenantId, tenant } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole, tenant);
 
     const body = await request.json();
     const validatedData = clientSchema.parse(body);

@@ -243,6 +243,7 @@ export async function hasPendingInvoice(tenantId: string, planId: string): Promi
       planId,
       status: { in: ["PENDING"] },
     },
+    select: { id: true },
   });
   return !!pending;
 }

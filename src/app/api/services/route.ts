@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
-    await requireActivePlan(tenantId, session.user.globalRole);
+    const { tenantId, tenant } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole, tenant);
     const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
     if (tenantUser.role === "EMPLOYEE") {
@@ -62,6 +62,7 @@ export async function POST(request: Request) {
 
     const existingService = await prisma.serviceType.findFirst({
       where: { name: validatedData.name, tenantId },
+      select: { id: true },
     });
 
     if (existingService) {

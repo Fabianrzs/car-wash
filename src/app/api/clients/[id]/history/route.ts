@@ -37,7 +37,9 @@ export async function GET(
       prisma.serviceOrder.findMany({
         where,
         include: {
-          vehicle: true,
+          vehicle: {
+            select: { id: true, plate: true, brand: true, model: true, vehicleType: true },
+          },
           items: {
             include: {
               serviceType: {

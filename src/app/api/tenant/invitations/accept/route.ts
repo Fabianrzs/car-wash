@@ -18,7 +18,14 @@ export async function POST(request: Request) {
 
     const invitation = await prisma.invitation.findUnique({
       where: { token },
-      include: { tenant: true },
+      select: {
+        id: true,
+        acceptedAt: true,
+        expiresAt: true,
+        tenantId: true,
+        role: true,
+        tenant: { select: { id: true, name: true, slug: true } },
+      },
     });
 
     if (!invitation) {
@@ -38,6 +45,7 @@ export async function POST(request: Request) {
       where: {
         userId_tenantId: { userId: session.user.id, tenantId: invitation.tenantId },
       },
+      select: { id: true },
     });
 
     if (existingMember) {

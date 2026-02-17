@@ -25,6 +25,7 @@ export async function PUT(
 
     const targetMember = await prisma.tenantUser.findFirst({
       where: { id, tenantId },
+      select: { id: true, role: true },
     });
 
     if (!targetMember) {
@@ -72,6 +73,7 @@ export async function DELETE(
 
     const targetMember = await prisma.tenantUser.findFirst({
       where: { id, tenantId },
+      select: { id: true, role: true },
     });
 
     if (!targetMember) {

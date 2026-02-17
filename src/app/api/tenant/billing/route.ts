@@ -13,13 +13,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
+    const { tenantId, tenant } = await requireTenant(request.headers);
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: { plan: true },
-    });
 
     // Get pending/overdue invoices
     const pendingInvoice = await prisma.invoice.findFirst({
@@ -67,7 +62,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
+    const { tenantId, tenant } = await requireTenant(request.headers);
     const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
     if (tenantUser.role === "EMPLOYEE") {
@@ -76,15 +71,6 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { action, planId } = body;
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: { plan: true },
-    });
-
-    if (!tenant) {
-      return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
-    }
 
     const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
     const protocol = appDomain.includes("localhost") ? "http" : "https";

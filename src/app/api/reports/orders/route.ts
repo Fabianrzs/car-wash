@@ -90,6 +90,7 @@ export async function GET(request: Request) {
         },
       },
       orderBy: { createdAt: "desc" },
+      take: 5000,
     });
 
     // Build summary

@@ -72,14 +72,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
-    await requireActivePlan(tenantId, session.user.globalRole);
+    const { tenantId, tenant } = await requireTenant(request.headers);
+    await requireActivePlan(tenantId, session.user.globalRole, tenant);
 
     const body = await request.json();
     const validatedData = vehicleSchema.parse(body);
 
     const existingVehicle = await prisma.vehicle.findFirst({
       where: { plate: validatedData.plate, tenantId },
+      select: { id: true },
     });
 
     if (existingVehicle) {

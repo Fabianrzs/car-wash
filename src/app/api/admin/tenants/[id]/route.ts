@@ -27,7 +27,20 @@ export async function GET(
         invoices: {
           orderBy: { createdAt: "desc" },
           take: 10,
-          include: { plan: { select: { name: true } } },
+          select: {
+            id: true,
+            invoiceNumber: true,
+            amount: true,
+            tax: true,
+            totalAmount: true,
+            status: true,
+            dueDate: true,
+            paidAt: true,
+            createdAt: true,
+            periodStart: true,
+            periodEnd: true,
+            plan: { select: { name: true } },
+          },
         },
       },
     });

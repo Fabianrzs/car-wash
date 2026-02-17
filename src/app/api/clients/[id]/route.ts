@@ -20,15 +20,40 @@ export async function GET(
     const client = await prisma.client.findFirst({
       where: { id, tenantId },
       include: {
-        vehicles: true,
+        vehicles: {
+          select: {
+            id: true,
+            plate: true,
+            brand: true,
+            model: true,
+            year: true,
+            color: true,
+            vehicleType: true,
+          },
+        },
         orders: {
           orderBy: { createdAt: "desc" },
           take: 5,
-          include: {
-            vehicle: true,
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            totalAmount: true,
+            createdAt: true,
+            startedAt: true,
+            completedAt: true,
+            vehicle: {
+              select: { id: true, plate: true, brand: true, model: true },
+            },
             items: {
-              include: {
-                serviceType: true,
+              select: {
+                id: true,
+                quantity: true,
+                unitPrice: true,
+                subtotal: true,
+                serviceType: {
+                  select: { id: true, name: true, price: true },
+                },
               },
             },
           },
@@ -71,6 +96,7 @@ export async function PUT(
 
     const existingClient = await prisma.client.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingClient) {
@@ -126,6 +152,7 @@ export async function DELETE(
 
     const existingClient = await prisma.client.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingClient) {

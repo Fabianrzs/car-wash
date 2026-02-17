@@ -67,6 +67,7 @@ export async function PUT(
 
     const existingVehicle = await prisma.vehicle.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingVehicle) {
@@ -82,6 +83,7 @@ export async function PUT(
         tenantId,
         id: { not: id },
       },
+      select: { id: true },
     });
 
     if (duplicatePlate) {
@@ -146,6 +148,7 @@ export async function DELETE(
 
     const existingVehicle = await prisma.vehicle.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingVehicle) {

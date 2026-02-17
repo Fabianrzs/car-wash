@@ -65,6 +65,7 @@ export async function PUT(
 
     const existingService = await prisma.serviceType.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingService) {
@@ -80,6 +81,7 @@ export async function PUT(
         tenantId,
         id: { not: id },
       },
+      select: { id: true },
     });
 
     if (duplicateName) {
@@ -142,6 +144,7 @@ export async function DELETE(
 
     const existingService = await prisma.serviceType.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingService) {

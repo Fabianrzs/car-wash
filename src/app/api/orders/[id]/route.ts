@@ -94,6 +94,7 @@ export async function PUT(
 
     const existingOrder = await prisma.serviceOrder.findFirst({
       where: { id, tenantId },
+      select: { id: true },
     });
 
     if (!existingOrder) {

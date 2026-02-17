@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, Plus, Search } from "lucide-react";
+import { Eye, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
@@ -170,28 +170,14 @@ export default function ClientsPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
-            <p className="text-sm text-gray-500">
-              Pagina {page} de {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-              >
-                Anterior
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Siguiente
-              </Button>
-            </div>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600">Pagina {page} de {totalPages}</span>
+            <Button size="sm" variant="secondary" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>

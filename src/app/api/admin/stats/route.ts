@@ -15,22 +15,22 @@ export async function GET() {
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
     const [
-      totalTenants,
-      activeTenants,
+      tenantsByActive,
       totalUsers,
       totalOrders,
-      tenantsThisMonth,
-      tenantsLastMonth,
+      tenantsByMonth,
       plans,
       recentTenants,
     ] = await Promise.all([
-      prisma.tenant.count(),
-      prisma.tenant.count({ where: { isActive: true } }),
+      prisma.tenant.groupBy({
+        by: ["isActive"],
+        _count: { id: true },
+      }),
       prisma.user.count(),
       prisma.serviceOrder.count(),
-      prisma.tenant.count({ where: { createdAt: { gte: startOfMonth } } }),
-      prisma.tenant.count({
-        where: { createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
+      prisma.tenant.findMany({
+        where: { createdAt: { gte: startOfLastMonth } },
+        select: { createdAt: true },
       }),
       prisma.plan.findMany({
         where: { isActive: true },
@@ -52,6 +52,18 @@ export async function GET() {
         },
       }),
     ]);
+
+    // Derive tenant counts from groupBy
+    const activeCount = tenantsByActive.find((t) => t.isActive)?._count.id || 0;
+    const inactiveCount = tenantsByActive.find((t) => !t.isActive)?._count.id || 0;
+    const totalTenants = activeCount + inactiveCount;
+    const activeTenants = activeCount;
+
+    // Derive monthly counts from findMany in memory
+    const tenantsThisMonth = tenantsByMonth.filter((t) => t.createdAt >= startOfMonth).length;
+    const tenantsLastMonth = tenantsByMonth.filter(
+      (t) => t.createdAt >= startOfLastMonth && t.createdAt <= endOfLastMonth
+    ).length;
 
     // Calculate MRR (Monthly Recurring Revenue)
     let mrr = 0;

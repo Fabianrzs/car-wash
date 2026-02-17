@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Search, Plus, ExternalLink } from "lucide-react";
+import { Building2, Search, Plus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -192,24 +192,14 @@ export default function AdminTenantsPage() {
       </div>
 
       {pages > 1 && (
-        <div className="mt-4 flex justify-center gap-2">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="rounded-lg border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <span className="px-3 py-1 text-sm text-gray-600">
-            {page} / {pages}
-          </span>
-          <button
-            onClick={() => setPage(Math.min(pages, page + 1))}
-            disabled={page === pages}
-            className="rounded-lg border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Siguiente
-          </button>
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-gray-600">Pagina {page} de {pages}</span>
+          <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
 

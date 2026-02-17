@@ -48,6 +48,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -59,6 +60,7 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -198,6 +200,7 @@ model Tenant {
   paymentReminders     PaymentReminder[]
 
   @@index([slug])
+  @@index([planId])
   @@map("tenants")
 }
 
@@ -233,6 +236,7 @@ model Invitation {
 
   @@index([token])
   @@index([tenantId])
+  @@index([invitedById])
   @@map("invitations")
 }
 
@@ -304,6 +308,7 @@ model ServiceType {
 
   @@unique([tenantId, name])
   @@index([tenantId])
+  @@index([tenantId, isActive])
   @@map("service_types")
 }
 
@@ -334,7 +339,11 @@ model ServiceOrder {
   @@index([status])
   @@index([createdAt])
   @@index([clientId])
+  @@index([vehicleId])
+  @@index([createdById])
   @@index([orderNumber])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
   @@map("service_orders")
 }
 
@@ -350,6 +359,8 @@ model OrderItem {
   order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   serviceType ServiceType  @relation(fields: [serviceTypeId], references: [id])
 
+  @@index([orderId])
+  @@index([serviceTypeId])
   @@map("order_items")
 }
 
@@ -384,6 +395,7 @@ model Invoice {
   @@index([tenantId])
   @@index([status])
   @@index([dueDate])
+  @@index([tenantId, status])
   @@map("invoices")
 }
 
@@ -397,6 +409,7 @@ model InvoiceItem {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
+  @@index([invoiceId])
   @@map("invoice_items")
 }
 
@@ -446,6 +459,7 @@ model ScheduledPlanChange {
   @@index([tenantId])
   @@index([status])
   @@index([effectiveDate])
+  @@index([status, effectiveDate])
   @@map("scheduled_plan_changes")
 }
 
@@ -462,6 +476,8 @@ model PaymentReminder {
   invoice Invoice? @relation(fields: [invoiceId], references: [id])
 
   @@index([tenantId])
+  @@index([invoiceId])
   @@index([scheduledFor])
+  @@index([sentAt, scheduledFor])
   @@map("payment_reminders")
 }

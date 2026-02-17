@@ -27,41 +27,49 @@ export async function POST(request: Request) {
       take: 100,
     });
 
+    // Categorize reminders in memory
+    const skipIds: string[] = [];
+    const overdueInvoiceIds: string[] = [];
     let processed = 0;
 
     for (const reminder of dueReminders) {
-      // Skip if invoice is already paid or cancelled
       if (reminder.invoice && ["PAID", "CANCELLED"].includes(reminder.invoice.status)) {
-        await prisma.paymentReminder.update({
-          where: { id: reminder.id },
-          data: { sentAt: now },
-        });
+        skipIds.push(reminder.id);
         continue;
       }
 
-      // Mark overdue invoices
       if (reminder.type === "EXPIRED" && reminder.invoice && reminder.invoice.status === "PENDING") {
-        await prisma.invoice.update({
-          where: { id: reminder.invoice.id },
-          data: { status: "OVERDUE" },
-        });
+        overdueInvoiceIds.push(reminder.invoice.id);
       }
 
-      // In production, you would send an email/notification here
-      // For now, we just log and mark as sent
       console.log(
         `Reminder [${reminder.type}] for tenant ${reminder.tenant.name}: ` +
           `Invoice ${reminder.invoice?.invoiceNumber || "N/A"} - ` +
           `$${reminder.invoice?.totalAmount || 0} due ${reminder.invoice?.dueDate?.toISOString() || "N/A"}`
       );
 
-      await prisma.paymentReminder.update({
-        where: { id: reminder.id },
-        data: { sentAt: now },
-      });
-
       processed++;
     }
+
+    // Batch updates
+    const allReminderIds = dueReminders.map((r) => r.id);
+
+    await Promise.all([
+      // Mark all reminders as sent in one query
+      allReminderIds.length > 0
+        ? prisma.paymentReminder.updateMany({
+            where: { id: { in: allReminderIds } },
+            data: { sentAt: now },
+          })
+        : Promise.resolve(),
+      // Mark overdue invoices in one query
+      overdueInvoiceIds.length > 0
+        ? prisma.invoice.updateMany({
+            where: { id: { in: overdueInvoiceIds } },
+            data: { status: "OVERDUE" },
+          })
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({ processed, total: dueReminders.length });
   } catch (error) {

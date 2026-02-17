@@ -60,9 +60,7 @@ export async function GET(request: Request) {
 
     const [
       completedOrdersAgg,
-      orderCount,
-      completedOrdersCount,
-      inProgressOrdersCount,
+      statusCounts,
       allOrders,
       topServicesData,
       uniqueClientsData,
@@ -76,20 +74,10 @@ export async function GET(request: Request) {
           totalAmount: true,
         },
       }),
-      prisma.serviceOrder.count({
+      prisma.serviceOrder.groupBy({
+        by: ["status"],
         where: dateFilter,
-      }),
-      prisma.serviceOrder.count({
-        where: {
-          ...dateFilter,
-          status: "COMPLETED",
-        },
-      }),
-      prisma.serviceOrder.count({
-        where: {
-          ...dateFilter,
-          status: "IN_PROGRESS",
-        },
+        _count: { id: true },
       }),
       prisma.serviceOrder.findMany({
         where: {
@@ -129,6 +117,12 @@ export async function GET(request: Request) {
         where: dateFilter,
       }),
     ]);
+
+    // Derive counts from groupBy result
+    const statusCountMap = new Map(statusCounts.map((s) => [s.status, s._count.id]));
+    const orderCount = statusCounts.reduce((sum, s) => sum + s._count.id, 0);
+    const completedOrdersCount = statusCountMap.get("COMPLETED") || 0;
+    const inProgressOrdersCount = statusCountMap.get("IN_PROGRESS") || 0;
 
     const totalIncome = Number(completedOrdersAgg._sum.totalAmount || 0);
     const averageOrderValue =

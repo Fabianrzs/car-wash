@@ -62,11 +62,15 @@ export function getTenantPlanStatus(tenant: {
   return { isBlocked: false, reason: null, trialEndsAt, planName, daysLeft, pendingInvoiceId: pendingInvoice?.id ?? null };
 }
 
-export async function requireActivePlan(tenantId: string, globalRole?: string) {
+export async function requireActivePlan(
+  tenantId: string,
+  globalRole?: string,
+  preloadedTenant?: { id: string; isActive: boolean; trialEndsAt: Date | null; planId: string | null; stripeSubscriptionId: string | null; plan: { id: string; name: string; price: number | any } | null }
+) {
   // SUPER_ADMIN is never blocked
   if (globalRole === "SUPER_ADMIN") return;
 
-  const tenant = await prisma.tenant.findUnique({
+  const tenant = preloadedTenant ?? await prisma.tenant.findUnique({
     where: { id: tenantId },
     include: { plan: true },
   });

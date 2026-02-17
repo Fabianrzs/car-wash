@@ -25,41 +25,54 @@ export async function POST(request: Request) {
       take: 50,
     });
 
-    let applied = 0;
+    // Categorize changes in memory
+    const toCancelIds: string[] = [];
+    const toApply: typeof dueChanges = [];
 
     for (const change of dueChanges) {
-      // Only apply if the invoice is paid
       if (change.invoice && change.invoice.status !== "PAID") {
-        // If overdue or cancelled, cancel the plan change
         if (["OVERDUE", "CANCELLED"].includes(change.invoice.status)) {
-          await prisma.scheduledPlanChange.update({
-            where: { id: change.id },
-            data: { status: "CANCELLED" },
-          });
+          toCancelIds.push(change.id);
         }
         continue;
       }
+      toApply.push(change);
+    }
 
-      // Apply the plan change
-      await prisma.tenant.update({
-        where: { id: change.tenantId },
-        data: {
-          plan: { connect: { id: change.toPlanId } },
-          trialEndsAt: change.invoice?.periodEnd || null,
-        },
+    // Batch cancel in one query
+    if (toCancelIds.length > 0) {
+      await prisma.scheduledPlanChange.updateMany({
+        where: { id: { in: toCancelIds } },
+        data: { status: "CANCELLED" },
       });
+    }
 
-      await prisma.scheduledPlanChange.update({
-        where: { id: change.id },
-        data: { status: "APPLIED" },
-      });
-
-      console.log(
-        `Plan change applied for tenant ${change.tenant.name}: ` +
-          `→ ${change.toPlan.name}`
+    // Apply changes in a single transaction
+    let applied = 0;
+    if (toApply.length > 0) {
+      await prisma.$transaction(
+        toApply.flatMap((change) => [
+          prisma.tenant.update({
+            where: { id: change.tenantId },
+            data: {
+              plan: { connect: { id: change.toPlanId } },
+              trialEndsAt: change.invoice?.periodEnd || null,
+            },
+          }),
+          prisma.scheduledPlanChange.update({
+            where: { id: change.id },
+            data: { status: "APPLIED" },
+          }),
+        ])
       );
 
-      applied++;
+      for (const change of toApply) {
+        console.log(
+          `Plan change applied for tenant ${change.tenant.name}: ` +
+            `→ ${change.toPlan.name}`
+        );
+      }
+      applied = toApply.length;
     }
 
     // Also check for expired plans (trialEndsAt passed, no renewal invoice)
@@ -73,21 +86,23 @@ export async function POST(request: Request) {
       select: { id: true, slug: true },
     });
 
+    // Batch check for renewal invoices instead of N+1
+    const expiredTenantIds = expiredTenants.map((t) => t.id);
     let blocked = 0;
-    for (const tenant of expiredTenants) {
-      // Check if there's a paid invoice extending the period
-      const renewalInvoice = await prisma.invoice.findFirst({
+
+    if (expiredTenantIds.length > 0) {
+      const tenantsWithRenewal = await prisma.invoice.findMany({
         where: {
-          tenantId: tenant.id,
+          tenantId: { in: expiredTenantIds },
           status: "PAID",
           periodEnd: { gt: now },
         },
+        select: { tenantId: true },
+        distinct: ["tenantId"],
       });
 
-      if (!renewalInvoice) {
-        // Plan expired, no renewal → will be blocked by getTenantPlanStatus
-        blocked++;
-      }
+      const renewedTenantIds = new Set(tenantsWithRenewal.map((i) => i.tenantId));
+      blocked = expiredTenantIds.length - renewedTenantIds.size;
     }
 
     return NextResponse.json({ applied, blocked, totalChecked: dueChanges.length });
