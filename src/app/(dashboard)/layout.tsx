@@ -1,6 +1,7 @@
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import PlanBlockingGuard from "@/components/guards/PlanBlockingGuard";
+import TenantSelectorModal from "@/components/guards/TenantSelectorModal";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
           <PlanBlockingGuard>{children}</PlanBlockingGuard>
         </main>
       </div>
+      <TenantSelectorModal />
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function LoginForm() {
         const res = await fetch("/api/auth/session");
         const session = await res.json();
         if (session?.user?.globalRole === "SUPER_ADMIN") {
-          window.location.href = "/admin";
+          window.location.href = "/dashboard";
         } else if (session?.user?.tenantSlug) {
           const dashboardUrl = buildTenantUrl(session.user.tenantSlug, "/dashboard");
           window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;

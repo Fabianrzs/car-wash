@@ -2,8 +2,10 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { LogOut, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LogOut, Shield, Building2, X } from "lucide-react";
 import Link from "next/link";
+import { extractTenantSlugFromHost, getBaseDomainUrl } from "@/lib/domain";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -36,6 +38,20 @@ export default function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const title = getPageTitle(pathname);
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+
+  const isSuperAdmin = session?.user?.globalRole === "SUPER_ADMIN";
+
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    const slug = extractTenantSlugFromHost(window.location.host);
+    setTenantSlug(slug);
+  }, [isSuperAdmin]);
+
+  const handleChangeTenant = () => {
+    // Redirect to base domain dashboard — modal will appear to pick another tenant
+    window.location.href = getBaseDomainUrl("/dashboard");
+  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
@@ -44,6 +60,20 @@ export default function Navbar() {
       </h1>
 
       <div className="flex items-center gap-2 md:gap-4">
+        {isSuperAdmin && tenantSlug && !pathname?.startsWith("/admin") && (
+          <span className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700">
+            <Building2 className="h-3.5 w-3.5" />
+            {tenantSlug}
+            <button
+              type="button"
+              onClick={handleChangeTenant}
+              className="ml-1 rounded p-0.5 hover:bg-blue-100"
+              title="Cambiar lavadero"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
         {session?.user?.globalRole === "SUPER_ADMIN" && !pathname?.startsWith("/admin") && (
           <Link
             href="/admin"

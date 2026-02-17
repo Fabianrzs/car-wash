@@ -115,15 +115,28 @@ export async function middleware(request: NextRequest) {
 
   // ─── Tenant routes WITHOUT subdomain → redirect to subdomain ───
   if (!tenantSlug && isLoggedIn && (isTenantRoute(pathname) || isTenantApiRoute(pathname))) {
-    // Super admin without subdomain goes to admin panel
+    // Super admin: use selected-tenant cookie to inject tenant context
     if (token?.globalRole === "SUPER_ADMIN") {
+      const selectedTenant = request.cookies.get("selected-tenant")?.value;
+
+      if (selectedTenant) {
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set("x-tenant-slug", selectedTenant);
+        return NextResponse.next({
+          request: { headers: requestHeaders },
+        });
+      }
+
+      // No cookie + API route → error
       if (isTenantApiRoute(pathname)) {
         return NextResponse.json(
-          { error: "Accede desde el subdominio del lavadero que quieres gestionar." },
+          { error: "Selecciona un lavadero primero." },
           { status: 400 }
         );
       }
-      return NextResponse.redirect(new URL("/admin", request.nextUrl));
+
+      // No cookie + page route → let through (modal will show)
+      return NextResponse.next();
     }
     if (token?.tenantSlug) {
       const tenantUrl = buildTenantUrl(token.tenantSlug, pathname + request.nextUrl.search);

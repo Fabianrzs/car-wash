@@ -85,6 +85,17 @@ export function buildTenantUrl(slug: string, path = "/"): string {
 }
 
 /**
+ * Build a URL on the base domain (without subdomain).
+ * Useful for SUPER_ADMIN to return to the main domain from a tenant subdomain.
+ *
+ * @example getBaseDomainUrl("/dashboard") → "http://localhost:3000/dashboard"
+ */
+export function getBaseDomainUrl(path = "/"): string {
+  const protocol = getProtocol();
+  return `${protocol}://${ENV_DOMAIN}${path}`;
+}
+
+/**
  * Extract tenant slug from a Host header value.
  *
  * e.g. "demo.localhost:3000" → "demo"

@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { extractTenantSlugFromHost } from "@/lib/domain";
@@ -104,10 +104,15 @@ export async function requireActivePlan(
 
 export async function getTenantSlugFromHeaders(): Promise<string | null> {
   const headersList = await headers();
-  return (
+  const slug =
     headersList.get("x-tenant-slug") ??
-    extractTenantSlugFromHost(headersList.get("host") || "")
-  );
+    extractTenantSlugFromHost(headersList.get("host") || "");
+
+  if (slug) return slug;
+
+  // Fallback: read selected-tenant cookie (SUPER_ADMIN via IP without subdomain)
+  const cookieStore = await cookies();
+  return cookieStore.get("selected-tenant")?.value ?? null;
 }
 
 export async function resolveTenant(slug: string) {
@@ -125,6 +130,12 @@ export async function requireTenant(requestHeaders?: Headers) {
     slug =
       headersList.get("x-tenant-slug") ??
       extractTenantSlugFromHost(headersList.get("host") || "");
+  }
+
+  // Fallback: read selected-tenant cookie (SUPER_ADMIN via IP without subdomain)
+  if (!slug) {
+    const cookieStore = await cookies();
+    slug = cookieStore.get("selected-tenant")?.value ?? null;
   }
 
   if (!slug) {

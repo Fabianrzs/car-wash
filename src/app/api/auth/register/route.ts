@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
+import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
 
 export async function POST(request: Request) {
   try {
@@ -71,6 +72,8 @@ export async function POST(request: Request) {
           role: "OWNER",
         },
       });
+
+      await associateSuperAdminsWithTenant(tenant.id, tx);
 
       return { user, tenant };
     });

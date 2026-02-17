@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import bcrypt from "bcryptjs";
+import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
 
 export async function GET(request: Request) {
   try {
@@ -117,6 +118,8 @@ export async function POST(request: Request) {
           },
         });
       }
+
+      await associateSuperAdminsWithTenant(newTenant.id, tx);
 
       return newTenant;
     });
