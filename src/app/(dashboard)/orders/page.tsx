@@ -66,7 +66,7 @@ export default function OrdersPage() {
     s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title="Ordenes de Servicio" description="Gestion de ordenes de lavado">
         <Button onClick={() => router.push("/orders/new")}>
           <Plus className="mr-2 h-4 w-4" /> Nueva Orden
@@ -81,7 +81,7 @@ export default function OrdersPage() {
             <button
               key={tab.value}
               onClick={() => { setStatus(tab.value); setPage(1); }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:px-4 md:py-2 ${
                 status === tab.value
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -92,7 +92,7 @@ export default function OrdersPage() {
           ))}
         </div>
 
-        <div className="mb-4 max-w-sm">
+        <div className="mb-4 w-full md:max-w-sm">
           <Input
             placeholder="Buscar por numero de orden..."
             value={search}
@@ -109,11 +109,11 @@ export default function OrdersPage() {
                 <TableRow>
                   <TableHead># Orden</TableHead>
                   <TableHead>Cliente</TableHead>
-                  <TableHead>Vehiculo</TableHead>
-                  <TableHead>Servicios</TableHead>
+                  <TableHead className="hidden md:table-cell">Vehiculo</TableHead>
+                  <TableHead className="hidden md:table-cell">Servicios</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
+                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -127,15 +127,15 @@ export default function OrdersPage() {
                     <TableRow key={o.id}>
                       <TableCell className="font-medium">{o.orderNumber}</TableCell>
                       <TableCell>{o.client.firstName} {o.client.lastName}</TableCell>
-                      <TableCell>{o.vehicle.plate}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                      <TableCell className="hidden md:table-cell">{o.vehicle.plate}</TableCell>
+                      <TableCell className="hidden max-w-[200px] truncate md:table-cell">
                         {o.items.map((i) => i.serviceType.name).join(", ")}
                       </TableCell>
                       <TableCell className="font-medium">{formatCurrency(o.totalAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={badgeVariant(o.status)}>{ORDER_STATUS_LABELS[o.status]}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{formatDate(o.createdAt)}</TableCell>
+                      <TableCell className="hidden text-sm md:table-cell">{formatDate(o.createdAt)}</TableCell>
                       <TableCell>
                         <Button size="sm" variant="ghost" onClick={() => router.push(`/orders/${o.id}`)}>
                           <Eye className="h-4 w-4" />

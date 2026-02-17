@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
         <StatsCard
           title="Ingresos Hoy"
           value={formatCurrency(stats?.totalIncome || 0)}
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-6 py-4">
+        <div className="border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Ordenes Recientes
           </h3>
@@ -132,11 +132,11 @@ export default function DashboardPage() {
             <TableRow>
               <TableHead>#Orden</TableHead>
               <TableHead>Cliente</TableHead>
-              <TableHead>Vehiculo</TableHead>
-              <TableHead>Servicio</TableHead>
+              <TableHead className="hidden md:table-cell">Vehiculo</TableHead>
+              <TableHead className="hidden md:table-cell">Servicio</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="hidden md:table-cell">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -160,11 +160,11 @@ export default function DashboardPage() {
                   <TableCell>
                     {order.client.firstName} {order.client.lastName}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {order.vehicle.plate} - {order.vehicle.brand}{" "}
                     {order.vehicle.model}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {order.items
                       .map((item) => item.serviceType.name)
                       .join(", ")}
@@ -175,7 +175,7 @@ export default function DashboardPage() {
                       {ORDER_STATUS_LABELS[order.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500">
+                  <TableCell className="hidden text-sm text-gray-500 md:table-cell">
                     {formatDate(order.createdAt)}
                   </TableCell>
                 </TableRow>

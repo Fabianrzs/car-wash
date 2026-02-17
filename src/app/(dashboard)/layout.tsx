@@ -12,7 +12,7 @@ export default function DashboardLayout({
       <Sidebar />
       <div className="flex flex-1 flex-col md:ml-64">
         <Navbar />
-        <main className="flex-1 bg-gray-50 p-6">
+        <main className="flex-1 bg-gray-50 p-4 md:p-6">
           <PlanBlockingGuard>{children}</PlanBlockingGuard>
         </main>
       </div>

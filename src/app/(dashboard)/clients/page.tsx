@@ -122,9 +122,9 @@ export default function ClientsPage() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Telefono</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Vehiculos</TableHead>
-                <TableHead>Ordenes</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Vehiculos</TableHead>
+                <TableHead className="hidden md:table-cell">Ordenes</TableHead>
                 <TableHead>Frecuente</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
@@ -143,11 +143,11 @@ export default function ClientsPage() {
                       {client.firstName} {client.lastName}
                     </TableCell>
                     <TableCell>{client.phone}</TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="hidden text-gray-500 md:table-cell">
                       {client.email || "-"}
                     </TableCell>
-                    <TableCell>{client._count?.vehicles || 0}</TableCell>
-                    <TableCell>{client._count?.orders || 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">{client._count?.vehicles || 0}</TableCell>
+                    <TableCell className="hidden md:table-cell">{client._count?.orders || 0}</TableCell>
                     <TableCell>
                       {client.isFrequent && (
                         <Badge className="bg-green-100 text-green-800 border-green-200">

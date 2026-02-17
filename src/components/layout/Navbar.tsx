@@ -38,12 +38,12 @@ export default function Navbar() {
   const title = getPageTitle(pathname);
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
       <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
         {title}
       </h1>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {session?.user?.globalRole === "SUPER_ADMIN" && !pathname?.startsWith("/admin") && (
           <Link
             href="/admin"

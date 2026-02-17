@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+      <h1 className="mb-6 text-xl font-bold text-gray-900 md:text-2xl">
         Usuarios ({total})
       </h1>
 
@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
               <th className="px-4 py-3">Usuario</th>
               <th className="px-4 py-3">Rol Global</th>
               <th className="px-4 py-3">Tenants</th>
-              <th className="px-4 py-3">Registrado</th>
+              <th className="hidden px-4 py-3 md:table-cell">Registrado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
                       <span className="text-gray-400">Ninguno</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
                     {new Date(u.createdAt).toLocaleDateString("es-CO")}
                   </td>
                 </tr>

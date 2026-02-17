@@ -51,7 +51,7 @@ export default function VehiclesPage() {
   useEffect(() => { fetchVehicles(); }, [page, search]);
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title="Vehiculos" description="Gestion de vehiculos registrados">
         <Button onClick={() => router.push("/vehicles/new")}>
           <Plus className="mr-2 h-4 w-4" /> Nuevo Vehiculo
@@ -61,7 +61,7 @@ export default function VehiclesPage() {
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mt-6">
-        <div className="mb-4 max-w-sm">
+        <div className="mb-4 w-full md:max-w-sm">
           <Input
             placeholder="Buscar por placa..."
             value={search}
@@ -79,9 +79,9 @@ export default function VehiclesPage() {
                   <TableHead>Placa</TableHead>
                   <TableHead>Marca</TableHead>
                   <TableHead>Modelo</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                  <TableHead className="hidden md:table-cell">Color</TableHead>
+                  <TableHead className="hidden md:table-cell">Cliente</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -98,9 +98,9 @@ export default function VehiclesPage() {
                       <TableCell className="font-medium">{v.plate}</TableCell>
                       <TableCell>{v.brand}</TableCell>
                       <TableCell>{v.model}</TableCell>
-                      <TableCell>{VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</TableCell>
-                      <TableCell>{v.color || "-"}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">{VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</TableCell>
+                      <TableCell className="hidden md:table-cell">{v.color || "-"}</TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <button
                           className="text-blue-600 hover:underline"
                           onClick={() => router.push(`/clients/${v.client.id}`)}

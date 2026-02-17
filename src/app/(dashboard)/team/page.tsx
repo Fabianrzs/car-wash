@@ -114,11 +114,11 @@ export default function TeamPage() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex items-center gap-2">
         <Users className="h-6 w-6 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-900">Equipo</h1>
+        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Equipo</h1>
       </div>
 
       {/* Invite form */}
-      <form onSubmit={handleInvite} className="mb-6 flex gap-2 rounded-xl border border-gray-200 bg-white p-4">
+      <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row">
         <div className="flex-1">
           <input
             type="email"
@@ -139,7 +139,7 @@ export default function TeamPage() {
         <button
           type="submit"
           disabled={inviting || !inviteEmail}
-          className="flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
         >
           <UserPlus className="h-4 w-4" />
           Invitar

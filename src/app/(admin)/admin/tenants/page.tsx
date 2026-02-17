@@ -106,7 +106,7 @@ export default function AdminTenantsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tenants ({total})</h1>
+        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Tenants ({total})</h1>
         <Button onClick={openModal}>
           <Plus className="mr-1 h-4 w-4" />
           Nuevo Tenant
@@ -131,10 +131,10 @@ export default function AdminTenantsPage() {
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
               <th className="px-4 py-3">Lavadero</th>
-              <th className="px-4 py-3">Plan</th>
+              <th className="hidden px-4 py-3 md:table-cell">Plan</th>
               <th className="px-4 py-3">Usuarios</th>
-              <th className="px-4 py-3">Clientes</th>
-              <th className="px-4 py-3">Ordenes</th>
+              <th className="hidden px-4 py-3 md:table-cell">Clientes</th>
+              <th className="hidden px-4 py-3 md:table-cell">Ordenes</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Acciones</th>
             </tr>
@@ -164,10 +164,10 @@ export default function AdminTenantsPage() {
                       </div>
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{t.plan?.name || "Sin plan"}</td>
+                  <td className="hidden px-4 py-3 md:table-cell">{t.plan?.name || "Sin plan"}</td>
                   <td className="px-4 py-3">{t._count.tenantUsers}</td>
-                  <td className="px-4 py-3">{t._count.clients}</td>
-                  <td className="px-4 py-3">{t._count.serviceOrders}</td>
+                  <td className="hidden px-4 py-3 md:table-cell">{t._count.clients}</td>
+                  <td className="hidden px-4 py-3 md:table-cell">{t._count.serviceOrders}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${t.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                       {t.isActive ? "Activo" : "Inactivo"}

@@ -62,7 +62,7 @@ export default function Modal({
       )}
       onClick={handleBackdropClick}
     >
-      <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <button
           type="button"
@@ -72,7 +72,7 @@ export default function Modal({
           <X className="h-5 w-5" />
         </button>
       </div>
-      <div className="px-6 py-4">{children}</div>
+      <div className="px-4 py-3 md:px-6 md:py-4">{children}</div>
     </dialog>
   );
 }

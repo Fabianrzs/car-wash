@@ -76,7 +76,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        "px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500",
+        "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 md:px-4 md:py-3",
         className
       )}
       {...props}
@@ -98,7 +98,7 @@ export function TableCell({
 }: TableCellProps) {
   return (
     <td
-      className={cn("whitespace-nowrap px-4 py-3 text-gray-700", className)}
+      className={cn("whitespace-nowrap px-3 py-2 text-gray-700 md:px-4 md:py-3", className)}
       {...props}
     >
       {children}

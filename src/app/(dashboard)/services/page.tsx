@@ -37,7 +37,7 @@ export default function ServicesPage() {
   if (loading) return <div className="flex justify-center p-12"><Spinner size="lg" /></div>;
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title="Servicios" description="Tipos de servicio de lavado disponibles">
         <Button onClick={() => router.push("/services/new")}>
           <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio

@@ -191,7 +191,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title="Reportes" description="Resumen de ingresos y detalle de ordenes">
         {tab === "resumen" && data && (
           <Button variant="secondary" onClick={exportSummaryCSV}>
@@ -233,7 +233,7 @@ export default function ReportsPage() {
           <button
             key={p.value}
             onClick={() => setPeriod(p.value)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:px-4 md:py-2 ${
               period === p.value ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -244,7 +244,7 @@ export default function ReportsPage() {
 
       {period === "custom" && (
         <Card className="mb-6">
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Fecha Inicio</label>
               <input
@@ -345,7 +345,7 @@ export default function ReportsPage() {
       {tab === "detalle" && (
         <>
           {/* Filters */}
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -357,7 +357,7 @@ export default function ReportsPage() {
               <option value="COMPLETED">Completada</option>
               <option value="CANCELLED">Cancelada</option>
             </select>
-            <div className="relative flex-1 max-w-xs">
+            <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -374,7 +374,7 @@ export default function ReportsPage() {
 
           {/* Summary bar */}
           {ordersData && (
-            <div className="mb-4 flex flex-wrap gap-6 rounded-lg bg-gray-50 px-4 py-3 text-sm">
+            <div className="mb-4 flex flex-wrap gap-3 rounded-lg bg-gray-50 px-4 py-3 text-sm md:gap-6">
               <span><strong>{ordersData.summary.orderCount}</strong> ordenes</span>
               <span><strong>{ordersData.summary.completedOrders}</strong> completadas</span>
               <span>Ingresos: <strong>{formatCurrency(ordersData.summary.totalIncome)}</strong></span>

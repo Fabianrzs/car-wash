@@ -63,12 +63,12 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-2xl">
       <div className="mb-6 flex items-center gap-2">
         <Settings className="h-6 w-6 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">
           Configuracion del Lavadero
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 md:p-6">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Nombre</label>
           <input

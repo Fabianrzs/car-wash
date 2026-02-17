@@ -131,7 +131,7 @@ export default function BillingPage() {
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex items-center gap-2">
         <CreditCard className="h-6 w-6 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-900">Facturacion</h1>
+        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Facturacion</h1>
       </div>
 
       {/* Message Banner */}
@@ -152,7 +152,7 @@ export default function BillingPage() {
       )}
 
       {/* Current Plan Info */}
-      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 md:p-6">
         {billing?.plan ? (
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -160,7 +160,7 @@ export default function BillingPage() {
                 <h2 className="text-lg font-semibold text-gray-900">Plan Actual: {billing.plan.name}</h2>
                 <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Activo</span>
               </div>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
+              <p className="mt-1 text-2xl font-bold text-gray-900 md:text-3xl">
                 ${Number(billing.plan.price).toLocaleString("es-CO")}
                 <span className="text-sm font-normal text-gray-500">
                   /{billing.plan.interval === "MONTHLY" ? "mes" : "ano"} + IVA
@@ -234,12 +234,12 @@ export default function BillingPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Factura</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Plan</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Periodo</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Total</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-500">Estado</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500"></th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-500 md:px-4 md:py-3">Factura</th>
+                  <th className="px-2 py-2 text-left font-medium text-gray-500 md:px-4 md:py-3">Plan</th>
+                  <th className="hidden px-2 py-2 text-left font-medium text-gray-500 md:table-cell md:px-4 md:py-3">Periodo</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-500 md:px-4 md:py-3">Total</th>
+                  <th className="px-2 py-2 text-center font-medium text-gray-500 md:px-4 md:py-3">Estado</th>
+                  <th className="px-2 py-2 text-right font-medium text-gray-500 md:px-4 md:py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -247,21 +247,21 @@ export default function BillingPage() {
                   const st = STATUS_LABELS[inv.status] || STATUS_LABELS.PENDING;
                   return (
                     <tr key={inv.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{inv.invoiceNumber}</td>
-                      <td className="px-4 py-3 text-gray-600">{inv.plan?.name || "—"}</td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-2 py-2 font-medium text-gray-900 md:px-4 md:py-3">{inv.invoiceNumber}</td>
+                      <td className="px-2 py-2 text-gray-600 md:px-4 md:py-3">{inv.plan?.name || "—"}</td>
+                      <td className="hidden px-2 py-2 text-gray-600 md:table-cell md:px-4 md:py-3">
                         {new Date(inv.periodStart).toLocaleDateString("es-CO")} -{" "}
                         {new Date(inv.periodEnd).toLocaleDateString("es-CO")}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-2 py-2 text-right font-medium text-gray-900 md:px-4 md:py-3">
                         ${Number(inv.totalAmount).toLocaleString("es-CO")}
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-2 py-2 text-center md:px-4 md:py-3">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.color}`}>
                           {st.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 py-2 text-right md:px-4 md:py-3">
                         <button
                           onClick={() => router.push(`/billing/invoices/${inv.id}`)}
                           className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -292,7 +292,7 @@ export default function BillingPage() {
           return (
             <div
               key={plan.id}
-              className={`relative rounded-xl border-2 bg-white p-6 transition-shadow hover:shadow-md ${
+              className={`relative rounded-xl border-2 bg-white p-4 transition-shadow hover:shadow-md md:p-6 ${
                 isCurrent ? "border-blue-500 shadow-md" : "border-gray-200"
               }`}
             >
@@ -307,7 +307,7 @@ export default function BillingPage() {
                   <p className="mt-1 text-sm text-gray-500">{plan.description}</p>
                 )}
               </div>
-              <p className="mb-1 text-3xl font-bold text-gray-900">
+              <p className="mb-1 text-2xl font-bold text-gray-900 md:text-3xl">
                 {isFree ? "Gratis" : (
                   <>${Number(plan.price).toLocaleString("es-CO")}</>
                 )}
@@ -349,8 +349,8 @@ export default function BillingPage() {
 
       {/* Disconnect Plan */}
       {billing?.plan && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-medium text-gray-900">Desvincular plan</h3>
               <p className="text-sm text-gray-500">Quitar tu plan actual. Perderas acceso a las funciones del sistema.</p>
