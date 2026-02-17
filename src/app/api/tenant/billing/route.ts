@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus } from "@/lib/tenant";
 import { createPlanInvoice, calculateNextPeriod, getCurrentPeriodEnd, hasPendingInvoice, createInvoiceReminders } from "@/lib/invoice";
 import { createBillingPortalSession } from "@/lib/stripe";
+import { buildTenantUrl } from "@/lib/domain";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -72,14 +73,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, planId } = body;
 
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-    const protocol = appDomain.includes("localhost") ? "http" : "https";
-
     // Legacy Stripe portal action
     if (action === "portal" && tenant.stripeCustomerId) {
       const portalSession = await createBillingPortalSession({
         stripeCustomerId: tenant.stripeCustomerId,
-        returnUrl: `${protocol}://${tenant.slug}.${appDomain}/billing`,
+        returnUrl: buildTenantUrl(tenant.slug, "/billing"),
       });
       return NextResponse.json({ url: portalSession.url });
     }

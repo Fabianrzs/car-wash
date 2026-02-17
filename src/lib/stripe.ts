@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getAppDomain, getProtocol } from "@/lib/domain";
 
 function getStripeClient() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -27,9 +28,6 @@ export async function createCheckoutSession({
   customerEmail: string;
   stripeCustomerId?: string;
 }) {
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-  const protocol = appDomain.includes("localhost") ? "http" : "https";
-
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -46,8 +44,8 @@ export async function createCheckoutSession({
       tenantId,
       tenantName,
     },
-    success_url: `${protocol}://${appDomain}/login?payment=success`,
-    cancel_url: `${protocol}://${appDomain}/register?cancelled=true`,
+    success_url: `${getProtocol()}://${getAppDomain()}/login?payment=success`,
+    cancel_url: `${getProtocol()}://${getAppDomain()}/register?cancelled=true`,
   });
 
   return session;

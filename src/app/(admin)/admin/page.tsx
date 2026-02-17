@@ -12,8 +12,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-const PROTOCOL = APP_DOMAIN.includes("localhost") ? "http" : "https";
+import { buildTenantUrl } from "@/lib/domain";
 
 interface RecentTenant {
   id: string;
@@ -178,7 +177,7 @@ export default function AdminDashboardPage() {
                     {t.isActive ? "Activo" : "Inactivo"}
                   </span>
                   <a
-                    href={`${PROTOCOL}://${t.slug}.${APP_DOMAIN}/dashboard`}
+                    href={buildTenantUrl(t.slug, "/dashboard")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"

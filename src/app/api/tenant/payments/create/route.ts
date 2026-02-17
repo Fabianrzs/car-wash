@@ -5,6 +5,7 @@ import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/ten
 import { generatePayUReferenceCode } from "@/lib/invoice";
 import { createPSEPayment, createCreditCardPayment } from "@/lib/payu";
 import { markInvoicePaid } from "@/lib/invoice";
+import { buildTenantUrl } from "@/lib/domain";
 
 export async function POST(request: Request) {
   try {
@@ -46,9 +47,7 @@ export async function POST(request: Request) {
     const tax = Number(invoice.tax);
     const taxReturnBase = Number(invoice.amount);
 
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-    const protocol = appDomain.includes("localhost") ? "http" : "https";
-    const responseUrl = `${protocol}://${invoice.tenant.slug}.${appDomain}/billing/invoices/${invoiceId}?payment=complete`;
+    const responseUrl = buildTenantUrl(invoice.tenant.slug, `/billing/invoices/${invoiceId}?payment=complete`);
 
     // Get IP and user agent from request
     const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";

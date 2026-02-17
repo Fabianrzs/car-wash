@@ -7,6 +7,7 @@ import { Droplets } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
+import { buildTenantUrl } from "@/lib/domain";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -34,9 +35,7 @@ export default function LoginForm() {
         if (session?.user?.globalRole === "SUPER_ADMIN") {
           window.location.href = "/admin";
         } else if (session?.user?.tenantSlug) {
-          const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-          const protocol = window.location.protocol;
-          const dashboardUrl = `${protocol}//${session.user.tenantSlug}.${appDomain}/dashboard`;
+          const dashboardUrl = buildTenantUrl(session.user.tenantSlug, "/dashboard");
           window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;
         } else {
           window.location.href = "/dashboard";

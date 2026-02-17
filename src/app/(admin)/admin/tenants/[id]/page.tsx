@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Building2, Users, ClipboardList, Car, Sparkles, ExternalLink, Pencil, X, CreditCard, Loader2, FileText } from "lucide-react";
 import Link from "next/link";
 
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-const PROTOCOL = APP_DOMAIN.includes("localhost") ? "http" : "https";
+import { buildTenantUrl } from "@/lib/domain";
 
 interface Plan {
   id: string;
@@ -177,7 +176,7 @@ export default function AdminTenantDetailPage() {
             Editar
           </button>
           <a
-            href={`${PROTOCOL}://${tenant.slug}.${APP_DOMAIN}/dashboard`}
+            href={buildTenantUrl(tenant.slug, "/dashboard")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

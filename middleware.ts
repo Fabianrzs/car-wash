@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
+import { buildTenantUrl, extractTenantSlugFromHost } from "@/lib/domain";
 
 // Routes that require a tenant context (subdomain)
 const TENANT_ROUTES = [
@@ -101,7 +100,7 @@ export async function middleware(request: NextRequest) {
     }
     // User with tenant goes to their subdomain dashboard (via session relay)
     if (token?.tenantSlug) {
-      const dashboardUrl = `${request.nextUrl.protocol}//${token.tenantSlug}.${APP_DOMAIN}/dashboard`;
+      const dashboardUrl = buildTenantUrl(token.tenantSlug, "/dashboard");
       const relayUrl = new URL("/api/auth/session-relay", request.nextUrl);
       relayUrl.searchParams.set("callbackUrl", dashboardUrl);
       return NextResponse.redirect(relayUrl);
@@ -112,21 +111,7 @@ export async function middleware(request: NextRequest) {
 
   // ─── Extract tenant slug from subdomain ───
   const hostname = request.headers.get("host") || "";
-  const appDomain = APP_DOMAIN.replace(/:\d+$/, "");
-
-  let tenantSlug: string | null = null;
-
-  if (hostname !== APP_DOMAIN && hostname !== appDomain) {
-    const localhostMatch = hostname.match(/^([^.]+)\.localhost/);
-    if (localhostMatch) {
-      tenantSlug = localhostMatch[1];
-    } else {
-      const subdomain = hostname.replace(`.${appDomain}`, "").replace(/:\d+$/, "");
-      if (subdomain && subdomain !== hostname && subdomain !== appDomain) {
-        tenantSlug = subdomain;
-      }
-    }
-  }
+  const tenantSlug = extractTenantSlugFromHost(hostname);
 
   // ─── Tenant routes WITHOUT subdomain → redirect to subdomain ───
   if (!tenantSlug && isLoggedIn && (isTenantRoute(pathname) || isTenantApiRoute(pathname))) {
@@ -141,7 +126,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/admin", request.nextUrl));
     }
     if (token?.tenantSlug) {
-      const tenantUrl = `${request.nextUrl.protocol}//${token.tenantSlug}.${APP_DOMAIN}${pathname}${request.nextUrl.search}`;
+      const tenantUrl = buildTenantUrl(token.tenantSlug, pathname + request.nextUrl.search);
       const relayUrl = new URL("/api/auth/session-relay", request.nextUrl);
       relayUrl.searchParams.set("callbackUrl", tenantUrl);
       return NextResponse.redirect(relayUrl);

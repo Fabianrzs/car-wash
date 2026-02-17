@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { extractTenantSlugFromHost } from "@/lib/domain";
 
 export interface TenantPlanStatus {
   isBlocked: boolean;
@@ -99,24 +100,6 @@ export async function requireActivePlan(
     };
     throw new TenantError(messages[status.reason!] || "Plan no activo", 403);
   }
-}
-
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-
-/**
- * Extract tenant slug from the Host header (e.g. "demo.localhost:3000" → "demo").
- */
-function extractTenantSlugFromHost(host: string): string | null {
-  const appHost = APP_DOMAIN.replace(/:\d+$/, "");
-  if (host === APP_DOMAIN || host === appHost) return null;
-
-  const localhostMatch = host.match(/^([^.]+)\.localhost/);
-  if (localhostMatch) return localhostMatch[1];
-
-  const subdomain = host.replace(`.${appHost}`, "").replace(/:\d+$/, "");
-  if (subdomain && subdomain !== host && subdomain !== appHost) return subdomain;
-
-  return null;
 }
 
 export async function getTenantSlugFromHeaders(): Promise<string | null> {

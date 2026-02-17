@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decode } from "next-auth/jwt";
+import { getProtocol } from "@/lib/domain";
 
 const COOKIE_NAME = "next-auth.session-token";
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     // Use the real Host header — Next.js dev normalizes request.url to localhost
     const host = request.headers.get("host") || "localhost:3000";
-    const baseUrl = `http://${host}`;
+    const baseUrl = `${getProtocol()}://${host}`;
     const destination = new URL(callbackUrl, baseUrl);
     const response = NextResponse.redirect(destination);
 

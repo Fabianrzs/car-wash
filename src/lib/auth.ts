@@ -1,14 +1,6 @@
 import NextAuth from "next-auth";
 import authConfig from "@/lib/auth.config";
-
-function getCookieDomain(): string {
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
-  const host = appDomain.replace(/:\d+$/, "");
-  if (host === "localhost") return ".localhost";
-  const parts = host.split(".");
-  if (parts.length <= 2) return `.${host}`;
-  return `.${parts.slice(-2).join(".")}`;
-}
+import { getCookieDomain } from "@/lib/domain";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
