@@ -9,10 +9,10 @@ import {
   DollarSign,
   TrendingUp,
   Activity,
-  ExternalLink,
 } from "lucide-react";
 
-import { buildTenantUrl } from "@/lib/domain";
+import ManageTenantButton from "@/components/admin/ManageTenantButton";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface RecentTenant {
   id: string;
@@ -47,11 +47,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader color="text-purple-600" />;
   }
 
   if (!stats) return null;
@@ -176,15 +172,7 @@ export default function AdminDashboardPage() {
                   >
                     {t.isActive ? "Activo" : "Inactivo"}
                   </span>
-                  <a
-                    href={buildTenantUrl(t.slug, "/dashboard")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Gestionar
-                  </a>
+                  <ManageTenantButton slug={t.slug} />
                 </div>
               </div>
             ))

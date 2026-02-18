@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Users, UserPlus, Mail, Trash2 } from "lucide-react";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface TeamMember {
   id: string;
@@ -103,11 +104,7 @@ export default function TeamPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

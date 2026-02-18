@@ -35,3 +35,12 @@ export default function Spinner({ size = "md", className }: SpinnerProps) {
     </svg>
   );
 }
+
+/** Full-page centered loading state. */
+export function PageLoader({ color = "text-blue-600" }: { color?: string }) {
+  return (
+    <div className="flex h-64 items-center justify-center">
+      <Spinner size="lg" className={color} />
+    </div>
+  );
+}

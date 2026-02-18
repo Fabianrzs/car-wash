@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Search } from "lucide-react";
+import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface UserItem {
@@ -118,17 +118,7 @@ export default function AdminUsersPage() {
         </table>
       </div>
 
-      {pages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-gray-600">Pagina {page} de {pages}</span>
-          <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={pages} onPageChange={setPage} />
     </div>
   );
 }

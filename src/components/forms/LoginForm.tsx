@@ -7,7 +7,7 @@ import { Droplets } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
-import { buildTenantUrl } from "@/lib/domain";
+import { buildTenantUrl, supportsSubdomains } from "@/lib/domain";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -35,8 +35,12 @@ export default function LoginForm() {
         if (session?.user?.globalRole === "SUPER_ADMIN") {
           window.location.href = "/dashboard";
         } else if (session?.user?.tenantSlug) {
-          const dashboardUrl = buildTenantUrl(session.user.tenantSlug, "/dashboard");
-          window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;
+          if (supportsSubdomains()) {
+            const dashboardUrl = buildTenantUrl(session.user.tenantSlug, "/dashboard");
+            window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;
+          } else {
+            window.location.href = "/dashboard";
+          }
         } else {
           window.location.href = "/dashboard";
         }

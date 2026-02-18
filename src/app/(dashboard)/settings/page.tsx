@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Settings } from "lucide-react";
+import { PageLoader } from "@/components/ui/Spinner";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -52,11 +53,7 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

@@ -5,7 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogOut, Shield, Building2, X } from "lucide-react";
 import Link from "next/link";
-import { extractTenantSlugFromHost, getBaseDomainUrl } from "@/lib/domain";
+import {
+  extractTenantSlugFromHost,
+  getBaseDomainUrl,
+  supportsSubdomains,
+} from "@/lib/domain";
+import { getSelectedTenant, clearSelectedTenant } from "@/lib/tenant-cookie";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -44,13 +49,28 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!isSuperAdmin) return;
+
+    // Try subdomain first
     const slug = extractTenantSlugFromHost(window.location.host);
-    setTenantSlug(slug);
+    if (slug) {
+      setTenantSlug(slug);
+      return;
+    }
+
+    // Fallback: read from selected-tenant cookie
+    const cookieSlug = getSelectedTenant();
+    if (cookieSlug) setTenantSlug(cookieSlug);
   }, [isSuperAdmin]);
 
   const handleChangeTenant = () => {
-    // Redirect to base domain dashboard — modal will appear to pick another tenant
-    window.location.href = getBaseDomainUrl("/dashboard");
+    if (supportsSubdomains()) {
+      // Redirect to base domain dashboard — modal will appear to pick another tenant
+      window.location.href = getBaseDomainUrl("/dashboard");
+    } else {
+      // Clear cookie and reload — modal will reappear
+      clearSelectedTenant();
+      window.location.reload();
+    }
   };
 
   return (

@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Search, Plus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Building2, Search, Plus } from "lucide-react";
+import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
-import { buildTenantUrl } from "@/lib/domain";
+import ManageTenantButton from "@/components/admin/ManageTenantButton";
 
 interface TenantItem {
   id: string;
@@ -173,15 +174,7 @@ export default function AdminTenantsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <a
-                      href={buildTenantUrl(t.slug, "/dashboard")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      Gestionar
-                    </a>
+                    <ManageTenantButton slug={t.slug} />
                   </td>
                 </tr>
               ))
@@ -190,17 +183,7 @@ export default function AdminTenantsPage() {
         </table>
       </div>
 
-      {pages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-gray-600">Pagina {page} de {pages}</span>
-          <Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => setPage(page + 1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={pages} onPageChange={setPage} />
 
       {/* Create Tenant Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nuevo Tenant">

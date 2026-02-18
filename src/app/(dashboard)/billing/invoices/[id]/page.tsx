@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, Loader2, CheckCircle, XCircle, Clock, Building2 } from "lucide-react";
 import Link from "next/link";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface InvoiceItem {
   id: string;
@@ -147,11 +148,7 @@ export default function InvoiceDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!invoice) {

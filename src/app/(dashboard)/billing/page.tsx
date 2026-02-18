@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, Check, AlertTriangle, Crown, Loader2, FileText, Clock, ArrowRight, XCircle } from "lucide-react";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface Plan {
   id: string;
@@ -115,11 +116,7 @@ export default function BillingPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const trialEndsAt = billing?.trialEndsAt ? new Date(billing.trialEndsAt) : null;

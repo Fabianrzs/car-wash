@@ -10,7 +10,8 @@ import Alert from "@/components/ui/Alert";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
-import { Plus, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
+import Pagination from "@/components/ui/Pagination";
 
 interface Vehicle {
   id: string;
@@ -119,17 +120,7 @@ export default function VehiclesPage() {
               </TableBody>
             </Table>
 
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-gray-600">Pagina {page} de {totalPages}</span>
-                <Button size="sm" variant="secondary" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </div>

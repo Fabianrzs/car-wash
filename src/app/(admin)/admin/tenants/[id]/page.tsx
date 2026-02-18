@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Building2, Users, ClipboardList, Car, Sparkles, ExternalLink, Pencil, X, CreditCard, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Building2, Users, ClipboardList, Car, Sparkles, Pencil, X, CreditCard, Loader2, FileText } from "lucide-react";
 import Link from "next/link";
 
-import { buildTenantUrl } from "@/lib/domain";
+import ManageTenantButton from "@/components/admin/ManageTenantButton";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface Plan {
   id: string;
@@ -130,11 +131,7 @@ export default function AdminTenantDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader color="text-purple-600" />;
   }
 
   if (!tenant) {
@@ -175,15 +172,10 @@ export default function AdminTenantDetailPage() {
             <Pencil className="h-4 w-4" />
             Editar
           </button>
-          <a
-            href={buildTenantUrl(tenant.slug, "/dashboard")}
-            target="_blank"
-            rel="noopener noreferrer"
+          <ManageTenantButton
+            slug={tenant.slug}
             className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Gestionar
-          </a>
+          />
           <span className={`rounded-full px-3 py-1 text-sm font-medium ${tenant.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
             {tenant.isActive ? "Activo" : "Inactivo"}
           </span>

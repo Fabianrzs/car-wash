@@ -5,6 +5,7 @@ import { CreditCard, Plus } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { PageLoader } from "@/components/ui/Spinner";
 
 interface PlanItem {
   id: string;
@@ -88,11 +89,7 @@ export default function AdminPlansPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader color="text-purple-600" />;
   }
 
   return (

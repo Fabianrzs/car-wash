@@ -7,6 +7,10 @@
  * - Client (browser): uses `window.location` for protocol & host — always
  *   reflects the real origin the user is accessing.
  * - Server: falls back to `NEXT_PUBLIC_APP_DOMAIN` env var.
+ *
+ * IMPORTANT — Set `NEXT_PUBLIC_APP_DOMAIN` correctly per environment:
+ *   - Local:      localhost:3000
+ *   - Production: car-wash-drab.vercel.app  (or your custom domain)
  */
 
 const ENV_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
@@ -18,8 +22,35 @@ function isIPAddress(host: string): boolean {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
 }
 
+/** Known shared-hosting platforms where wildcard subdomains are unavailable. */
+const SHARED_PLATFORMS = [
+  "vercel.app",
+  "netlify.app",
+  "herokuapp.com",
+  "railway.app",
+  "fly.dev",
+  "render.com",
+];
+
 /**
- * The full domain with port (e.g. "localhost:3000", "192.168.1.8:3000", "carwash.com").
+ * Whether the given hostname supports tenant subdomains.
+ *
+ * Returns `false` for:
+ *   - Raw IP addresses (192.168.1.8)
+ *   - Shared hosting platforms (*.vercel.app, *.netlify.app, …)
+ *
+ * Returns `true` for:
+ *   - localhost  (tenant.localhost works in most browsers)
+ *   - Custom domains (tenant.carwash.com)
+ */
+export function supportsSubdomains(host?: string): boolean {
+  const h = host || getAppHost();
+  if (isIPAddress(h)) return false;
+  return !SHARED_PLATFORMS.some((platform) => h.endsWith(platform));
+}
+
+/**
+ * The full domain with port (e.g. "localhost:3000", "carwash.com").
  * On the client reads from `window.location.host`.
  */
 export function getAppDomain(): string {
@@ -28,7 +59,7 @@ export function getAppDomain(): string {
 }
 
 /**
- * Host portion without the port (e.g. "192.168.1.8" or "localhost").
+ * Host portion without the port (e.g. "localhost" or "carwash.com").
  * On the client reads from `window.location.hostname`.
  */
 export function getAppHost(): string {
@@ -38,11 +69,13 @@ export function getAppHost(): string {
 
 /**
  * Returns "http" or "https".
- * On the client reads directly from `window.location.protocol`.
- * On the server infers from the domain (localhost/IP → http, otherwise https).
+ * - Client: reads from `window.location.protocol`.
+ * - Server production (`NODE_ENV=production`): always "https".
+ * - Server dev: "http" for localhost/IP, "https" otherwise.
  */
 export function getProtocol(): string {
   if (isClient) return window.location.protocol.replace(":", "");
+  if (process.env.NODE_ENV === "production") return "https";
   const host = getAppHost();
   if (host === "localhost" || isIPAddress(host)) return "http";
   return "https";
@@ -51,16 +84,21 @@ export function getProtocol(): string {
 /**
  * Cookie domain for sharing cookies across subdomains.
  *
- * - IP addresses  → `undefined` (browser defaults to exact origin;
- *   IPs don't support subdomain cookies).
- * - localhost      → `.localhost`
- * - example.com    → `.example.com`
- * - sub.example.com → `.example.com`
+ * - IP addresses         → `undefined` (browser defaults to exact origin)
+ * - localhost             → `.localhost`
+ * - Shared platforms      → `.{full-host}` (e.g. `.car-wash-drab.vercel.app`)
+ * - Custom 2-part domain  → `.example.com`
+ * - Custom 3+-part domain → `.example.com` (root)
  */
 export function getCookieDomain(): string | undefined {
   const host = getAppHost();
   if (isIPAddress(host)) return undefined;
   if (host === "localhost") return ".localhost";
+
+  // Shared platforms: scope to the full app hostname (NOT the platform root)
+  if (!supportsSubdomains(host)) return `.${host}`;
+
+  // Custom domain: scope to root for subdomain sharing
   const parts = host.split(".");
   if (parts.length <= 2) return `.${host}`;
   return `.${parts.slice(-2).join(".")}`;
@@ -69,30 +107,33 @@ export function getCookieDomain(): string | undefined {
 /**
  * Build a full URL for a tenant subdomain.
  *
- * For IP addresses (where subdomains don't work) it falls back to the
- * base domain so the middleware can route via the x-tenant-slug header.
+ * When subdomains are NOT supported (IP, shared platform):
+ *   → returns the same-origin URL (caller should use cookie-based tenant context).
  *
- * @example buildTenantUrl("demo", "/dashboard") → "http://demo.localhost:3000/dashboard"
+ * When subdomains ARE supported:
+ *   → returns `protocol://slug.domain/path`
  */
 export function buildTenantUrl(slug: string, path = "/"): string {
   const protocol = getProtocol();
   const domain = getAppDomain();
   const host = getAppHost();
-  if (isIPAddress(host)) {
+
+  if (!supportsSubdomains(host)) {
+    // Same origin — tenant context via cookie / JWT header
     return `${protocol}://${domain}${path}`;
   }
+
   return `${protocol}://${slug}.${domain}${path}`;
 }
 
 /**
  * Build a URL on the base domain (without subdomain).
- * Useful for SUPER_ADMIN to return to the main domain from a tenant subdomain.
- *
- * @example getBaseDomainUrl("/dashboard") → "http://localhost:3000/dashboard"
+ * On client uses `window.location`, on server uses ENV_DOMAIN.
  */
 export function getBaseDomainUrl(path = "/"): string {
   const protocol = getProtocol();
-  return `${protocol}://${ENV_DOMAIN}${path}`;
+  const domain = isClient ? ENV_DOMAIN : ENV_DOMAIN;
+  return `${protocol}://${domain}${path}`;
 }
 
 /**
@@ -102,10 +143,14 @@ export function getBaseDomainUrl(path = "/"): string {
  *      "demo.carwash.com"    → "demo"
  *      "localhost:3000"      → null
  *      "192.168.1.8:3000"    → null  (IPs have no subdomains)
+ *      "car-wash-drab.vercel.app" → null (shared platform, no subdomains)
  */
 export function extractTenantSlugFromHost(host: string): string | null {
   const hostOnly = host.replace(/:\d+$/, "");
   if (isIPAddress(hostOnly)) return null;
+
+  // Shared platforms don't support subdomains
+  if (!supportsSubdomains(hostOnly)) return null;
 
   const appDomain = ENV_DOMAIN;
   const appHost = ENV_DOMAIN.replace(/:\d+$/, "");

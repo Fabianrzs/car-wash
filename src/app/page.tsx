@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Droplets,
@@ -15,25 +12,7 @@ import {
   Car,
   Star,
 } from "lucide-react";
-
-interface Plan {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  price: number;
-  interval: string;
-  maxUsers: number;
-  maxOrdersPerMonth: number;
-  features: string[];
-}
-
-interface Stats {
-  totalTenants: number;
-  totalOrders: number;
-  totalClients: number;
-  totalVehicles: number;
-}
+import { prisma } from "@/lib/prisma";
 
 const features = [
   { icon: LayoutDashboard, title: "Dashboard", desc: "Vista general de tu negocio en tiempo real" },
@@ -44,19 +23,42 @@ const features = [
   { icon: Building2, title: "Multi-sucursal", desc: "Gestiona multiples sucursales desde una cuenta" },
 ];
 
-export default function LandingPage() {
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
+async function getPageData() {
+  const [plans, totalTenants, totalOrders, totalClients, totalVehicles] =
+    await Promise.all([
+      prisma.plan.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          price: true,
+          interval: true,
+          maxUsers: true,
+          maxOrdersPerMonth: true,
+          features: true,
+        },
+        orderBy: { price: "asc" },
+      }),
+      prisma.tenant.count({ where: { isActive: true } }),
+      prisma.serviceOrder.count(),
+      prisma.client.count(),
+      prisma.vehicle.count(),
+    ]);
 
-  useEffect(() => {
-    fetch("/api/plans").then((r) => r.json()).then(setPlans).catch(() => {});
-    fetch("/api/public-stats").then((r) => r.json()).then(setStats).catch(() => {});
-  }, []);
+  return { plans, stats: { totalTenants, totalOrders, totalClients, totalVehicles } };
+}
+
+export default async function LandingPage() {
+  const { plans, stats } = await getPageData();
+  const hasStats = stats.totalTenants > 0 || stats.totalOrders > 0;
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
@@ -88,7 +90,8 @@ export default function LandingPage() {
             Gestiona tu Lavadero de Autos
           </h1>
           <p className="mt-6 text-lg text-gray-600 sm:text-xl">
-            La plataforma todo-en-uno para administrar tu lavadero. Clientes, ordenes, reportes y equipo en un solo lugar.
+            La plataforma todo-en-uno para administrar tu lavadero. Clientes,
+            ordenes, reportes y equipo en un solo lugar.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
@@ -109,25 +112,22 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      {stats && (stats.totalTenants > 0 || stats.totalOrders > 0) && (
+      {hasStats && (
         <section className="border-y border-gray-100 bg-gray-50">
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 sm:grid-cols-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stats.totalTenants}+</p>
-              <p className="mt-1 text-sm text-gray-600">Lavaderos</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stats.totalOrders.toLocaleString()}+</p>
-              <p className="mt-1 text-sm text-gray-600">Ordenes Procesadas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stats.totalClients.toLocaleString()}+</p>
-              <p className="mt-1 text-sm text-gray-600">Clientes Registrados</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stats.totalVehicles.toLocaleString()}+</p>
-              <p className="mt-1 text-sm text-gray-600">Vehiculos</p>
-            </div>
+            {[
+              { value: stats.totalTenants, label: "Lavaderos" },
+              { value: stats.totalOrders, label: "Ordenes Procesadas" },
+              { value: stats.totalClients, label: "Clientes Registrados" },
+              { value: stats.totalVehicles, label: "Vehiculos" },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-3xl font-bold text-blue-600">
+                  {s.value.toLocaleString()}+
+                </p>
+                <p className="mt-1 text-sm text-gray-600">{s.label}</p>
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -138,15 +138,21 @@ export default function LandingPage() {
           Todo lo que necesitas para tu lavadero
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-gray-600">
-          Funcionalidades pensadas para que administres tu negocio de forma eficiente
+          Funcionalidades pensadas para que administres tu negocio de forma
+          eficiente
         </p>
         <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="rounded-xl border border-gray-200 p-6 transition-shadow hover:shadow-md">
+            <div
+              key={f.title}
+              className="rounded-xl border border-gray-200 p-6 transition-shadow hover:shadow-md"
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
                 <f.icon className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">{f.title}</h3>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">
+                {f.title}
+              </h3>
               <p className="mt-2 text-sm text-gray-600">{f.desc}</p>
             </div>
           ))}
@@ -154,9 +160,14 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="border-t border-gray-100 bg-gray-50 px-6 py-20">
+      <section
+        id="pricing"
+        className="border-t border-gray-100 bg-gray-50 px-6 py-20"
+      >
         <div className="mx-auto max-w-6xl">
-          <h2 className="text-center text-3xl font-bold text-gray-900">Planes y Precios</h2>
+          <h2 className="text-center text-3xl font-bold text-gray-900">
+            Planes y Precios
+          </h2>
           <p className="mx-auto mt-4 max-w-2xl text-center text-gray-600">
             Elige el plan que mejor se adapte a tu negocio
           </p>
@@ -167,7 +178,9 @@ export default function LandingPage() {
                 <div
                   key={plan.id}
                   className={`relative rounded-xl border-2 bg-white p-8 ${
-                    isFree ? "border-blue-600 shadow-lg" : "border-gray-200"
+                    isFree
+                      ? "border-blue-600 shadow-lg"
+                      : "border-gray-200"
                   }`}
                 >
                   {isFree && (
@@ -177,12 +190,18 @@ export default function LandingPage() {
                       </span>
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {plan.name}
+                  </h3>
                   {plan.description && (
-                    <p className="mt-2 text-sm text-gray-600">{plan.description}</p>
+                    <p className="mt-2 text-sm text-gray-600">
+                      {plan.description}
+                    </p>
                   )}
                   <p className="mt-4 text-4xl font-extrabold text-gray-900">
-                    {isFree ? "Gratis" : `$${Number(plan.price).toLocaleString("es-CO")}`}
+                    {isFree
+                      ? "Gratis"
+                      : `$${Number(plan.price).toLocaleString("es-CO")}`}
                     {!isFree && (
                       <span className="text-base font-normal text-gray-500">
                         /{plan.interval === "MONTHLY" ? "mes" : "ano"}
@@ -200,7 +219,10 @@ export default function LandingPage() {
                     </li>
                     {Array.isArray(plan.features) &&
                       (plan.features as string[]).map((f, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                        <li
+                          key={i}
+                          className="flex items-center gap-2 text-sm text-gray-600"
+                        >
                           <Check className="h-4 w-4 text-green-500" />
                           {f}
                         </li>
@@ -231,7 +253,8 @@ export default function LandingPage() {
             Comienza Ahora
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-blue-100">
-            Unete a los lavaderos que ya gestionan su negocio de forma inteligente. Sin tarjeta de credito.
+            Unete a los lavaderos que ya gestionan su negocio de forma
+            inteligente. Sin tarjeta de credito.
           </p>
           <Link
             href="/register?plan=prueba-gratis"
@@ -254,11 +277,15 @@ export default function LandingPage() {
               <span className="font-bold text-gray-900">Car Wash</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link href="/login" className="hover:text-gray-700">Iniciar Sesion</Link>
-              <Link href="/register" className="hover:text-gray-700">Registrarse</Link>
+              <Link href="/login" className="hover:text-gray-700">
+                Iniciar Sesion
+              </Link>
+              <Link href="/register" className="hover:text-gray-700">
+                Registrarse
+              </Link>
             </div>
             <p className="text-sm text-gray-500">
-              &copy; {new Date().getFullYear()} Car Wash. Todos los derechos reservados.
+              &copy; {currentYear} Car Wash. Todos los derechos reservados.
             </p>
           </div>
         </div>

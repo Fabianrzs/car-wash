@@ -4,7 +4,15 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
-import { buildTenantUrl, extractTenantSlugFromHost } from "@/lib/domain";
+import {
+  buildTenantUrl,
+  extractTenantSlugFromHost,
+  supportsSubdomains,
+} from "@/lib/domain";
+import {
+  getSelectedTenant,
+  setSelectedTenant as saveTenantCookie,
+} from "@/lib/tenant-cookie";
 import Modal from "@/components/ui/Modal";
 import { Search, Building2, Shield } from "lucide-react";
 
@@ -42,13 +50,18 @@ export default function TenantSelectorModal() {
     }
   }, []);
 
-  // Show modal only for SUPER_ADMIN without a tenant subdomain
+  // Show modal only for SUPER_ADMIN without a tenant context
   useEffect(() => {
     if (!isSuperAdmin) return;
+
+    // Check subdomain first
     const currentSlug = extractTenantSlugFromHost(window.location.host);
-    if (!currentSlug) {
-      setIsOpen(true);
-    }
+    if (currentSlug) return;
+
+    // Check selected-tenant cookie
+    if (getSelectedTenant()) return;
+
+    setIsOpen(true);
   }, [isSuperAdmin]);
 
   // Fetch tenants on open and on search change
@@ -62,9 +75,19 @@ export default function TenantSelectorModal() {
 
   const handleConfirm = () => {
     if (!selectedTenant) return;
-    const tenantUrl = buildTenantUrl(selectedTenant.slug, window.location.pathname);
-    // Redirect via session-relay to set auth cookie on the tenant subdomain
-    window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(tenantUrl)}`;
+
+    if (supportsSubdomains()) {
+      // Subdomains work → redirect via session-relay to set cookie on subdomain
+      const tenantUrl = buildTenantUrl(
+        selectedTenant.slug,
+        window.location.pathname
+      );
+      window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(tenantUrl)}`;
+    } else {
+      // No subdomains (Vercel, IP) → set cookie on current origin and reload
+      saveTenantCookie(selectedTenant.slug);
+      window.location.reload();
+    }
   };
 
   const handleGoToAdmin = () => {
@@ -119,7 +142,9 @@ export default function TenantSelectorModal() {
                 <Building2 className="h-5 w-5 shrink-0 text-gray-400" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{tenant.name}</p>
-                  <p className="truncate text-xs text-gray-500">{tenant.slug}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {tenant.slug}
+                  </p>
                 </div>
               </button>
             ))

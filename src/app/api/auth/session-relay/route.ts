@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decode } from "next-auth/jwt";
-import { getProtocol } from "@/lib/domain";
+import { getProtocol, getCookieDomain } from "@/lib/domain";
 
 const COOKIE_NAME = "next-auth.session-token";
 
@@ -48,11 +48,13 @@ export async function GET(request: NextRequest) {
     const destination = new URL(callbackUrl, baseUrl);
     const response = NextResponse.redirect(destination);
 
+    const cookieDomain = getCookieDomain();
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
       secure: process.env.NODE_ENV === "production",
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
     });
 
     return response;
