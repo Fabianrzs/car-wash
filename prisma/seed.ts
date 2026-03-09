@@ -80,7 +80,6 @@ async function main() {
     },
   });
 
-  console.log(`Planes creados: ${trialPlan.name}, ${basicPlan.name}, ${proPlan.name}, ${enterprisePlan.name}`);
 
   // =============================================
   // 2. Create Super Admin
@@ -436,13 +435,12 @@ async function main() {
   console.log("  Password general tenants: password123");
   console.log("\nTenants creados:");
   for (const td of tenantsData) {
-    console.log(`  - ${td.name}: ${td.slug}.localhost:3000 (Owner: ${td.owner.email})`);
+    console.log(`  - ${td.name} (slug: ${td.slug}) - Owner: ${td.owner.email}`);
   }
-  console.log("\nPara acceder a un tenant, usa el subdominio:");
-  console.log("  http://demo.localhost:3000/dashboard");
-  console.log("  http://aqua-shine.localhost:3000/dashboard");
-  console.log("  http://clean-express.localhost:3000/dashboard");
-  console.log("  etc.");
+  console.log("\nPara acceder:");
+  console.log("  1. Ingresa a http://localhost:3000/login");
+  console.log("  2. Usa las credenciales del owner o empleado del tenant");
+  console.log("  3. Si el usuario tiene acceso a varios tenants, selecciona uno en el modal");
 }
 
 main()
