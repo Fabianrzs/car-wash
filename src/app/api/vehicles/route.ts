@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { vehicleSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, requireActivePlan, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireActivePlan, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener vehiculos:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(vehicle, { status: 201 });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de vehiculo invalidos", details: error },

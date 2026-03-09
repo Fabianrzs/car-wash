@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import {
-  buildTenantUrl,
-  extractTenantSlugFromHost,
-  supportsSubdomains,
-} from "@/lib/domain";
 
-// Routes that require a tenant context (subdomain)
+// Routes that require a tenant context
 const TENANT_ROUTES = [
   "/dashboard",
   "/clients",
@@ -68,19 +63,18 @@ export async function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
+  const isSecure = process.env.NODE_ENV === "production";
+  const cookieName = isSecure
+    ? "__Secure-next-auth.session-token"
+    : "next-auth.session-token";
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
-    cookieName: "next-auth.session-token",
-    salt: "next-auth.session-token",
+    cookieName,
+    salt: cookieName,
   });
   const isLoggedIn = !!token;
-
-  // ─── Detect hostname & subdomain support early ───
-  const hostname = request.headers.get("host") || "";
-  const hostOnly = hostname.replace(/:\d+$/, "");
-  const canSubdomain = supportsSubdomains(hostOnly);
-  const tenantSlug = extractTenantSlugFromHost(hostname);
 
   // ─── Super admin routes: require SUPER_ADMIN role ───
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
@@ -103,100 +97,52 @@ export async function middleware(request: NextRequest) {
   }
 
   // ─── Logged in + on login/register → redirect away ───
-  if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
-    // Super admin goes to admin panel
+  if (isLoggedIn && isPublicRoute) {
     if (token?.globalRole === "SUPER_ADMIN") {
       return NextResponse.redirect(new URL("/admin", request.nextUrl));
     }
-    // User with tenant
     if (token?.tenantSlug) {
-      if (canSubdomain) {
-        // Redirect via session-relay to tenant subdomain
-        const dashboardUrl = buildTenantUrl(token.tenantSlug, "/dashboard");
-        const relayUrl = new URL("/api/auth/session-relay", request.nextUrl);
-        relayUrl.searchParams.set("callbackUrl", dashboardUrl);
-        return NextResponse.redirect(relayUrl);
-      }
-      // No subdomains → redirect directly to dashboard (tenant from JWT)
       return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
     }
-    // User without tenantSlug — let them access login to re-authenticate
     return NextResponse.next();
   }
 
-  // ─── Tenant routes WITHOUT subdomain → resolve tenant context ───
-  if (
-    !tenantSlug &&
-    isLoggedIn &&
-    (isTenantRoute(pathname) || isTenantApiRoute(pathname))
-  ) {
-    // Super admin: use selected-tenant cookie to inject tenant context
+  // ─── Tenant routes → inject tenant context from session or cookie ───
+  if (isLoggedIn && (isTenantRoute(pathname) || isTenantApiRoute(pathname))) {
+    let tenantSlug: string | null = null;
+
     if (token?.globalRole === "SUPER_ADMIN") {
-      const selectedTenant = request.cookies.get("selected-tenant")?.value;
+      // SUPER_ADMIN: tenant comes from selected-tenant cookie
+      tenantSlug = request.cookies.get("selected-tenant")?.value ?? null;
 
-      if (selectedTenant) {
-        const requestHeaders = new Headers(request.headers);
-        requestHeaders.set("x-tenant-slug", selectedTenant);
-        return NextResponse.next({
-          request: { headers: requestHeaders },
-        });
+      if (!tenantSlug) {
+        if (isTenantApiRoute(pathname)) {
+          return NextResponse.json(
+            { error: "Selecciona un lavadero primero." },
+            { status: 400 }
+          );
+        }
+        // No cookie → let through (TenantSelectorModal will appear)
+        return NextResponse.next();
       }
+    } else {
+      // Regular user: tenant comes from JWT session
+      tenantSlug = (token?.tenantSlug as string) ?? null;
 
-      // No cookie + API route → error
-      if (isTenantApiRoute(pathname)) {
-        return NextResponse.json(
-          { error: "Selecciona un lavadero primero." },
-          { status: 400 }
-        );
+      if (!tenantSlug) {
+        if (isTenantApiRoute(pathname)) {
+          return NextResponse.json(
+            { error: "Tenant no especificado." },
+            { status: 400 }
+          );
+        }
+        return NextResponse.redirect(new URL("/login", request.nextUrl));
       }
-
-      // No cookie + page route → let through (modal will show)
-      return NextResponse.next();
     }
 
-    // Regular user with tenantSlug in JWT
-    if (token?.tenantSlug) {
-      if (canSubdomain) {
-        // Redirect to tenant subdomain via session-relay
-        const tenantUrl = buildTenantUrl(
-          token.tenantSlug,
-          pathname + request.nextUrl.search
-        );
-        const relayUrl = new URL("/api/auth/session-relay", request.nextUrl);
-        relayUrl.searchParams.set("callbackUrl", tenantUrl);
-        return NextResponse.redirect(relayUrl);
-      }
-
-      // No subdomains → inject tenant header from JWT directly
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set("x-tenant-slug", token.tenantSlug);
-      return NextResponse.next({
-        request: { headers: requestHeaders },
-      });
-    }
-
-    // User has no tenant
-    if (isTenantApiRoute(pathname)) {
-      return NextResponse.json(
-        {
-          error:
-            "Tenant no especificado. Accede desde el subdominio de tu lavadero.",
-        },
-        { status: 400 }
-      );
-    }
-    return NextResponse.redirect(new URL("/login", request.nextUrl));
-  }
-
-  // ─── Inject tenant slug header when we have a subdomain ───
-  if (tenantSlug) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-tenant-slug", tenantSlug);
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   return NextResponse.next();

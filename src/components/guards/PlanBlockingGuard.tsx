@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, CreditCard, ShieldOff, Clock } from "lucide-react";
+
+const CACHE_TTL_MS = 60_000; // 1 minute
 
 interface PlanStatus {
   isBlocked: boolean;
@@ -57,22 +59,47 @@ const BLOCK_CONFIG: Record<string, {
   },
 };
 
+// Module-level cache shared across navigations within the same session
+let cachedStatus: PlanStatus | null = null;
+let cacheExpiresAt = 0;
+
 export default function PlanBlockingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
+  const [planStatus, setPlanStatus] = useState<PlanStatus | null>(cachedStatus);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
+    const now = Date.now();
+
+    // Use cached value if still fresh
+    if (cachedStatus && now < cacheExpiresAt) {
+      setPlanStatus(cachedStatus);
+      return;
+    }
+
+    // Avoid parallel fetches on rapid navigation
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     fetch("/api/tenant/plan-status")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
       })
-      .then(setPlanStatus)
+      .then((status: PlanStatus) => {
+        cachedStatus = status;
+        cacheExpiresAt = Date.now() + CACHE_TTL_MS;
+        setPlanStatus(status);
+      })
       .catch(() => {
         // Fail-open: don't block on network errors
-        setPlanStatus({ isBlocked: false, reason: null, trialEndsAt: null, planName: null, daysLeft: null, pendingInvoiceId: null });
-      });
+        const fallback: PlanStatus = { isBlocked: false, reason: null, trialEndsAt: null, planName: null, daysLeft: null, pendingInvoiceId: null };
+        cachedStatus = fallback;
+        cacheExpiresAt = Date.now() + CACHE_TTL_MS;
+        setPlanStatus(fallback);
+      })
+      .finally(() => { fetchingRef.current = false; });
   }, [pathname]);
 
   // Don't block exempt paths
@@ -122,31 +149,29 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
   const config = BLOCK_CONFIG[planStatus.reason!] || BLOCK_CONFIG.no_plan;
   const Icon = config.icon;
 
+  // Don't render children when blocked — keep sensitive content out of the DOM
   return (
-    <>
-      {children}
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <Icon className="h-8 w-8 text-red-600" />
-          </div>
-          <h2 className="mb-2 text-xl font-bold text-gray-900">{config.title}</h2>
-          <p className="mb-6 text-sm text-gray-600">{config.description}</p>
-          {config.showButton && (
-            <button
-              onClick={() => {
-                const path = planStatus.pendingInvoiceId
-                  ? `/billing/invoices/${planStatus.pendingInvoiceId}`
-                  : config.buttonPath;
-                router.push(path);
-              }}
-              className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-            >
-              {config.buttonLabel}
-            </button>
-          )}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+          <Icon className="h-8 w-8 text-red-600" />
         </div>
+        <h2 className="mb-2 text-xl font-bold text-gray-900">{config.title}</h2>
+        <p className="mb-6 text-sm text-gray-600">{config.description}</p>
+        {config.showButton && (
+          <button
+            onClick={() => {
+              const path = planStatus.pendingInvoiceId
+                ? `/billing/invoices/${planStatus.pendingInvoiceId}`
+                : config.buttonPath;
+              router.push(path);
+            }}
+            className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            {config.buttonLabel}
+          </button>
+        )}
       </div>
-    </>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(
   request: Request,
@@ -64,7 +64,7 @@ export async function GET(
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener historial del cliente:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

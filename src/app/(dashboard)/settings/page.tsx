@@ -8,6 +8,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -35,6 +36,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     setSuccess(false);
+    setSaveError("");
 
     try {
       const res = await fetch("/api/tenant/settings", {
@@ -46,7 +48,12 @@ export default function SettingsPage() {
       if (res.ok) {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error || "Error al guardar la configuracion");
       }
+    } catch {
+      setSaveError("Error de conexion. Intenta de nuevo.");
     } finally {
       setSaving(false);
     }
@@ -105,6 +112,9 @@ export default function SettingsPage() {
 
         {success && (
           <p className="text-sm text-green-600">Configuracion actualizada correctamente</p>
+        )}
+        {saveError && (
+          <p className="text-sm text-red-600">{saveError}</p>
         )}
 
         <button

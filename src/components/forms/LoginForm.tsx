@@ -3,17 +3,18 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Droplets } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
-import { buildTenantUrl, supportsSubdomains } from "@/lib/domain";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,20 +31,11 @@ export default function LoginForm() {
       if (result?.error) {
         setError("Credenciales inválidas. Verifica tu correo y contraseña.");
       } else {
-        const res = await fetch("/api/auth/session");
-        const session = await res.json();
-        if (session?.user?.globalRole === "SUPER_ADMIN") {
-          window.location.href = "/dashboard";
-        } else if (session?.user?.tenantSlug) {
-          if (supportsSubdomains()) {
-            const dashboardUrl = buildTenantUrl(session.user.tenantSlug, "/dashboard");
-            window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(dashboardUrl)}`;
-          } else {
-            window.location.href = "/dashboard";
-          }
-        } else {
-          window.location.href = "/dashboard";
-        }
+        const rawCallback = searchParams.get("callbackUrl");
+        // Only allow relative paths to prevent open redirect
+        const destination =
+          rawCallback && rawCallback.startsWith("/") ? rawCallback : "/dashboard";
+        window.location.href = destination;
       }
     } catch {
       setError("Ocurrió un error. Intenta de nuevo.");

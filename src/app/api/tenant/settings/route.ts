@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { tenantSettingsSchema } from "@/lib/validations";
 
 export async function GET(request: Request) {
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(tenant);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener configuracion:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -52,7 +52,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(tenant);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al actualizar configuracion:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

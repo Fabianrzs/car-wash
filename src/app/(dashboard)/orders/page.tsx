@@ -14,6 +14,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
 import { Plus, Eye } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const STATUS_TABS = [
   { label: "Todas", value: "" },
@@ -43,25 +44,31 @@ export default function OrdersPage() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const params = new URLSearchParams({ page: String(page) });
-      if (search) params.set("search", search);
-      if (status) params.set("status", status);
-      const data = await fetchApi<{ orders: Order[]; pages: number }>(`/api/orders?${params}`);
-      setOrders(data.orders || []);
-      setTotalPages(data.pages || 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar ordenes");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchOrders(); }, [page, search, status]);
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams({ page: String(page) });
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (status) params.set("status", status);
+        const data = await fetchApi<{ orders: Order[]; pages: number }>(`/api/orders?${params}`);
+        if (!cancelled) {
+          setOrders(data.orders || []);
+          setTotalPages(data.pages || 1);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar ordenes");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [page, debouncedSearch, status]);
 
   const badgeVariant = (s: string) =>
     s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";

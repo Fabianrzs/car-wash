@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
 
 export async function GET(request: Request) {
@@ -100,14 +101,17 @@ export async function POST(request: Request) {
         let user = await tx.user.findUnique({ where: { email: ownerEmail } });
 
         if (!user) {
-          const tempPassword = await bcrypt.hash("changeme123", 10);
+          const tempPassword = randomBytes(16).toString("hex");
+          const hashedPassword = await bcrypt.hash(tempPassword, 12);
           user = await tx.user.create({
             data: {
               email: ownerEmail,
               name: ownerEmail.split("@")[0],
-              password: tempPassword,
+              password: hashedPassword,
             },
           });
+          // TODO: Send tempPassword to ownerEmail via email notification
+          console.info(`[ADMIN] Created user for ${ownerEmail}. They must reset their password.`);
         }
 
         await tx.tenantUser.create({

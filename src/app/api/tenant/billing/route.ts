@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus, TenantError } from "@/lib/tenant";
 import { createPlanInvoice, calculateNextPeriod, getCurrentPeriodEnd, hasPendingInvoice, createInvoiceReminders } from "@/lib/invoice";
 import { createBillingPortalSession } from "@/lib/stripe";
 import { buildTenantUrl } from "@/lib/domain";
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       scheduledChange,
     });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener facturacion:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "Accion no valida" }, { status: 400 });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error en facturacion:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

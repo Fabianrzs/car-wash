@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { generatePayUReferenceCode } from "@/lib/invoice";
 import { createPSEPayment, createCreditCardPayment } from "@/lib/payu";
 import { markInvoicePaid } from "@/lib/invoice";
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
       responseCode: paymentResult.responseCode,
     }, { status: 201 });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al crear pago:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Error al procesar el pago" },

@@ -3,8 +3,22 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
 import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  // Rate limit: 10 registration attempts per IP per hour
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`register:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Intenta de nuevo en una hora." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const validatedData = registerSchema.parse(body);

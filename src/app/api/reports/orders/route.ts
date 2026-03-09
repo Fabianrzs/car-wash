@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error en reporte de ordenes:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

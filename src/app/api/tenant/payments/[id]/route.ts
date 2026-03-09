@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { queryTransactionByReference } from "@/lib/payu";
 import { markInvoicePaid } from "@/lib/invoice";
 
@@ -78,7 +78,7 @@ export async function GET(
 
     return NextResponse.json(payment);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener pago:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

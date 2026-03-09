@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,7 @@ export async function GET(
 
     return NextResponse.json(invoice);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener factura:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

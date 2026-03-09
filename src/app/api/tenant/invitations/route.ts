@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(invitations);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener invitaciones:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

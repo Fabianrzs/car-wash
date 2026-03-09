@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { orderStatusSchema } from "@/lib/validations";
 import type { OrderStatus } from "@/generated/prisma/client";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function PATCH(
   request: Request,
@@ -119,7 +119,7 @@ export async function PATCH(
 
     return NextResponse.json(order);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Estado de orden invalido", details: error },

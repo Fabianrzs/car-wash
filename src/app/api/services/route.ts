@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { serviceTypeSchema } from "@/lib/validations";
 import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, requireTenantMember, requireActivePlan, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, requireActivePlan, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(services);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener servicios:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(service, { status: 201 });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de servicio invalidos", details: error },

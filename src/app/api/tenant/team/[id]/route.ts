@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function PUT(
   request: Request,
@@ -46,7 +46,7 @@ export async function PUT(
 
     return NextResponse.json(member);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al actualizar miembro:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -91,7 +91,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Miembro removido correctamente" });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al remover miembro:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

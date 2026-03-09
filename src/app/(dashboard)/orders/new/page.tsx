@@ -10,6 +10,7 @@ import Spinner from "@/components/ui/Spinner";
 import { formatCurrency } from "@/lib/utils";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { useDebounce } from "@/hooks/useDebounce";
+import Alert from "@/components/ui/Alert";
 import { ArrowLeft, ArrowRight, Check, Search } from "lucide-react";
 
 interface Client {
@@ -55,13 +56,18 @@ export default function NewOrderPage() {
 
   // Step 4: Notes
   const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
 
   const debouncedSearch = useDebounce(clientSearch, 300);
 
   useEffect(() => {
     fetch("/api/services?active=true")
-      .then((r) => r.json())
-      .then((data) => setServices(Array.isArray(data) ? data : []));
+      .then((r) => {
+        if (!r.ok) throw new Error("Error al cargar servicios");
+        return r.json();
+      })
+      .then((data) => setServices(Array.isArray(data) ? data : []))
+      .catch((err) => setError(err.message || "Error al cargar servicios"));
   }, []);
 
   useEffect(() => {
@@ -105,6 +111,7 @@ export default function NewOrderPage() {
   const handleSubmit = async () => {
     if (!selectedClient || !selectedVehicleId || selectedServices.length === 0) return;
     setSubmitting(true);
+    setError("");
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -125,11 +132,11 @@ export default function NewOrderPage() {
         router.push(`/orders/${data.id}`);
       } else {
         const data = await res.json();
-        alert(data.error || "Error al crear la orden");
+        setError(data.error || "Error al crear la orden");
         setSubmitting(false);
       }
     } catch {
-      alert("Error de conexion. Intenta de nuevo.");
+      setError("Error de conexion. Intenta de nuevo.");
       setSubmitting(false);
     }
   };
@@ -137,6 +144,8 @@ export default function NewOrderPage() {
   return (
     <div className="p-6">
       <PageHeader title="Nueva Orden" description={`Paso ${step} de 4`} />
+
+      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mx-auto mt-6 max-w-3xl">
         {/* Progress bar */}

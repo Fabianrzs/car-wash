@@ -5,7 +5,7 @@ import { orderSchema } from "@/lib/validations";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { generateOrderNumber } from "@/lib/order-number";
 import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, requireActivePlan, handleTenantError } from "@/lib/tenant";
+import { requireTenant, requireActivePlan, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(request: Request) {
   try {
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / ITEMS_PER_PAGE),
     });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener ordenes:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -131,6 +131,25 @@ export async function POST(request: Request) {
 
       if (serviceTypes.length !== serviceTypeIds.length) {
         throw new Error("Uno o mas servicios no son validos o estan inactivos");
+      }
+
+      // Validate client and vehicle belong to this tenant
+      const [clientExists, vehicleExists] = await Promise.all([
+        tx.client.findFirst({
+          where: { id: validatedData.clientId, tenantId },
+          select: { id: true },
+        }),
+        tx.vehicle.findFirst({
+          where: { id: validatedData.vehicleId, tenantId },
+          select: { id: true },
+        }),
+      ]);
+
+      if (!clientExists) {
+        throw new Error("El cliente no pertenece a este lavadero");
+      }
+      if (!vehicleExists) {
+        throw new Error("El vehiculo no pertenece a este lavadero");
       }
 
       const priceMap = new Map(
@@ -199,7 +218,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de orden invalidos", details: error },
@@ -207,7 +226,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (error instanceof Error && error.message.includes("no son validos")) {
+    if (error instanceof Error && (
+      error.message.includes("no son validos") ||
+      error.message.includes("no pertenece")
+    )) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

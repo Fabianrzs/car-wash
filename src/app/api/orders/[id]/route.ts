@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 
 const updateOrderNotesSchema = z.object({
   notes: z.string().max(1000).optional().or(z.literal("")),
@@ -68,7 +68,7 @@ export async function GET(
 
     return NextResponse.json(order);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener orden:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -140,7 +140,7 @@ export async function PUT(
 
     return NextResponse.json(order);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de orden invalidos", details: error },

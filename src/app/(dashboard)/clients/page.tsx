@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Eye, Plus, Search } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
@@ -21,6 +20,7 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface Client {
   id: string;
@@ -36,7 +36,6 @@ interface Client {
 }
 
 export default function ClientsPage() {
-  const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,31 +43,32 @@ export default function ClientsPage() {
   const [filterFrequent, setFilterFrequent] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
-    fetchClients();
-  }, [page, search, filterFrequent]);
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams({ page: String(page) });
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (filterFrequent) params.set("isFrequent", "true");
 
-  async function fetchClients() {
-    setLoading(true);
-    setError("");
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(ITEMS_PER_PAGE),
-      });
-      if (search) params.set("search", search);
-      if (filterFrequent) params.set("isFrequent", "true");
-
-      const data = await fetchApi<{ clients: Client[]; pages?: number; totalPages?: number }>(`/api/clients?${params}`);
-      setClients(data.clients || []);
-      setTotalPages(data.pages || data.totalPages || 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar clientes");
-    } finally {
-      setLoading(false);
-    }
-  }
+        const data = await fetchApi<{ clients: Client[]; pages?: number; totalPages?: number }>(`/api/clients?${params}`);
+        if (!cancelled) {
+          setClients(data.clients || []);
+          setTotalPages(data.pages || data.totalPages || 1);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar clientes");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [page, debouncedSearch, filterFrequent]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearch(e.target.value);

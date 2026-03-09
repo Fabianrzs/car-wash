@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { clientSchema } from "@/lib/validations";
-import { requireTenant, handleTenantError } from "@/lib/tenant";
+import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 
 export async function GET(
   request: Request,
@@ -70,7 +70,7 @@ export async function GET(
 
     return NextResponse.json(client);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener cliente:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
@@ -121,7 +121,7 @@ export async function PUT(
 
     return NextResponse.json(client);
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
       return NextResponse.json(
         { error: "Datos de cliente invalidos", details: error },
@@ -188,7 +188,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Cliente eliminado correctamente" });
   } catch (error) {
-    try { return handleTenantError(error); } catch {}
+    if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al eliminar cliente:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },

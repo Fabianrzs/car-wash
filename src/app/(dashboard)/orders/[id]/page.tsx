@@ -10,6 +10,7 @@ import Spinner from "@/components/ui/Spinner";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import Alert from "@/components/ui/Alert";
 import { Play, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 
 interface OrderDetail {
@@ -39,39 +40,69 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState("");
 
-  const fetchOrder = async () => {
-    const res = await fetch(`/api/orders/${params.id}`);
-    if (res.ok) setOrder(await res.json());
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchOrder(); }, [params.id]);
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch(`/api/orders/${params.id}`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (!cancelled) setError(data.error || "Error al cargar la orden");
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setOrder(data);
+      } catch {
+        if (!cancelled) setError("Error de conexion");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [params.id]);
 
   const updateStatus = async (newStatus: string) => {
     setUpdating(true);
-    const res = await fetch(`/api/orders/${params.id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    if (res.ok) {
-      await fetchOrder();
-    } else {
-      const data = await res.json();
-      alert(data.error || "Error al actualizar estado");
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${params.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOrder(updated);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Error al actualizar estado");
+      }
+    } catch {
+      setError("Error de conexion al actualizar estado");
+    } finally {
+      setUpdating(false);
     }
-    setUpdating(false);
   };
 
   const badgeVariant = (s: string) =>
     s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
 
   if (loading) return <div className="flex justify-center p-12"><Spinner size="lg" /></div>;
+  if (error && !order) return (
+    <div className="p-6">
+      <Alert variant="error">{error}</Alert>
+    </div>
+  );
   if (!order) return <div className="p-6 text-center text-gray-500">Orden no encontrada</div>;
 
   return (
     <div className="p-6">
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
       <PageHeader title={`Orden ${order.orderNumber}`}>
         <Button variant="secondary" onClick={() => router.push("/orders")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Volver
