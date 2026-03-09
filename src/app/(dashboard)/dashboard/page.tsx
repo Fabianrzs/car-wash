@@ -61,11 +61,19 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const [dailyData, ordersData] = await Promise.all([
-          fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
-          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch(() => null),
+          fetchApi<ReportStats>("/api/reports?period=daily").catch((err) => {
+            console.error("Error al cargar stats:", err);
+            return null;
+          }),
+          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch((err) => {
+            console.error("Error al cargar ordenes recientes:", err);
+            return null;
+          }),
         ]);
 
         if (dailyData) setStats(dailyData);
+        else setError("No se pudieron cargar las estadisticas del dia.");
+
         if (ordersData) setRecentOrders((ordersData.orders || []).slice(0, 10));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar datos");

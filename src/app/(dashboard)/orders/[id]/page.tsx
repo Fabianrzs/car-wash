@@ -50,6 +50,10 @@ export default function OrderDetailPage() {
       try {
         const res = await fetch(`/api/orders/${params.id}`);
         if (!res.ok) {
+          if (res.status === 404) {
+            if (!cancelled) router.replace("/orders");
+            return;
+          }
           const data = await res.json().catch(() => ({}));
           if (!cancelled) setError(data.error || "Error al cargar la orden");
           return;

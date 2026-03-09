@@ -19,11 +19,25 @@ export default function VehicleDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/vehicles/${params.id}`)
-      .then((r) => r.json())
-      .then((data) => { setVehicle(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [params.id]);
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/vehicles/${params.id}`);
+        if (res.status === 404) {
+          if (!cancelled) router.replace("/vehicles");
+          return;
+        }
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setVehicle(data);
+        }
+      } catch { /* ignore */ } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [params.id, router]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -31,7 +45,7 @@ export default function VehicleDetailPage() {
     if (res.ok) {
       router.push("/vehicles");
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       alert(data.error || "Error al eliminar");
       setDeleting(false);
       setShowDelete(false);

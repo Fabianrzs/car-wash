@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/components/layout/PageHeader";
 import ClientForm from "@/components/forms/ClientForm";
@@ -49,18 +49,22 @@ export default function ClientDetailPage() {
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchClient = async () => {
+  const fetchClient = useCallback(async () => {
     const res = await fetch(`/api/clients/${params.id}`);
+    if (res.status === 404) {
+      router.replace("/clients");
+      return;
+    }
     if (res.ok) {
       const data = await res.json();
       setClient(data);
     }
     setLoading(false);
-  };
+  }, [params.id, router]);
 
   useEffect(() => {
     fetchClient();
-  }, [params.id]);
+  }, [fetchClient]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -68,7 +72,7 @@ export default function ClientDetailPage() {
     if (res.ok) {
       router.push("/clients");
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       alert(data.error || "Error al eliminar");
       setDeleting(false);
       setShowDelete(false);

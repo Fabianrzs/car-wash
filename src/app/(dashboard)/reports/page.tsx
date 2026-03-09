@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -72,45 +72,52 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const buildParams = () => {
+  const buildParams = useCallback(() => {
     const params = new URLSearchParams({ period });
     if (period === "custom" && startDate && endDate) {
       params.set("startDate", startDate);
       params.set("endDate", endDate);
     }
     return params;
-  };
+  }, [period, startDate, endDate]);
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
-    const params = buildParams();
-    const res = await fetch(`/api/reports?${params}`);
-    if (res.ok) setData(await res.json());
-    setLoading(false);
-  };
+    try {
+      const params = buildParams();
+      const res = await fetch(`/api/reports?${params}`);
+      if (res.ok) setData(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [buildParams]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoadingOrders(true);
-    const params = buildParams();
-    if (statusFilter) params.set("status", statusFilter);
-    if (searchQuery) params.set("search", searchQuery);
-    const res = await fetch(`/api/reports/orders?${params}`);
-    if (res.ok) setOrdersData(await res.json());
-    setLoadingOrders(false);
-  };
+    try {
+      const params = buildParams();
+      if (statusFilter) params.set("status", statusFilter);
+      if (searchQuery) params.set("search", searchQuery);
+      const res = await fetch(`/api/reports/orders?${params}`);
+      if (res.ok) setOrdersData(await res.json());
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, [buildParams, statusFilter, searchQuery]);
 
+  // Fetch on period change (skip custom until user explicitly triggers)
   useEffect(() => {
     if (period !== "custom") {
       fetchReport();
-      if (tab === "detalle") fetchOrders();
     }
-  }, [period]);
+  }, [period, fetchReport]);
 
+  // Fetch orders when switching to detail tab (if not already loaded for this period)
   useEffect(() => {
-    if (tab === "detalle" && !ordersData && period !== "custom") {
+    if (tab === "detalle" && period !== "custom") {
       fetchOrders();
     }
-  }, [tab]);
+  }, [tab, period, fetchOrders]);
 
   const handleCustomSearch = () => {
     if (startDate && endDate) {
