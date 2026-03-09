@@ -1,7 +1,6 @@
 import { headers, cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { extractTenantSlugFromHost } from "@/lib/domain";
 
 export interface TenantPlanStatus {
   isBlocked: boolean;
@@ -104,13 +103,11 @@ export async function requireActivePlan(
 
 export async function getTenantSlugFromHeaders(): Promise<string | null> {
   const headersList = await headers();
-  const slug =
-    headersList.get("x-tenant-slug") ??
-    extractTenantSlugFromHost(headersList.get("host") || "");
+  const slug = headersList.get("x-tenant-slug");
 
   if (slug) return slug;
 
-  // Fallback: read selected-tenant cookie (SUPER_ADMIN via IP without subdomain)
+  // Fallback: read selected-tenant cookie (SUPER_ADMIN without cookie injected by middleware)
   const cookieStore = await cookies();
   return cookieStore.get("selected-tenant")?.value ?? null;
 }
@@ -127,12 +124,10 @@ export async function requireTenant(requestHeaders?: Headers) {
 
   if (!slug) {
     const headersList = await headers();
-    slug =
-      headersList.get("x-tenant-slug") ??
-      extractTenantSlugFromHost(headersList.get("host") || "");
+    slug = headersList.get("x-tenant-slug");
   }
 
-  // Fallback: read selected-tenant cookie (SUPER_ADMIN via IP without subdomain)
+  // Fallback: read selected-tenant cookie
   if (!slug) {
     const cookieStore = await cookies();
     slug = cookieStore.get("selected-tenant")?.value ?? null;

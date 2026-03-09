@@ -5,11 +5,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
-  buildTenantUrl,
-  extractTenantSlugFromHost,
-  supportsSubdomains,
-} from "@/lib/domain";
-import {
   getSelectedTenant,
   setSelectedTenant as saveTenantCookie,
 } from "@/lib/tenant-cookie";
@@ -54,11 +49,6 @@ export default function TenantSelectorModal() {
   useEffect(() => {
     if (!isSuperAdmin) return;
 
-    // Check subdomain first
-    const currentSlug = extractTenantSlugFromHost(window.location.host);
-    if (currentSlug) return;
-
-    // Check selected-tenant cookie
     if (getSelectedTenant()) return;
 
     setIsOpen(true);
@@ -76,18 +66,8 @@ export default function TenantSelectorModal() {
   const handleConfirm = () => {
     if (!selectedTenant) return;
 
-    if (supportsSubdomains()) {
-      // Subdomains work → redirect via session-relay to set cookie on subdomain
-      const tenantUrl = buildTenantUrl(
-        selectedTenant.slug,
-        window.location.pathname
-      );
-      window.location.href = `/api/auth/session-relay?callbackUrl=${encodeURIComponent(tenantUrl)}`;
-    } else {
-      // No subdomains (Vercel, IP) → set cookie on current origin and reload
-      saveTenantCookie(selectedTenant.slug);
-      window.location.reload();
-    }
+    saveTenantCookie(selectedTenant.slug);
+    window.location.reload();
   };
 
   const handleGoToAdmin = () => {
