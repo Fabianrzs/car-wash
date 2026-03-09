@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Users, UserPlus, Mail, Trash2 } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 interface TeamMember {
   id: string;
@@ -29,6 +31,13 @@ export default function TeamPage() {
   const [inviteRole, setInviteRole] = useState("EMPLOYEE");
   const [inviting, setInviting] = useState(false);
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [removeModal, setRemoveModal] = useState<{ open: boolean; id: string; name: string }>({
+    open: false,
+    id: "",
+    name: "",
+  });
+  const [removing, setRemoving] = useState(false);
 
   // Check if current user is OWNER
   const currentMember = members.find((m) => m.user.id === session?.user?.id);
@@ -48,6 +57,11 @@ export default function TeamPage() {
 
   useEffect(() => { loadData(); }, []);
 
+  const showMessage = (text: string, error = false) => {
+    setMessage(text);
+    setIsError(error);
+  };
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviting(true);
@@ -61,11 +75,11 @@ export default function TeamPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("Invitacion enviada");
+        showMessage("Invitacion enviada");
         setInviteEmail("");
         loadData();
       } else {
-        setMessage(data.error || "Error al invitar");
+        showMessage(data.error || "Error al invitar", true);
       }
     } finally {
       setInviting(false);
@@ -81,25 +95,30 @@ export default function TeamPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      setMessage("Rol actualizado");
+      showMessage("Rol actualizado");
       loadData();
     } else {
-      setMessage(data.error || "Error al cambiar rol");
+      showMessage(data.error || "Error al cambiar rol", true);
     }
   };
 
-  const handleRemove = async (tenantUserId: string, userName: string) => {
-    if (!confirm(`¿Estas seguro de remover a ${userName}?`)) return;
-    setMessage("");
-    const res = await fetch(`/api/tenant/team?id=${tenantUserId}`, {
+  const confirmRemove = (id: string, name: string) => {
+    setRemoveModal({ open: true, id, name });
+  };
+
+  const handleRemove = async () => {
+    setRemoving(true);
+    const res = await fetch(`/api/tenant/team?id=${removeModal.id}`, {
       method: "DELETE",
     });
     const data = await res.json();
+    setRemoveModal({ open: false, id: "", name: "" });
+    setRemoving(false);
     if (res.ok) {
-      setMessage("Miembro removido");
+      showMessage("Miembro removido");
       loadData();
     } else {
-      setMessage(data.error || "Error al remover");
+      showMessage(data.error || "Error al remover", true);
     }
   };
 
@@ -114,37 +133,39 @@ export default function TeamPage() {
         <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Equipo</h1>
       </div>
 
-      {/* Invite form */}
-      <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row">
-        <div className="flex-1">
-          <input
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            placeholder="email@ejemplo.com"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <select
-          value={inviteRole}
-          onChange={(e) => setInviteRole(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2"
-        >
-          <option value="EMPLOYEE">Empleado</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-        <button
-          type="submit"
-          disabled={inviting || !inviteEmail}
-          className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
-        >
-          <UserPlus className="h-4 w-4" />
-          Invitar
-        </button>
-      </form>
+      {/* Invite form - only for OWNER */}
+      {isOwner && (
+        <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row">
+          <div className="flex-1">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="email@ejemplo.com"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
+          >
+            <option value="EMPLOYEE">Empleado</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+          <button
+            type="submit"
+            disabled={inviting || !inviteEmail}
+            className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
+          >
+            <UserPlus className="h-4 w-4" />
+            Invitar
+          </button>
+        </form>
+      )}
 
       {message && (
-        <p className={`mb-4 text-sm ${message.includes("Error") ? "text-red-600" : "text-green-600"}`}>
+        <p className={`mb-4 text-sm ${isError ? "text-red-600" : "text-green-600"}`}>
           {message}
         </p>
       )}
@@ -173,7 +194,7 @@ export default function TeamPage() {
                       <option value="EMPLOYEE">Empleado</option>
                     </select>
                     <button
-                      onClick={() => handleRemove(m.id, m.user.name || m.user.email)}
+                      onClick={() => confirmRemove(m.id, m.user.name || m.user.email)}
                       className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
                       title="Remover miembro"
                     >
@@ -223,6 +244,26 @@ export default function TeamPage() {
           </div>
         </div>
       )}
+
+      {/* Remove confirmation modal */}
+      <Modal
+        isOpen={removeModal.open}
+        onClose={() => setRemoveModal({ open: false, id: "", name: "" })}
+        title="Confirmar eliminacion"
+      >
+        <p className="mb-4 text-gray-600">
+          Estas seguro de remover a <strong>{removeModal.name}</strong> del equipo?
+          Esta accion no se puede deshacer.
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setRemoveModal({ open: false, id: "", name: "" })}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleRemove} loading={removing}>
+            Remover
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

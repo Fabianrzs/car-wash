@@ -69,6 +69,7 @@ export default function ReportsPage() {
   const [ordersData, setOrdersData] = useState<OrdersReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -83,10 +84,14 @@ export default function ReportsPage() {
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const params = buildParams();
       const res = await fetch(`/api/reports?${params}`);
       if (res.ok) setData(await res.json());
+      else setError("No se pudieron cargar los datos del reporte");
+    } catch {
+      setError("Error de conexion al cargar el reporte");
     } finally {
       setLoading(false);
     }
@@ -283,6 +288,10 @@ export default function ReportsPage() {
         <>
           {loading ? (
             <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+              <p className="text-red-700">{error}</p>
+            </div>
           ) : data ? (
             <>
               <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

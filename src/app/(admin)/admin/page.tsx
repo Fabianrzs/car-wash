@@ -38,16 +38,29 @@ interface Stats {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/stats")
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Error al cargar estadisticas");
+        return res.json();
+      })
       .then(setStats)
+      .catch((err) => setError(err instanceof Error ? err.message : "Error al cargar estadisticas"))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return <PageLoader color="text-purple-600" />;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+        <p className="text-red-700">{error}</p>
+      </div>
+    );
   }
 
   if (!stats) return null;
