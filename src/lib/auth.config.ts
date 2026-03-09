@@ -23,31 +23,36 @@ export default {
         });
         if (!rl.allowed) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: {
-            tenantUsers: {
-              where: { isActive: true },
-              include: { tenant: { select: { slug: true } } },
-              take: 1,
-              orderBy: { createdAt: "asc" },
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: {
+              tenantUsers: {
+                where: { isActive: true },
+                include: { tenant: { select: { slug: true } } },
+                take: 1,
+                orderBy: { createdAt: "asc" },
+              },
             },
-          },
-        });
-        if (!user || !user.password) return null;
+          });
+          if (!user || !user.password) return null;
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) return null;
+          const passwordMatch = await bcrypt.compare(password, user.password);
+          if (!passwordMatch) return null;
 
-        const tenantSlug = user.tenantUsers[0]?.tenant?.slug || undefined;
+          const tenantSlug = user.tenantUsers[0]?.tenant?.slug || undefined;
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          globalRole: user.globalRole,
-          tenantSlug,
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            globalRole: user.globalRole,
+            tenantSlug,
+          };
+        } catch (err) {
+          console.error("[auth] authorize error:", err);
+          return null;
+        }
       },
     }),
   ],

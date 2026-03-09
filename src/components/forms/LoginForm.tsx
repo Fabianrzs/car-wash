@@ -29,7 +29,11 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Credenciales inválidas. Verifica tu correo y contraseña.");
+        if (result.error === "Configuration") {
+          setError("Error del servidor. Verifica la configuración de la base de datos.");
+        } else {
+          setError("Credenciales inválidas. Verifica tu correo y contraseña.");
+        }
       } else {
         const rawCallback = searchParams.get("callbackUrl");
         // Only allow relative paths to prevent open redirect
