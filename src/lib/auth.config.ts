@@ -30,7 +30,6 @@ export default {
               tenantUsers: {
                 where: { isActive: true },
                 include: { tenant: { select: { slug: true } } },
-                take: 1,
                 orderBy: { createdAt: "asc" },
               },
             },
@@ -40,7 +39,13 @@ export default {
           const passwordMatch = await bcrypt.compare(password, user.password);
           if (!passwordMatch) return null;
 
-          const tenantSlug = user.tenantUsers[0]?.tenant?.slug || undefined;
+          // Only embed tenantSlug in JWT for single-tenant users.
+          // Multi-tenant users will select via TenantGuard → cookie.
+          const activeTenants = user.tenantUsers;
+          const tenantSlug =
+            activeTenants.length === 1
+              ? activeTenants[0].tenant.slug
+              : undefined;
 
           return {
             id: user.id,

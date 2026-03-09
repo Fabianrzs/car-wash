@@ -9,6 +9,7 @@ import {
   setSelectedTenant as saveTenantCookie,
 } from "@/lib/tenant-cookie";
 import Modal from "@/components/ui/Modal";
+import Spinner from "@/components/ui/Spinner";
 import { Search, Building2, Shield } from "lucide-react";
 
 interface Tenant {
@@ -17,140 +18,209 @@ interface Tenant {
   slug: string;
 }
 
-export default function TenantSelectorModal() {
-  const { data: session } = useSession();
+interface TenantGuardProps {
+  children: React.ReactNode;
+}
+
+export default function TenantGuard({ children }: TenantGuardProps) {
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+
+  const [ready, setReady] = useState(false);
+  const [showSelector, setShowSelector] = useState(false);
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [search, setSearch] = useState("");
-  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [selected, setSelected] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
 
   const isSuperAdmin = session?.user?.globalRole === "SUPER_ADMIN";
 
-  const fetchTenants = useCallback(async (query: string) => {
+  // Fetch tenants for SUPER_ADMIN (from admin list)
+  const fetchAdminTenants = useCallback(async (query: string) => {
     setLoading(true);
     try {
       const params = query ? `?search=${encodeURIComponent(query)}` : "";
       const res = await fetch(`/api/admin/tenants/list${params}`);
       if (res.ok) {
         const data = await res.json();
-        setTenants(data.tenants);
+        setTenants(data.tenants ?? []);
       }
     } catch {
-      // silently fail
+      setError("No se pudieron cargar los lavaderos.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Show modal only for SUPER_ADMIN without a tenant context
-  useEffect(() => {
-    if (!isSuperAdmin) return;
+  // Fetch tenants for regular multi-tenant users
+  const fetchUserTenants = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/user/tenants");
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const list: Tenant[] = data.tenants ?? [];
 
-    if (getSelectedTenant()) return;
-
-    setIsOpen(true);
-  }, [isSuperAdmin]);
-
-  // Fetch tenants on open and on search change
-  useEffect(() => {
-    if (isOpen) {
-      fetchTenants(debouncedSearch);
+      if (list.length === 0) {
+        router.replace("/login");
+        return;
+      }
+      if (list.length === 1) {
+        // Auto-select the only tenant
+        saveTenantCookie(list[0].slug);
+        setReady(true);
+      } else {
+        setTenants(list);
+        setShowSelector(true);
+      }
+    } catch {
+      setError("No se pudieron cargar los lavaderos.");
+    } finally {
+      setLoading(false);
     }
-  }, [isOpen, debouncedSearch, fetchTenants]);
+  }, [router]);
 
-  if (!isSuperAdmin) return null;
+  // Resolve tenant on session load
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session) return;
+
+    // Already have a cookie → tenant confirmed
+    if (getSelectedTenant()) {
+      setReady(true);
+      return;
+    }
+
+    if (isSuperAdmin) {
+      setShowSelector(true);
+      return;
+    }
+
+    // Regular user: single tenant embedded in JWT → auto-set cookie
+    if (session.user.tenantSlug) {
+      saveTenantCookie(session.user.tenantSlug);
+      setReady(true);
+      return;
+    }
+
+    // Regular user: no JWT tenantSlug → multi-tenant, must select
+    fetchUserTenants();
+  }, [session, status, isSuperAdmin, fetchUserTenants]);
+
+  // Fetch admin tenants when selector opens or search changes
+  useEffect(() => {
+    if (showSelector && isSuperAdmin) {
+      fetchAdminTenants(debouncedSearch);
+    }
+  }, [showSelector, debouncedSearch, isSuperAdmin, fetchAdminTenants]);
 
   const handleConfirm = () => {
-    if (!selectedTenant) return;
-
-    saveTenantCookie(selectedTenant.slug);
+    if (!selected) return;
+    saveTenantCookie(selected.slug);
     window.location.reload();
   };
 
-  const handleGoToAdmin = () => {
-    router.push("/admin");
-  };
+  // Block until tenant is ready
+  if (status === "loading" || (!ready && !showSelector && !error)) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error && !showSelector) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <p className="text-sm text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => {}}
-      title="Seleccionar Lavadero"
-    >
-      <div className="space-y-4">
-        <p className="text-sm text-gray-500">
-          Selecciona el lavadero que deseas gestionar.
-        </p>
+    <>
+      {ready && children}
 
-        {/* Search input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o slug..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+      <Modal isOpen={showSelector} onClose={() => {}} title="Seleccionar Lavadero">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Selecciona el lavadero que deseas gestionar.
+          </p>
 
-        {/* Tenant list */}
-        <div className="max-h-64 space-y-1 overflow-y-auto">
-          {loading ? (
-            <div className="py-8 text-center text-sm text-gray-400">
-              Cargando...
+          {/* Search — only for SUPER_ADMIN */}
+          {isSuperAdmin && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre o slug..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
             </div>
-          ) : tenants.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-400">
-              No se encontraron lavaderos
-            </div>
-          ) : (
-            tenants.map((tenant) => (
-              <button
-                key={tenant.id}
-                type="button"
-                onClick={() => setSelectedTenant(tenant)}
-                className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
-                  selectedTenant?.id === tenant.id
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <Building2 className="h-5 w-5 shrink-0 text-gray-400" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{tenant.name}</p>
-                  <p className="truncate text-xs text-gray-500">
-                    {tenant.slug}
-                  </p>
-                </div>
-              </button>
-            ))
           )}
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 border-t border-gray-200 pt-4">
-          <button
-            type="button"
-            onClick={handleGoToAdmin}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Shield className="h-4 w-4" />
-            Ir al Panel Admin
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!selectedTenant}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Confirmar
-          </button>
+          {/* Tenant list */}
+          <div className="max-h-64 space-y-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Spinner />
+              </div>
+            ) : error ? (
+              <p className="py-8 text-center text-sm text-red-500">{error}</p>
+            ) : tenants.length === 0 ? (
+              <p className="py-8 text-center text-sm text-gray-400">
+                No se encontraron lavaderos
+              </p>
+            ) : (
+              tenants.map((tenant) => (
+                <button
+                  key={tenant.id}
+                  type="button"
+                  onClick={() => setSelected(tenant)}
+                  className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+                    selected?.id === tenant.id
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <Building2 className="h-5 w-5 shrink-0 text-gray-400" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{tenant.name}</p>
+                    <p className="truncate text-xs text-gray-500">{tenant.slug}</p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 border-t border-gray-200 pt-4">
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => router.push("/admin")}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <Shield className="h-4 w-4" />
+                Ir al Panel Admin
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!selected}
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Confirmar
+            </button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 }

@@ -126,8 +126,10 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
       }
     } else {
-      // Regular user: tenant comes from JWT session
-      tenantSlug = (token?.tenantSlug as string) ?? null;
+      // Regular user: cookie takes precedence (multi-tenant switching),
+      // fallback to JWT tenantSlug (single-tenant users set on login).
+      const cookieTenant = request.cookies.get("selected-tenant")?.value;
+      tenantSlug = cookieTenant || (token?.tenantSlug as string) || null;
 
       if (!tenantSlug) {
         if (isTenantApiRoute(pathname)) {
@@ -136,7 +138,8 @@ export async function middleware(request: NextRequest) {
             { status: 400 }
           );
         }
-        return NextResponse.redirect(new URL("/login", request.nextUrl));
+        // Let the TenantGuard handle selection client-side
+        return NextResponse.next();
       }
     }
 
