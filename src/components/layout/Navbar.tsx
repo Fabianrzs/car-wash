@@ -53,6 +53,19 @@ export default function Navbar() {
     window.location.reload();
   };
 
+  const handleSignOut = () => {
+    // Clear all client-accessible cookies and session storage before sign-out
+    clearSelectedTenant();
+    sessionStorage.clear();
+    // Clear any remaining non-HttpOnly cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
+    });
+    signOut({ callbackUrl: "/login" });
+  };
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
       <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
@@ -90,7 +103,7 @@ export default function Navbar() {
         )}
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={handleSignOut}
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           <LogOut className="h-4 w-4" />
