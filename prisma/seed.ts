@@ -18,7 +18,7 @@ async function main() {
   const superAdminPassword = await bcrypt.hash("superadmin123", 12);
 
   // =============================================
-  // 1. Create Plans
+  // 1. Plans
   // =============================================
   const trialPlan = await prisma.plan.upsert({
     where: { slug: "prueba-gratis" },
@@ -80,9 +80,8 @@ async function main() {
     },
   });
 
-
   // =============================================
-  // 2. Create Super Admin
+  // 2. Super Admin
   // =============================================
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin@carwash.com" },
@@ -97,7 +96,7 @@ async function main() {
   console.log(`Super Admin: ${superAdmin.email}`);
 
   // =============================================
-  // 3. Define tenant data
+  // 3. Tenant definitions
   // =============================================
   const tenantsData = [
     {
@@ -256,7 +255,6 @@ async function main() {
     const td = tenantsData[t];
     console.log(`\nCreando tenant: ${td.name} (${td.slug})...`);
 
-    // Create tenant
     const tenant = await prisma.tenant.upsert({
       where: { slug: td.slug },
       update: {},
@@ -267,41 +265,29 @@ async function main() {
         phone: td.phone,
         address: td.address,
         ...(td.planId ? { plan: { connect: { id: td.planId } } } : {}),
-        trialEndsAt: td.trialEndsAt || null,
+        trialEndsAt: (td as any).trialEndsAt || null,
       },
     });
 
-    // Create owner
+    // Owner
     const owner = await prisma.user.upsert({
       where: { email: td.owner.email },
       update: {},
-      create: {
-        name: td.owner.name,
-        email: td.owner.email,
-        password: hashedPassword,
-        globalRole: "USER",
-      },
+      create: { name: td.owner.name, email: td.owner.email, password: hashedPassword, globalRole: "USER" },
     });
-
     await prisma.tenantUser.upsert({
       where: { userId_tenantId: { userId: owner.id, tenantId: tenant.id } },
       update: { role: "OWNER" },
       create: { user: { connect: { id: owner.id } }, tenant: { connect: { id: tenant.id } }, role: "OWNER" },
     });
 
-    // Create team members
+    // Team
     for (const member of td.team) {
       const user = await prisma.user.upsert({
         where: { email: member.email },
         update: {},
-        create: {
-          name: member.name,
-          email: member.email,
-          password: hashedPassword,
-          globalRole: "USER",
-        },
+        create: { name: member.name, email: member.email, password: hashedPassword, globalRole: "USER" },
       });
-
       await prisma.tenantUser.upsert({
         where: { userId_tenantId: { userId: user.id, tenantId: tenant.id } },
         update: { role: member.role },
@@ -309,7 +295,7 @@ async function main() {
       });
     }
 
-    // Create services
+    // Services
     const createdServices = [];
     for (const svc of serviceTemplates) {
       const service = await prisma.serviceType.upsert({
@@ -320,7 +306,7 @@ async function main() {
       createdServices.push(service);
     }
 
-    // Create clients (use subset based on tenant index)
+    // Clients
     const clientCount = Math.min(4 + t * 2, clientsData.length);
     const tenantClients = clientsData.slice(0, clientCount);
     const createdClients = [];
@@ -342,11 +328,12 @@ async function main() {
       createdClients.push(client);
     }
 
-    // Create vehicles for each client
+    // Vehicles — created independently, then associated via ClientVehicle
     const createdVehicles = [];
     for (let c = 0; c < createdClients.length; c++) {
       const vd = vehiclesData[c % vehiclesData.length];
       const uniquePlate = `${vd.plate}-${td.slug.substring(0, 3).toUpperCase()}`;
+
       const vehicle = await prisma.vehicle.upsert({
         where: { tenantId_plate: { tenantId: tenant.id, plate: uniquePlate } },
         update: {},
@@ -357,20 +344,37 @@ async function main() {
           year: vd.year,
           color: vd.color,
           vehicleType: vd.vehicleType,
-          client: { connect: { id: createdClients[c].id } },
           tenant: { connect: { id: tenant.id } },
         },
       });
       createdVehicles.push(vehicle);
+
+      // Associate vehicle with its primary client
+      await prisma.clientVehicle.upsert({
+        where: { clientId_vehicleId: { clientId: createdClients[c].id, vehicleId: vehicle.id } },
+        update: {},
+        create: { clientId: createdClients[c].id, vehicleId: vehicle.id, tenantId: tenant.id },
+      });
     }
 
-    // Create orders
+    // Demo many-to-many: first vehicle also belongs to second client (if both exist)
+    if (t === 0 && createdClients.length >= 2 && createdVehicles.length >= 1) {
+      await prisma.clientVehicle.upsert({
+        where: { clientId_vehicleId: { clientId: createdClients[1].id, vehicleId: createdVehicles[0].id } },
+        update: {},
+        create: { clientId: createdClients[1].id, vehicleId: createdVehicles[0].id, tenantId: tenant.id },
+      });
+      console.log(`  -> Vehiculo compartido: ${createdVehicles[0].plate} entre ${createdClients[0].firstName} y ${createdClients[1].firstName}`);
+    }
+
+    // Orders — use vehicle that belongs to the selected client
     const orderCount = 5 + t * 3;
     let orderCounter = 1;
 
     for (let o = 0; o < orderCount; o++) {
       const clientIdx = o % createdClients.length;
-      const vehicleIdx = o % createdVehicles.length;
+      // Use the vehicle associated with this client (same index, since we created 1 vehicle per client)
+      const vehicleIdx = clientIdx;
       const serviceIdx = o % createdServices.length;
       const statusIdx = o % statuses.length;
       const status = statuses[statusIdx];
@@ -387,7 +391,6 @@ async function main() {
 
       const orderNumber = `ORD-${td.slug.substring(0, 3).toUpperCase()}-${String(orderCounter++).padStart(4, "0")}`;
 
-      // Check if order already exists
       const existing = await prisma.serviceOrder.findUnique({
         where: { tenantId_orderNumber: { tenantId: tenant.id, orderNumber } },
       });
@@ -407,14 +410,7 @@ async function main() {
             vehicle: { connect: { id: createdVehicles[vehicleIdx].id } },
             createdBy: { connect: { id: owner.id } },
             items: {
-              create: [
-                {
-                  quantity,
-                  unitPrice: service.price,
-                  subtotal,
-                  serviceType: { connect: { id: service.id } },
-                },
-              ],
+              create: [{ quantity, unitPrice: service.price, subtotal, serviceType: { connect: { id: service.id } } }],
             },
           },
         });

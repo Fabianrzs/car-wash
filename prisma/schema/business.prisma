@@ -1,0 +1,138 @@
+model Client {
+  id         String   @id @default(cuid())
+  firstName  String   @db.VarChar(100)
+  lastName   String   @db.VarChar(100)
+  email      String?  @db.VarChar(255)
+  phone      String   @db.VarChar(20)
+  address    String?  @db.Text
+  notes      String?  @db.Text
+  isFrequent Boolean  @default(false)
+  tenantId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vehicles ClientVehicle[]
+  orders   ServiceOrder[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([lastName, firstName])
+  @@index([phone])
+  @@map("clients")
+}
+
+model Vehicle {
+  id          String      @id @default(cuid())
+  plate       String      @db.VarChar(15)
+  brand       String      @db.VarChar(50)
+  model       String      @db.VarChar(50)
+  year        Int?
+  color       String?     @db.VarChar(30)
+  vehicleType VehicleType @default(SEDAN)
+  tenantId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant  Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clients ClientVehicle[]
+  orders  ServiceOrder[]
+
+  @@unique([tenantId, plate])
+  @@index([tenantId])
+  @@index([plate])
+  @@map("vehicles")
+}
+
+model ClientVehicle {
+  id        String   @id @default(cuid())
+  clientId  String
+  vehicleId String
+  tenantId  String
+  createdAt DateTime @default(now())
+
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, vehicleId])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([tenantId])
+  @@map("client_vehicles")
+}
+
+model ServiceType {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  duration    Int
+  isActive    Boolean  @default(true)
+  tenantId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@map("service_types")
+}
+
+model ServiceOrder {
+  id          String      @id @default(cuid())
+  orderNumber String      @db.VarChar(20)
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  notes       String?     @db.Text
+  startedAt   DateTime?
+  completedAt DateTime?
+  tenantId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  clientId     String
+  vehicleId    String
+  createdById  String
+  assignedToId String?
+
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client     Client    @relation(fields: [clientId], references: [id])
+  vehicle    Vehicle   @relation(fields: [vehicleId], references: [id])
+  createdBy  User      @relation("CreatedByUser", fields: [createdById], references: [id])
+  assignedTo User?     @relation("AssignedToUser", fields: [assignedToId], references: [id])
+  items      OrderItem[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([orderNumber])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+  @@map("service_orders")
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  quantity      Int     @default(1)
+  unitPrice     Decimal @db.Decimal(10, 2)
+  subtotal      Decimal @db.Decimal(10, 2)
+
+  orderId       String
+  serviceTypeId String
+
+  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceType ServiceType  @relation(fields: [serviceTypeId], references: [id])
+
+  @@index([orderId])
+  @@index([serviceTypeId])
+  @@map("order_items")
+}

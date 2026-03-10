@@ -1,0 +1,65 @@
+enum GlobalRole {
+  USER
+  SUPER_ADMIN
+}
+
+enum TenantRole {
+  OWNER
+  ADMIN
+  EMPLOYEE
+}
+
+enum PlanInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PSE
+  CREDIT_CARD
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  EXPIRED
+  ERROR
+}
+
+enum PlanChangeStatus {
+  SCHEDULED
+  APPLIED
+  CANCELLED
+}
+
+enum ReminderType {
+  EXPIRING_7_DAYS
+  EXPIRING_3_DAYS
+  EXPIRING_1_DAY
+  EXPIRED
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  TRUCK
+  MOTORCYCLE
+  VAN
+  OTHER
+}

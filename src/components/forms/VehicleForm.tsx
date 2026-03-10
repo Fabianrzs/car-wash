@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import { X } from "lucide-react";
 
 interface VehicleFormData {
   id?: string;
@@ -15,7 +16,7 @@ interface VehicleFormData {
   year: string;
   color: string;
   vehicleType: string;
-  clientId: string;
+  clientIds: string[];
 }
 
 interface ClientOption {
@@ -27,58 +28,60 @@ interface ClientOption {
 
 interface VehicleFormProps {
   initialData?: VehicleFormData;
-  defaultClientId?: string;
+  defaultClientIds?: string[];
   onSuccess: () => void;
 }
 
 export default function VehicleForm({
   initialData,
-  defaultClientId,
+  defaultClientIds,
   onSuccess,
 }: VehicleFormProps) {
-  const [formData, setFormData] = useState<VehicleFormData>({
+  const [formData, setFormData] = useState<Omit<VehicleFormData, "clientIds">>({
     plate: initialData?.plate || "",
     brand: initialData?.brand || "",
     model: initialData?.model || "",
     year: initialData?.year || "",
     color: initialData?.color || "",
     vehicleType: initialData?.vehicleType || "SEDAN",
-    clientId: initialData?.clientId || defaultClientId || "",
   });
+  const [selectedClients, setSelectedClients] = useState<ClientOption[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [searchResults, setSearchResults] = useState<ClientOption[]>([]);
   const [clientSearch, setClientSearch] = useState("");
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
-  const [selectedClientName, setSelectedClientName] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Inline new client form
+  const [showNewClient, setShowNewClient] = useState(false);
+  const [newClient, setNewClient] = useState({ firstName: "", lastName: "", phone: "" });
+  const [newClientErrors, setNewClientErrors] = useState<Record<string, string>>({});
+  const [creatingClient, setCreatingClient] = useState(false);
 
   const isEditMode = !!initialData?.id;
 
+  // Initialize selected clients from initialData or defaultClientIds
   useEffect(() => {
-    const cId = initialData?.clientId || defaultClientId;
-    if (cId) {
-      fetchClientName(cId);
-    }
-  }, [initialData?.clientId, defaultClientId]);
+    const ids = initialData?.clientIds || defaultClientIds || [];
+    if (ids.length === 0) return;
 
-  async function fetchClientName(clientId: string) {
-    try {
-      const res = await fetch(`/api/clients/${clientId}`);
-      if (res.ok) {
-        const client = await res.json();
-        setSelectedClientName(
-          `${client.firstName} ${client.lastName} - ${client.phone}`
-        );
-      }
-    } catch {
-      // Silently handle
-    }
-  }
+    Promise.all(
+      ids.map((id) =>
+        fetch(`/api/clients/${id}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      const clients = results.filter(Boolean) as ClientOption[];
+      setSelectedClients(clients);
+    });
+  }, []);
 
+  // Search clients debounced
   useEffect(() => {
     if (clientSearch.length < 2) {
-      setClients([]);
+      setSearchResults([]);
       return;
     }
 
@@ -89,7 +92,10 @@ export default function VehicleForm({
         );
         if (res.ok) {
           const data = await res.json();
-          setClients(data.clients || data);
+          const all: ClientOption[] = data.clients || data;
+          // Filter already selected
+          const selectedIds = new Set(selectedClients.map((c) => c.id));
+          setSearchResults(all.filter((c) => !selectedIds.has(c.id)));
         }
       } catch {
         // Silently handle
@@ -97,23 +103,60 @@ export default function VehicleForm({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [clientSearch]);
+  }, [clientSearch, selectedClients]);
+
+  function addClient(client: ClientOption) {
+    setSelectedClients((prev) => [...prev, client]);
+    setClientSearch("");
+    setShowDropdown(false);
+    setSearchResults([]);
+    if (errors.clientIds) {
+      setErrors((prev) => { const n = { ...prev }; delete n.clientIds; return n; });
+    }
+  }
+
+  function removeClient(id: string) {
+    setSelectedClients((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  async function handleCreateNewClient() {
+    const errs: Record<string, string> = {};
+    if (!newClient.firstName.trim()) errs.firstName = "Requerido";
+    if (!newClient.lastName.trim()) errs.lastName = "Requerido";
+    if (!newClient.phone.trim() || newClient.phone.trim().length < 7) errs.phone = "Telefono invalido";
+    if (Object.keys(errs).length > 0) { setNewClientErrors(errs); return; }
+
+    setCreatingClient(true);
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newClient, isFrequent: false }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setNewClientErrors({ phone: data.error || "Error al crear cliente" });
+        return;
+      }
+      const created: ClientOption = await res.json();
+      addClient(created);
+      setNewClient({ firstName: "", lastName: "", phone: "" });
+      setNewClientErrors({});
+      setShowNewClient(false);
+    } catch {
+      setNewClientErrors({ phone: "Error de conexion" });
+    } finally {
+      setCreatingClient(false);
+    }
+  }
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.plate.trim()) {
-      newErrors.plate = "La placa es requerida";
-    }
-    if (!formData.brand.trim()) {
-      newErrors.brand = "La marca es requerida";
-    }
-    if (!formData.model.trim()) {
-      newErrors.model = "El modelo es requerido";
-    }
-    if (!formData.clientId) {
-      newErrors.clientId = "Debe seleccionar un cliente";
-    }
+    if (!formData.plate.trim()) newErrors.plate = "La placa es requerida";
+    if (!formData.brand.trim()) newErrors.brand = "La marca es requerida";
+    if (!formData.model.trim()) newErrors.model = "El modelo es requerido";
+    if (selectedClients.length === 0) newErrors.clientIds = "Debe seleccionar al menos un cliente";
     if (formData.year && (isNaN(Number(formData.year)) || Number(formData.year) < 1900)) {
       newErrors.year = "El ano debe ser valido";
     }
@@ -138,6 +181,7 @@ export default function VehicleForm({
       const payload = {
         ...formData,
         year: formData.year ? Number(formData.year) : null,
+        clientIds: selectedClients.map((c) => c.id),
       };
 
       const res = await fetch(url, {
@@ -168,22 +212,6 @@ export default function VehicleForm({
       setErrors((prev) => {
         const next = { ...prev };
         delete next[name];
-        return next;
-      });
-    }
-  }
-
-  function selectClient(client: ClientOption) {
-    setFormData((prev) => ({ ...prev, clientId: client.id }));
-    setSelectedClientName(
-      `${client.firstName} ${client.lastName} - ${client.phone}`
-    );
-    setClientSearch("");
-    setShowClientDropdown(false);
-    if (errors.clientId) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.clientId;
         return next;
       });
     }
@@ -285,54 +313,133 @@ export default function VehicleForm({
           />
         </div>
 
-        <div className="relative sm:col-span-2">
+        {/* Clients section */}
+        <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Cliente *
+            Clientes *
           </label>
-          {selectedClientName && (
-            <div className="mb-2 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">
-              <span>{selectedClientName}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedClientName("");
-                  setFormData((prev) => ({ ...prev, clientId: "" }));
-                }}
-                className="ml-auto text-blue-600 hover:text-blue-800"
-              >
-                Cambiar
-              </button>
+
+          {/* Selected client chips */}
+          {selectedClients.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {selectedClients.map((c) => (
+                <span
+                  key={c.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                >
+                  {c.firstName} {c.lastName}
+                  <button
+                    type="button"
+                    onClick={() => removeClient(c.id)}
+                    className="ml-1 text-blue-600 hover:text-blue-900"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
-          {!selectedClientName && (
-            <>
-              <Input
-                value={clientSearch}
-                onChange={(e) => {
-                  setClientSearch(e.target.value);
-                  setShowClientDropdown(true);
-                }}
-                onFocus={() => setShowClientDropdown(true)}
-                placeholder="Buscar cliente por nombre o telefono..."
-              />
-              {showClientDropdown && clients.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                  {clients.map((client) => (
-                    <button
-                      key={client.id}
-                      type="button"
-                      onClick={() => selectClient(client)}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                    >
-                      {client.firstName} {client.lastName} - {client.phone}
-                    </button>
-                  ))}
+
+          {/* Search input */}
+          <div className="relative">
+            <Input
+              value={clientSearch}
+              onChange={(e) => {
+                setClientSearch(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              placeholder="Buscar cliente por nombre o telefono..."
+            />
+            {showDropdown && searchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                {searchResults.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onClick={() => addClient(client)}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                  >
+                    {client.firstName} {client.lastName} — {client.phone}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Create new client inline */}
+          <div className="mt-2">
+            {!showNewClient ? (
+              <button
+                type="button"
+                onClick={() => setShowNewClient(true)}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                + Crear nuevo cliente
+              </button>
+            ) : (
+              <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
+                <p className="text-sm font-medium text-blue-800">Nuevo cliente</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <Input
+                      placeholder="Nombre *"
+                      value={newClient.firstName}
+                      onChange={(e) => setNewClient((p) => ({ ...p, firstName: e.target.value }))}
+                    />
+                    {newClientErrors.firstName && (
+                      <p className="mt-1 text-xs text-red-600">{newClientErrors.firstName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Apellido *"
+                      value={newClient.lastName}
+                      onChange={(e) => setNewClient((p) => ({ ...p, lastName: e.target.value }))}
+                    />
+                    {newClientErrors.lastName && (
+                      <p className="mt-1 text-xs text-red-600">{newClientErrors.lastName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="Telefono *"
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient((p) => ({ ...p, phone: e.target.value }))}
+                    />
+                    {newClientErrors.phone && (
+                      <p className="mt-1 text-xs text-red-600">{newClientErrors.phone}</p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </>
-          )}
-          {errors.clientId && (
-            <p className="mt-1 text-sm text-red-600">{errors.clientId}</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateNewClient}
+                    disabled={creatingClient}
+                  >
+                    {creatingClient ? "Guardando..." : "Guardar cliente"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setShowNewClient(false);
+                      setNewClient({ firstName: "", lastName: "", phone: "" });
+                      setNewClientErrors({});
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {errors.clientIds && (
+            <p className="mt-1 text-sm text-red-600">{errors.clientIds}</p>
           )}
         </div>
       </div>

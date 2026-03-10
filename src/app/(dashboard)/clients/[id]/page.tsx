@@ -14,6 +14,15 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { Trash2, Car } from "lucide-react";
 
+interface VehicleDetail {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  vehicleType: string;
+  color: string | null;
+}
+
 interface ClientData {
   id: string;
   firstName: string;
@@ -23,14 +32,7 @@ interface ClientData {
   address: string | null;
   notes: string | null;
   isFrequent: boolean;
-  vehicles: Array<{
-    id: string;
-    plate: string;
-    brand: string;
-    model: string;
-    vehicleType: string;
-    color: string | null;
-  }>;
+  vehicles: Array<{ vehicle: VehicleDetail }>;
   orders: Array<{
     id: string;
     orderNumber: string;
@@ -82,6 +84,8 @@ export default function ClientDetailPage() {
   if (loading) return <div className="flex items-center justify-center p-12"><Spinner size="lg" /></div>;
   if (!client) return <div className="p-6 text-center text-gray-500">Cliente no encontrado</div>;
 
+  const vehicles = client.vehicles.map((cv) => cv.vehicle);
+
   return (
     <div className="p-6">
       <PageHeader
@@ -113,17 +117,17 @@ export default function ClientDetailPage() {
         <div className="space-y-6">
           <Card>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Vehiculos ({client.vehicles.length})</h3>
+              <h3 className="text-lg font-semibold">Vehiculos ({vehicles.length})</h3>
               <Button size="sm" onClick={() => router.push(`/vehicles/new?clientId=${client.id}`)}>
                 <Car className="mr-2 h-4 w-4" />
                 Agregar
               </Button>
             </div>
-            {client.vehicles.length === 0 ? (
+            {vehicles.length === 0 ? (
               <p className="text-sm text-gray-500">Sin vehiculos registrados</p>
             ) : (
               <div className="space-y-2">
-                {client.vehicles.map((v) => (
+                {vehicles.map((v) => (
                   <div
                     key={v.id}
                     className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-gray-50"

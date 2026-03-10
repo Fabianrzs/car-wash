@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
 import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   // Rate limit: 10 registration attempts per IP per hour
@@ -91,6 +92,13 @@ export async function POST(request: Request) {
 
       return { user, tenant };
     });
+
+    sendWelcomeEmail(
+      result.user.email,
+      result.user.name ?? "",
+      result.tenant.name,
+      result.tenant.slug
+    ).catch((err) => console.error("Error sending welcome email:", err));
 
     return NextResponse.json(
       {

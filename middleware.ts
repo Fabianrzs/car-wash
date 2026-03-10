@@ -49,7 +49,8 @@ export async function middleware(request: NextRequest) {
   // ─── Public: API routes without auth ───
   if (
     pathname.startsWith("/api/plans") ||
-    pathname.startsWith("/api/public-stats")
+    pathname.startsWith("/api/public-stats") ||
+    pathname.startsWith("/api/invite")
   ) {
     return NextResponse.next();
   }
@@ -58,7 +59,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === "/") return NextResponse.next();
 
   // ─── Public page routes (login, register) ───
-  const publicRoutes = ["/login", "/register"];
+  const publicRoutes = ["/login", "/register", "/invite"];
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );

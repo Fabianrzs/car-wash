@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import crypto from "crypto";
+import { sendInvitationEmail } from "@/lib/email";
 
 export async function GET(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
     const members = await prisma.tenantUser.findMany({
-      where: { tenantId },
+      where: { tenantId, user: { globalRole: "USER" } },
       include: {
         user: {
           select: { id: true, name: true, email: true, image: true },
@@ -84,7 +85,16 @@ export async function POST(request: Request) {
         expiresAt,
         invitedBy: { connect: { id: session.user.id } },
       },
+      include: { tenant: { select: { name: true } } },
     });
+
+    sendInvitationEmail(
+      email,
+      session.user.name ?? session.user.email ?? "Un administrador",
+      invitation.tenant.name,
+      token,
+      invitation.role
+    ).catch((err) => console.error("Error sending invitation email:", err));
 
     return NextResponse.json(invitation, { status: 201 });
   } catch (error) {

@@ -21,14 +21,18 @@ export async function GET(
       where: { id, tenantId },
       include: {
         vehicles: {
-          select: {
-            id: true,
-            plate: true,
-            brand: true,
-            model: true,
-            year: true,
-            color: true,
-            vehicleType: true,
+          include: {
+            vehicle: {
+              select: {
+                id: true,
+                plate: true,
+                brand: true,
+                model: true,
+                year: true,
+                color: true,
+                vehicleType: true,
+              },
+            },
           },
         },
         orders: {

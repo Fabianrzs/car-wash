@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
+import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 
 interface ClientFormData {
   id?: string;
@@ -14,6 +16,13 @@ interface ClientFormData {
   address: string;
   notes: string;
   isFrequent: boolean;
+}
+
+interface VehicleData {
+  plate: string;
+  brand: string;
+  model: string;
+  vehicleType: string;
 }
 
 interface ClientFormProps {
@@ -37,6 +46,16 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
 
   const isEditMode = !!initialData?.id;
 
+  // Optional vehicle
+  const [addVehicle, setAddVehicle] = useState(false);
+  const [vehicleData, setVehicleData] = useState<VehicleData>({
+    plate: "",
+    brand: "",
+    model: "",
+    vehicleType: "SEDAN",
+  });
+  const [vehicleErrors, setVehicleErrors] = useState<Record<string, string>>({});
+
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
 
@@ -53,6 +72,18 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "El email no es valido";
+    }
+
+    if (addVehicle) {
+      const ve: Record<string, string> = {};
+      if (!vehicleData.plate.trim()) ve.plate = "La placa es requerida";
+      if (!vehicleData.brand.trim()) ve.brand = "La marca es requerida";
+      if (!vehicleData.model.trim()) ve.model = "El modelo es requerido";
+      setVehicleErrors(ve);
+      if (Object.keys(ve).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
     }
 
     setErrors(newErrors);
@@ -72,10 +103,15 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
         : "/api/clients";
       const method = isEditMode ? "PUT" : "POST";
 
+      const payload = {
+        ...formData,
+        ...(addVehicle && !isEditMode ? { vehicle: vehicleData } : {}),
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -106,6 +142,16 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
         delete next[name];
         return next;
       });
+    }
+  }
+
+  function handleVehicleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
+    const { name, value } = e.target;
+    setVehicleData((prev) => ({ ...prev, [name]: value }));
+    if (vehicleErrors[name]) {
+      setVehicleErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
     }
   }
 
@@ -215,6 +261,82 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
             </span>
           </label>
         </div>
+
+        {/* Optional vehicle (only shown on create) */}
+        {!isEditMode && (
+          <div className="sm:col-span-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={addVehicle}
+                onChange={(e) => setAddVehicle(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Agregar vehiculo ahora
+              </span>
+            </label>
+
+            {addVehicle && (
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="mb-3 text-sm font-medium text-gray-700">Datos del vehiculo</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Placa *</label>
+                    <Input
+                      name="plate"
+                      value={vehicleData.plate}
+                      onChange={handleVehicleChange}
+                      placeholder="ABC-123"
+                      className="uppercase"
+                    />
+                    {vehicleErrors.plate && (
+                      <p className="mt-1 text-xs text-red-600">{vehicleErrors.plate}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Tipo</label>
+                    <Select
+                      name="vehicleType"
+                      value={vehicleData.vehicleType}
+                      onChange={handleVehicleChange}
+                    >
+                      {Object.entries(VEHICLE_TYPE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Marca *</label>
+                    <Input
+                      name="brand"
+                      value={vehicleData.brand}
+                      onChange={handleVehicleChange}
+                      placeholder="Toyota, Chevrolet..."
+                    />
+                    {vehicleErrors.brand && (
+                      <p className="mt-1 text-xs text-red-600">{vehicleErrors.brand}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Modelo *</label>
+                    <Input
+                      name="model"
+                      value={vehicleData.model}
+                      onChange={handleVehicleChange}
+                      placeholder="Corolla, Spark..."
+                    />
+                    {vehicleErrors.model && (
+                      <p className="mt-1 text-xs text-red-600">{vehicleErrors.model}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end gap-3">

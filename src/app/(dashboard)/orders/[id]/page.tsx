@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -11,7 +12,13 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import Alert from "@/components/ui/Alert";
-import { Play, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Play, CheckCircle, XCircle, ArrowLeft, UserCheck } from "lucide-react";
+
+interface TeamMember {
+  id: string;
+  role: string;
+  user: { id: string; name: string | null; email: string };
+}
 
 interface OrderDetail {
   id: string;
@@ -25,6 +32,7 @@ interface OrderDetail {
   client: { id: string; firstName: string; lastName: string; phone: string };
   vehicle: { plate: string; brand: string; model: string };
   createdBy: { name: string };
+  assignedTo: { id: string; name: string | null } | null;
   items: Array<{
     id: string;
     quantity: number;
@@ -37,10 +45,14 @@ interface OrderDetail {
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState("");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,18 +60,34 @@ export default function OrderDetailPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`/api/orders/${params.id}`);
-        if (!res.ok) {
-          if (res.status === 404) {
+        const [orderRes, teamRes] = await Promise.all([
+          fetch(`/api/orders/${params.id}`),
+          fetch("/api/tenant/team"),
+        ]);
+
+        if (!orderRes.ok) {
+          if (orderRes.status === 404) {
             if (!cancelled) router.replace("/orders");
             return;
           }
-          const data = await res.json().catch(() => ({}));
+          const data = await orderRes.json().catch(() => ({}));
           if (!cancelled) setError(data.error || "Error al cargar la orden");
           return;
         }
-        const data = await res.json();
-        if (!cancelled) setOrder(data);
+
+        const orderData = await orderRes.json();
+        if (!cancelled) setOrder(orderData);
+
+        if (teamRes.ok) {
+          const teamData: TeamMember[] = await teamRes.json();
+          if (!cancelled) {
+            setTeamMembers(teamData);
+            if (session?.user?.id) {
+              const me = teamData.find((m) => m.user.id === session.user.id);
+              setCurrentUserRole(me?.role ?? null);
+            }
+          }
+        }
       } catch {
         if (!cancelled) setError("Error de conexion");
       } finally {
@@ -68,7 +96,7 @@ export default function OrderDetailPage() {
     };
     run();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [params.id, session?.user?.id]);
 
   const updateStatus = async (newStatus: string) => {
     setUpdating(true);
@@ -93,6 +121,29 @@ export default function OrderDetailPage() {
     }
   };
 
+  const assignOrder = async (assignedToId: string | null) => {
+    setAssigning(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${params.id}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedToId }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOrder((prev) => prev ? { ...prev, assignedTo: updated.assignedTo } : prev);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Error al asignar orden");
+      }
+    } catch {
+      setError("Error de conexion al asignar orden");
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const badgeVariant = (s: string) =>
     s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
 
@@ -103,6 +154,8 @@ export default function OrderDetailPage() {
     </div>
   );
   if (!order) return <div className="p-6 text-center text-gray-500">Orden no encontrada</div>;
+
+  const canAssign = currentUserRole === "OWNER" || currentUserRole === "ADMIN";
 
   return (
     <div className="p-6">
@@ -252,6 +305,32 @@ export default function OrderDetailPage() {
                 </p>
               )}
             </div>
+          </Card>
+
+          {/* Assignment */}
+          <Card className="mt-4">
+            <h3 className="mb-3 text-lg font-semibold flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-gray-400" /> Asignado a
+            </h3>
+            {canAssign ? (
+              <select
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                value={order.assignedTo?.id ?? ""}
+                onChange={(e) => assignOrder(e.target.value || null)}
+                disabled={assigning}
+              >
+                <option value="">Sin asignar</option>
+                {teamMembers.map((m) => (
+                  <option key={m.user.id} value={m.user.id}>
+                    {m.user.name ?? m.user.email} ({m.role === "OWNER" ? "Propietario" : m.role === "ADMIN" ? "Admin" : "Empleado"})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-gray-700">
+                {order.assignedTo?.name ?? <span className="text-gray-400">Sin asignar</span>}
+              </p>
+            )}
           </Card>
 
           {/* Timeline */}

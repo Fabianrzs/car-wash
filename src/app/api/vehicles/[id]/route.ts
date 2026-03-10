@@ -20,13 +20,17 @@ export async function GET(
     const vehicle = await prisma.vehicle.findFirst({
       where: { id, tenantId },
       include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
-            email: true,
+        clients: {
+          include: {
+            client: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -93,26 +97,50 @@ export async function PUT(
       );
     }
 
-    const vehicle = await prisma.vehicle.update({
-      where: { id },
-      data: {
-        plate: validatedData.plate,
-        brand: validatedData.brand,
-        model: validatedData.model,
-        year: validatedData.year ?? null,
-        color: validatedData.color || null,
-        vehicleType: validatedData.vehicleType,
-        client: { connect: { id: validatedData.clientId } },
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+    const vehicle = await prisma.$transaction(async (tx) => {
+      const validClients = await tx.client.findMany({
+        where: { id: { in: validatedData.clientIds }, tenantId },
+        select: { id: true },
+      });
+
+      if (validClients.length !== validatedData.clientIds.length) {
+        throw new Error("Uno o mas clientes no pertenecen a este lavadero");
+      }
+
+      await tx.vehicle.update({
+        where: { id },
+        data: {
+          plate: validatedData.plate,
+          brand: validatedData.brand,
+          model: validatedData.model,
+          year: validatedData.year ?? null,
+          color: validatedData.color || null,
+          vehicleType: validatedData.vehicleType,
+        },
+      });
+
+      await tx.clientVehicle.deleteMany({ where: { vehicleId: id } });
+
+      await tx.clientVehicle.createMany({
+        data: validatedData.clientIds.map((clientId) => ({
+          clientId,
+          vehicleId: id,
+          tenantId,
+        })),
+      });
+
+      return tx.vehicle.findFirst({
+        where: { id },
+        include: {
+          clients: {
+            include: {
+              client: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
           },
         },
-      },
+      });
     });
 
     return NextResponse.json(vehicle);
@@ -123,6 +151,9 @@ export async function PUT(
         { error: "Datos de vehiculo invalidos", details: error },
         { status: 400 }
       );
+    }
+    if (error instanceof Error && error.message.includes("no pertenecen")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     console.error("Error al actualizar vehiculo:", error);

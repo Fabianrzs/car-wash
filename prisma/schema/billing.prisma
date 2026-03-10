@@ -1,0 +1,113 @@
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique @db.VarChar(30)
+  tenantId      String
+  planId        String?
+  amount        Decimal       @db.Decimal(10, 2)
+  tax           Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(PENDING)
+  description   String?       @db.Text
+  periodStart   DateTime
+  periodEnd     DateTime
+  dueDate       DateTime
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan     Plan?         @relation(fields: [planId], references: [id])
+  items    InvoiceItem[]
+  payments Payment[]
+  scheduledPlanChanges ScheduledPlanChange[]
+  reminders            PaymentReminder[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([tenantId, status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String  @db.VarChar(255)
+  quantity    Int     @default(1)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  subtotal    Decimal @db.Decimal(10, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  invoiceId         String
+  tenantId          String
+  amount            Decimal       @db.Decimal(10, 2)
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  payuOrderId       String?       @db.VarChar(255)
+  payuTransactionId String?       @db.VarChar(255)
+  payuReferenceCode String?       @unique @db.VarChar(255)
+  payuResponseCode  String?       @db.VarChar(100)
+  pseBank           String?       @db.VarChar(255)
+  pseBankUrl        String?       @db.Text
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("payments")
+}
+
+model ScheduledPlanChange {
+  id            String           @id @default(cuid())
+  tenantId      String
+  fromPlanId    String?
+  toPlanId      String
+  invoiceId     String?
+  effectiveDate DateTime
+  status        PlanChangeStatus @default(SCHEDULED)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fromPlan Plan?    @relation("FromPlan", fields: [fromPlanId], references: [id])
+  toPlan   Plan     @relation("ToPlan", fields: [toPlanId], references: [id])
+  invoice  Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([effectiveDate])
+  @@index([status, effectiveDate])
+  @@map("scheduled_plan_changes")
+}
+
+model PaymentReminder {
+  id           String       @id @default(cuid())
+  tenantId     String
+  invoiceId    String?
+  type         ReminderType
+  sentAt       DateTime?
+  scheduledFor DateTime
+  createdAt    DateTime     @default(now())
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@index([tenantId])
+  @@index([invoiceId])
+  @@index([scheduledFor])
+  @@index([sentAt, scheduledFor])
+  @@map("payment_reminders")
+}

@@ -35,6 +35,14 @@ export const clientSchema = z.object({
   address: z.string().max(500).optional().or(z.literal("")),
   notes: z.string().max(1000).optional().or(z.literal("")),
   isFrequent: z.boolean().default(false),
+  vehicle: z.object({
+    plate: z.string().min(2).max(15),
+    brand: z.string().min(1).max(50),
+    model: z.string().min(1).max(50),
+    year: z.coerce.number().int().min(1900).max(2100).optional().nullable(),
+    color: z.string().max(30).optional().or(z.literal("")),
+    vehicleType: z.enum(["SEDAN", "SUV", "TRUCK", "MOTORCYCLE", "VAN", "OTHER"]).default("SEDAN"),
+  }).optional(),
 });
 
 // =============================================
@@ -48,7 +56,7 @@ export const vehicleSchema = z.object({
   year: z.coerce.number().int().min(1900).max(2100).optional().nullable(),
   color: z.string().max(30).optional().or(z.literal("")),
   vehicleType: z.enum(["SEDAN", "SUV", "TRUCK", "MOTORCYCLE", "VAN", "OTHER"]).default("SEDAN"),
-  clientId: z.string().min(1, "El cliente es requerido"),
+  clientIds: z.array(z.string().min(1)).min(1, "Al menos un cliente es requerido"),
 });
 
 // =============================================

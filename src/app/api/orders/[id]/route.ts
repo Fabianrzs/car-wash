@@ -56,6 +56,12 @@ export async function GET(
             email: true,
           },
         },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 

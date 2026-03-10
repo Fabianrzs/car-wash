@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -33,10 +33,12 @@ interface Order {
   client: { firstName: string; lastName: string };
   vehicle: { plate: string; brand: string; model: string };
   items: Array<{ serviceType: { name: string } }>;
+  assignedTo: { id: string; name: string | null } | null;
 }
 
 export default function OrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,7 +46,22 @@ export default function OrdersPage() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [view, setView] = useState<"all" | "mine">(
+    searchParams.get("view") === "mine" ? "mine" : "all"
+  );
   const debouncedSearch = useDebounce(search, 300);
+
+  const setViewWithUrl = (v: "all" | "mine") => {
+    setView(v);
+    setPage(1);
+    const url = new URL(window.location.href);
+    if (v === "mine") {
+      url.searchParams.set("view", "mine");
+    } else {
+      url.searchParams.delete("view");
+    }
+    router.replace(url.pathname + url.search);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +72,7 @@ export default function OrdersPage() {
         const params = new URLSearchParams({ page: String(page) });
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (status) params.set("status", status);
+        if (view === "mine") params.set("assignedToMe", "true");
         const data = await fetchApi<{ orders: Order[]; pages: number }>(`/api/orders?${params}`);
         if (!cancelled) {
           setOrders(data.orders || []);
@@ -68,7 +86,7 @@ export default function OrdersPage() {
     };
     run();
     return () => { cancelled = true; };
-  }, [page, debouncedSearch, status]);
+  }, [page, debouncedSearch, status, view]);
 
   const badgeVariant = (s: string) =>
     s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
@@ -84,6 +102,23 @@ export default function OrdersPage() {
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mt-6">
+        {/* View tabs */}
+        <div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
+          {[{ label: "Todas", value: "all" as const }, { label: "Mis órdenes", value: "mine" as const }].map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setViewWithUrl(t.value)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                view === t.value
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {STATUS_TABS.map((tab) => (
             <button
@@ -121,6 +156,7 @@ export default function OrdersPage() {
                   <TableHead className="hidden md:table-cell">Servicios</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="hidden lg:table-cell">Asignado a</TableHead>
                   <TableHead className="hidden md:table-cell">Fecha</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -128,7 +164,7 @@ export default function OrdersPage() {
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-500">No se encontraron ordenes</TableCell>
+                    <TableCell colSpan={9} className="text-center text-gray-500">No se encontraron ordenes</TableCell>
                   </TableRow>
                 ) : (
                   orders.map((o) => (
@@ -142,6 +178,9 @@ export default function OrdersPage() {
                       <TableCell className="font-medium">{formatCurrency(o.totalAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={badgeVariant(o.status)}>{ORDER_STATUS_LABELS[o.status]}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-gray-600">
+                        {o.assignedTo?.name ?? <span className="text-gray-400">—</span>}
                       </TableCell>
                       <TableCell className="hidden text-sm md:table-cell">{formatDate(o.createdAt)}</TableCell>
                       <TableCell>

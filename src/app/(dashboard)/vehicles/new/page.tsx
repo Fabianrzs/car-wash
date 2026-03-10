@@ -15,7 +15,10 @@ function NewVehicleContent() {
     <div className="p-6">
       <PageHeader title="Nuevo Vehiculo" description="Registrar un nuevo vehiculo" />
       <div className="mt-6 max-w-2xl">
-        <VehicleForm defaultClientId={clientId} onSuccess={() => router.push("/vehicles")} />
+        <VehicleForm
+          defaultClientIds={clientId ? [clientId] : undefined}
+          onSuccess={() => router.push("/vehicles")}
+        />
       </div>
     </div>
   );

@@ -27,19 +27,23 @@ export async function GET(request: Request) {
     }
 
     if (clientId) {
-      where.clientId = clientId;
+      where.clients = { some: { clientId } };
     }
 
     const [vehicles, total] = await Promise.all([
       prisma.vehicle.findMany({
         where,
         include: {
-          client: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              phone: true,
+          clients: {
+            include: {
+              client: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  phone: true,
+                },
+              },
             },
           },
         },
@@ -90,26 +94,48 @@ export async function POST(request: Request) {
       );
     }
 
-    const vehicle = await prisma.vehicle.create({
-      data: {
-        plate: validatedData.plate,
-        brand: validatedData.brand,
-        model: validatedData.model,
-        year: validatedData.year ?? null,
-        color: validatedData.color || null,
-        vehicleType: validatedData.vehicleType,
-        client: { connect: { id: validatedData.clientId } },
-        tenant: { connect: { id: tenantId } },
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+    const vehicle = await prisma.$transaction(async (tx) => {
+      const validClients = await tx.client.findMany({
+        where: { id: { in: validatedData.clientIds }, tenantId },
+        select: { id: true },
+      });
+
+      if (validClients.length !== validatedData.clientIds.length) {
+        throw new Error("Uno o mas clientes no pertenecen a este lavadero");
+      }
+
+      const created = await tx.vehicle.create({
+        data: {
+          plate: validatedData.plate,
+          brand: validatedData.brand,
+          model: validatedData.model,
+          year: validatedData.year ?? null,
+          color: validatedData.color || null,
+          vehicleType: validatedData.vehicleType,
+          tenant: { connect: { id: tenantId } },
+        },
+      });
+
+      await tx.clientVehicle.createMany({
+        data: validatedData.clientIds.map((clientId) => ({
+          clientId,
+          vehicleId: created.id,
+          tenantId,
+        })),
+      });
+
+      return tx.vehicle.findFirst({
+        where: { id: created.id },
+        include: {
+          clients: {
+            include: {
+              client: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
           },
         },
-      },
+      });
     });
 
     return NextResponse.json(vehicle, { status: 201 });
@@ -120,6 +146,9 @@ export async function POST(request: Request) {
         { error: "Datos de vehiculo invalidos", details: error },
         { status: 400 }
       );
+    }
+    if (error instanceof Error && error.message.includes("no pertenecen")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     console.error("Error al crear vehiculo:", error);

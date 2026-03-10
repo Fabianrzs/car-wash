@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { orderStatusSchema } from "@/lib/validations";
 import type { OrderStatus } from "@/generated/prisma/client";
 import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
+import { sendOrderStatusChangeEmail } from "@/lib/email";
 
 export async function PATCH(
   request: Request,
@@ -22,7 +23,15 @@ export async function PATCH(
 
     const existingOrder = await prisma.serviceOrder.findFirst({
       where: { id, tenantId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        orderNumber: true,
+        assignedToId: true,
+        assignedTo: { select: { id: true, name: true, email: true } },
+        client: { select: { firstName: true, lastName: true } },
+        tenant: { select: { name: true } },
+      },
     });
 
     if (!existingOrder) {
@@ -116,6 +125,37 @@ export async function PATCH(
         },
       },
     });
+
+    // Fire-and-forget email notifications
+    const changedByName = session.user.name ?? session.user.email ?? "Un usuario";
+    const clientName = `${existingOrder.client.firstName} ${existingOrder.client.lastName}`;
+    const tenantName = existingOrder.tenant.name;
+    const orderNumber = existingOrder.orderNumber;
+
+    Promise.all([
+      prisma.tenantUser.findMany({
+        where: {
+          tenantId,
+          role: { in: ["OWNER", "ADMIN"] },
+          user: { globalRole: "USER" },
+        },
+        include: { user: { select: { email: true, name: true, id: true } } },
+      }).then((admins) => {
+        const recipients = new Map<string, string>();
+        for (const m of admins) {
+          recipients.set(m.user.id, m.user.email);
+        }
+        // Also include assigned employee if different from changer
+        if (existingOrder.assignedTo && existingOrder.assignedTo.id !== session.user.id) {
+          recipients.set(existingOrder.assignedTo.id, existingOrder.assignedTo.email!);
+        }
+        return Promise.all(
+          Array.from(recipients.values()).map((email) =>
+            sendOrderStatusChangeEmail(email, tenantName, orderNumber, newStatus, clientName, changedByName)
+          )
+        );
+      }),
+    ]).catch((err) => console.error("Error sending order status emails:", err));
 
     return NextResponse.json(order);
   } catch (error) {

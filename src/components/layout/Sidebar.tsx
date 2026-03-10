@@ -15,28 +15,48 @@ import {
   Settings,
   UserPlus,
   CreditCard,
+  ListTodo,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTenantRole } from "@/hooks/useTenantRole";
 
-const navigation = [
+const managerNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Clientes", href: "/clients", icon: Users },
   { name: "Vehiculos", href: "/vehicles", icon: Car },
   { name: "Servicios", href: "/services", icon: Sparkles },
   { name: "Ordenes", href: "/orders", icon: ClipboardList },
-  { name: "Reportes", href: "/reports", icon: BarChart3 },
 ];
 
-const configNavigation = [
-  { name: "Ajustes", href: "/settings", icon: Settings },
-  { name: "Equipo", href: "/team", icon: UserPlus },
-  { name: "Facturacion", href: "/billing", icon: CreditCard },
+const employeeNavigation = [
+  { name: "Mis Órdenes", href: "/mis-ordenes", icon: ListTodo },
+  { name: "Ordenes", href: "/orders", icon: ClipboardList },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const role = useTenantRole();
+
+  // Fail-open: show all items while loading (role === null)
+  const isEmployee = role === "EMPLOYEE";
+  const showReports = role === null || role === "OWNER" || role === "ADMIN";
+  const showTeam = role === null || role === "OWNER" || role === "ADMIN";
+  const showBilling = role === null || role === "OWNER";
+
+  const configNavigation = [
+    { name: "Ajustes", href: "/settings", icon: Settings, show: true },
+    { name: "Equipo", href: "/team", icon: UserPlus, show: showTeam },
+    { name: "Facturacion", href: "/billing", icon: CreditCard, show: showBilling },
+  ];
+
+  const coreNav = isEmployee ? employeeNavigation : managerNavigation;
+
+  const mainNavigation = [
+    ...coreNav,
+    ...(showReports ? [{ name: "Reportes", href: "/reports", icon: BarChart3 }] : []),
+  ];
 
   return (
     <>
@@ -76,7 +96,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-1 p-4">
-          {navigation.map((item) => {
+          {mainNavigation.map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
@@ -108,7 +128,7 @@ export default function Sidebar() {
             Configuracion
           </p>
 
-          {configNavigation.map((item) => {
+          {configNavigation.filter((item) => item.show).map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(item.href + "/");
             return (

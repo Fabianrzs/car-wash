@@ -13,12 +13,20 @@ import { useDebounce } from "@/hooks/useDebounce";
 import Alert from "@/components/ui/Alert";
 import { ArrowLeft, ArrowRight, Check, Search } from "lucide-react";
 
+interface VehicleItem {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  vehicleType: string;
+}
+
 interface Client {
   id: string;
   firstName: string;
   lastName: string;
   phone: string;
-  vehicles: Array<{ id: string; plate: string; brand: string; model: string; vehicleType: string }>;
+  vehicles: Array<{ vehicle: VehicleItem }>;
 }
 
 interface ServiceType {
@@ -85,7 +93,6 @@ export default function NewOrderPage() {
   }, [debouncedSearch]);
 
   const selectClient = async (client: Client) => {
-    // Fetch client with vehicles
     const res = await fetch(`/api/clients/${client.id}`);
     const data = await res.json();
     setSelectedClient(data);
@@ -107,6 +114,9 @@ export default function NewOrderPage() {
   };
 
   const total = selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
+
+  // Flattened vehicles list from junction
+  const clientVehicles = selectedClient?.vehicles.map((cv) => cv.vehicle) || [];
 
   const handleSubmit = async () => {
     if (!selectedClient || !selectedVehicleId || selectedServices.length === 0) return;
@@ -206,7 +216,7 @@ export default function NewOrderPage() {
             <h3 className="mb-4 text-lg font-semibold">
               Seleccionar Vehiculo de {selectedClient.firstName} {selectedClient.lastName}
             </h3>
-            {selectedClient.vehicles.length === 0 ? (
+            {clientVehicles.length === 0 ? (
               <div className="text-center">
                 <p className="mb-4 text-gray-500">Este cliente no tiene vehiculos registrados</p>
                 <Button onClick={() => router.push(`/vehicles/new?clientId=${selectedClient.id}`)}>
@@ -215,7 +225,7 @@ export default function NewOrderPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {selectedClient.vehicles.map((v) => (
+                {clientVehicles.map((v) => (
                   <div
                     key={v.id}
                     className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
@@ -295,9 +305,9 @@ export default function NewOrderPage() {
               <div className="rounded-lg bg-gray-50 p-4">
                 <p className="text-sm text-gray-500">Vehiculo</p>
                 <p className="font-medium">
-                  {selectedClient.vehicles.find((v) => v.id === selectedVehicleId)?.plate} -{" "}
-                  {selectedClient.vehicles.find((v) => v.id === selectedVehicleId)?.brand}{" "}
-                  {selectedClient.vehicles.find((v) => v.id === selectedVehicleId)?.model}
+                  {clientVehicles.find((v) => v.id === selectedVehicleId)?.plate} -{" "}
+                  {clientVehicles.find((v) => v.id === selectedVehicleId)?.brand}{" "}
+                  {clientVehicles.find((v) => v.id === selectedVehicleId)?.model}
                 </p>
               </div>
               <div className="rounded-lg bg-gray-50 p-4">

@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
     const clientId = searchParams.get("clientId") || "";
+    const assignedToMe = searchParams.get("assignedToMe") === "true";
 
     const where: Prisma.ServiceOrderWhereInput = { tenantId };
 
@@ -34,6 +35,10 @@ export async function GET(request: Request) {
 
     if (clientId) {
       where.clientId = clientId;
+    }
+
+    if (assignedToMe) {
+      where.assignedToId = session.user.id;
     }
 
     const [orders, total] = await Promise.all([
@@ -65,6 +70,9 @@ export async function GET(request: Request) {
                 },
               },
             },
+          },
+          assignedTo: {
+            select: { id: true, name: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -133,23 +141,24 @@ export async function POST(request: Request) {
         throw new Error("Uno o mas servicios no son validos o estan inactivos");
       }
 
-      // Validate client and vehicle belong to this tenant
-      const [clientExists, vehicleExists] = await Promise.all([
-        tx.client.findFirst({
-          where: { id: validatedData.clientId, tenantId },
-          select: { id: true },
-        }),
-        tx.vehicle.findFirst({
-          where: { id: validatedData.vehicleId, tenantId },
-          select: { id: true },
-        }),
-      ]);
+      // Validate client and vehicle belong to this tenant and are associated
+      const junction = await tx.clientVehicle.findFirst({
+        where: {
+          clientId: validatedData.clientId,
+          vehicleId: validatedData.vehicleId,
+          tenantId,
+        },
+        select: { id: true },
+      });
 
-      if (!clientExists) {
-        throw new Error("El cliente no pertenece a este lavadero");
-      }
-      if (!vehicleExists) {
-        throw new Error("El vehiculo no pertenece a este lavadero");
+      if (!junction) {
+        const [clientExists, vehicleExists] = await Promise.all([
+          tx.client.findFirst({ where: { id: validatedData.clientId, tenantId }, select: { id: true } }),
+          tx.vehicle.findFirst({ where: { id: validatedData.vehicleId, tenantId }, select: { id: true } }),
+        ]);
+        if (!clientExists) throw new Error("El cliente no pertenece a este lavadero");
+        if (!vehicleExists) throw new Error("El vehiculo no pertenece a este lavadero");
+        throw new Error("El vehiculo no esta asociado a este cliente");
       }
 
       const priceMap = new Map(
@@ -228,7 +237,8 @@ export async function POST(request: Request) {
 
     if (error instanceof Error && (
       error.message.includes("no son validos") ||
-      error.message.includes("no pertenece")
+      error.message.includes("no pertenece") ||
+      error.message.includes("no esta asociado")
     )) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

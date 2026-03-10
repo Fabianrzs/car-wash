@@ -55,6 +55,8 @@ export default function VehicleDetailPage() {
   if (loading) return <div className="flex items-center justify-center p-12"><Spinner size="lg" /></div>;
   if (!vehicle) return <div className="p-6 text-center text-gray-500">Vehiculo no encontrado</div>;
 
+  const clientIds: string[] = (vehicle.clients || []).map((cv: any) => cv.clientId);
+
   return (
     <div className="p-6">
       <PageHeader title={`${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`} description="Detalle del vehiculo">
@@ -66,8 +68,7 @@ export default function VehicleDetailPage() {
       <div className="mt-6 max-w-2xl">
         <Card>
           <VehicleForm
-            initialData={vehicle}
-            defaultClientId={vehicle.clientId}
+            initialData={{ ...vehicle, clientIds }}
             onSuccess={() => router.push("/vehicles")}
           />
         </Card>

@@ -92,20 +92,53 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = clientSchema.parse(body);
 
-    const client = await prisma.client.create({
-      data: {
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        email: validatedData.email || null,
-        phone: validatedData.phone,
-        address: validatedData.address || null,
-        notes: validatedData.notes || null,
-        isFrequent: validatedData.isFrequent,
-        tenant: { connect: { id: tenantId } },
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const client = await tx.client.create({
+        data: {
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+          email: validatedData.email || null,
+          phone: validatedData.phone,
+          address: validatedData.address || null,
+          notes: validatedData.notes || null,
+          isFrequent: validatedData.isFrequent,
+          tenant: { connect: { id: tenantId } },
+        },
+      });
+
+      if (validatedData.vehicle) {
+        const v = validatedData.vehicle;
+
+        const existingVehicle = await tx.vehicle.findFirst({
+          where: { plate: v.plate, tenantId },
+          select: { id: true },
+        });
+
+        if (existingVehicle) {
+          throw new Error("Ya existe un vehiculo con esa placa");
+        }
+
+        const vehicle = await tx.vehicle.create({
+          data: {
+            plate: v.plate,
+            brand: v.brand,
+            model: v.model,
+            year: v.year ?? null,
+            color: v.color || null,
+            vehicleType: v.vehicleType,
+            tenant: { connect: { id: tenantId } },
+          },
+        });
+
+        await tx.clientVehicle.create({
+          data: { clientId: client.id, vehicleId: vehicle.id, tenantId },
+        });
+      }
+
+      return client;
     });
 
-    return NextResponse.json(client, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
     if (error instanceof Error && error.name === "ZodError") {
@@ -113,6 +146,9 @@ export async function POST(request: Request) {
         { error: "Datos de cliente invalidos", details: error },
         { status: 400 }
       );
+    }
+    if (error instanceof Error && error.message.includes("placa")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     console.error("Error al crear cliente:", error);

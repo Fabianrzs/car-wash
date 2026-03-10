@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendPaymentReminderEmail } from "@/lib/email";
 
 // Called by cron job to process pending reminders
 // Should be protected by a secret in production
@@ -42,11 +43,18 @@ export async function POST(request: Request) {
         overdueInvoiceIds.push(reminder.invoice.id);
       }
 
-      console.log(
-        `Reminder [${reminder.type}] for tenant ${reminder.tenant.name}: ` +
-          `Invoice ${reminder.invoice?.invoiceNumber || "N/A"} - ` +
-          `$${reminder.invoice?.totalAmount || 0} due ${reminder.invoice?.dueDate?.toISOString() || "N/A"}`
-      );
+      if (reminder.tenant.email && reminder.invoice) {
+        sendPaymentReminderEmail(
+          reminder.tenant.email,
+          reminder.tenant.name,
+          reminder.invoice.invoiceNumber,
+          Number(reminder.invoice.totalAmount),
+          reminder.invoice.dueDate,
+          reminder.type
+        ).catch((err) =>
+          console.error(`Error sending reminder email for tenant ${reminder.tenant.name}:`, err)
+        );
+      }
 
       processed++;
     }
