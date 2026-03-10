@@ -1,10 +1,21 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM = process.env.EMAIL_FROM || "onboarding@resend.dev";
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "localhost:3000";
 const APP_URL = APP_DOMAIN.startsWith("http") ? APP_DOMAIN : `https://${APP_DOMAIN}`;
+
+function createTransport() {
+  return nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: Number(process.env.EMAIL_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+const FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER || "noreply@localhost";
 
 export async function sendWelcomeEmail(
   to: string,
@@ -14,7 +25,7 @@ export async function sendWelcomeEmail(
 ) {
   const dashboardUrl = `${APP_URL}/dashboard`;
 
-  await resend.emails.send({
+  await createTransport().sendMail({
     from: FROM,
     to,
     subject: `¡Bienvenido a ${tenantName}!`,
@@ -56,7 +67,7 @@ export async function sendInvitationEmail(
   };
   const roleLabel = roleLabels[role] ?? role;
 
-  await resend.emails.send({
+  await createTransport().sendMail({
     from: FROM,
     to,
     subject: `${inviterName} te invitó a ${tenantName}`,
@@ -101,7 +112,7 @@ export async function sendOrderStatusChangeEmail(
 ) {
   const statusLabel = ORDER_STATUS_LABELS_ES[newStatus] ?? newStatus;
 
-  await resend.emails.send({
+  await createTransport().sendMail({
     from: FROM,
     to,
     subject: `[${tenantName}] Orden ${orderNumber} — ${statusLabel}`,
@@ -161,7 +172,7 @@ export async function sendPaymentReminderEmail(
     body: `Tienes una factura pendiente <strong>${invoiceNumber}</strong> por <strong>$${amount.toFixed(2)}</strong>.`,
   };
 
-  await resend.emails.send({
+  await createTransport().sendMail({
     from: FROM,
     to,
     subject: `[${tenantName}] ${labels.subject}`,

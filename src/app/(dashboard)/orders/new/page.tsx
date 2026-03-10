@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { useDebounce } from "@/hooks/useDebounce";
 import Alert from "@/components/ui/Alert";
-import { ArrowLeft, ArrowRight, Check, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Search, UserCheck } from "lucide-react";
 
 interface VehicleItem {
   id: string;
@@ -29,6 +29,12 @@ interface Client {
   vehicles: Array<{ vehicle: VehicleItem }>;
 }
 
+interface Employee {
+  id: string;
+  role: string;
+  user: { id: string; name: string | null; email: string };
+}
+
 interface ServiceType {
   id: string;
   name: string;
@@ -44,6 +50,8 @@ interface SelectedService {
   quantity: number;
 }
 
+const STEPS = ["Cliente", "Vehiculo", "Lavador", "Servicios", "Confirmar"];
+
 export default function NewOrderPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -58,11 +66,16 @@ export default function NewOrderPage() {
   // Step 2: Vehicle
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
-  // Step 3: Services
+  // Step 3: Employee (lavador)
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<string | null>(null);
+
+  // Step 4: Services
   const [services, setServices] = useState<ServiceType[]>([]);
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
 
-  // Step 4: Notes
+  // Step 5: Notes + submit
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
 
@@ -92,6 +105,17 @@ export default function NewOrderPage() {
       .finally(() => setLoading(false));
   }, [debouncedSearch]);
 
+  // Load employees when reaching step 3
+  useEffect(() => {
+    if (step !== 3) return;
+    setEmployeesLoading(true);
+    fetch("/api/tenant/team")
+      .then((r) => r.json())
+      .then((data) => setEmployees(Array.isArray(data) ? data : []))
+      .catch(() => setEmployees([]))
+      .finally(() => setEmployeesLoading(false));
+  }, [step]);
+
   const selectClient = async (client: Client) => {
     const res = await fetch(`/api/clients/${client.id}`);
     const data = await res.json();
@@ -115,8 +139,9 @@ export default function NewOrderPage() {
 
   const total = selectedServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
 
-  // Flattened vehicles list from junction
   const clientVehicles = selectedClient?.vehicles.map((cv) => cv.vehicle) || [];
+
+  const selectedAssignee = employees.find((e) => e.user.id === selectedAssigneeId);
 
   const handleSubmit = async () => {
     if (!selectedClient || !selectedVehicleId || selectedServices.length === 0) return;
@@ -129,6 +154,7 @@ export default function NewOrderPage() {
         body: JSON.stringify({
           clientId: selectedClient.id,
           vehicleId: selectedVehicleId,
+          assignedToId: selectedAssigneeId || undefined,
           notes: notes || undefined,
           items: selectedServices.map((s) => ({
             serviceTypeId: s.serviceTypeId,
@@ -153,14 +179,14 @@ export default function NewOrderPage() {
 
   return (
     <div className="p-6">
-      <PageHeader title="Nueva Orden" description={`Paso ${step} de 4`} />
+      <PageHeader title="Nueva Orden" description={`Paso ${step} de ${STEPS.length}`} />
 
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
       <div className="mx-auto mt-6 max-w-3xl">
         {/* Progress bar */}
         <div className="mb-8 flex items-center justify-between">
-          {["Cliente", "Vehiculo", "Servicios", "Confirmar"].map((label, i) => (
+          {STEPS.map((label, i) => (
             <div key={label} className="flex items-center">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                 step > i + 1 ? "bg-green-500 text-white" : step === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
@@ -168,7 +194,7 @@ export default function NewOrderPage() {
                 {step > i + 1 ? <Check className="h-4 w-4" /> : i + 1}
               </div>
               <span className={`ml-2 text-sm ${step === i + 1 ? "font-medium" : "text-gray-500"}`}>{label}</span>
-              {i < 3 && <div className="mx-4 h-px w-12 bg-gray-300" />}
+              {i < STEPS.length - 1 && <div className="mx-4 h-px w-8 bg-gray-300" />}
             </div>
           ))}
         </div>
@@ -251,8 +277,67 @@ export default function NewOrderPage() {
           </Card>
         )}
 
-        {/* Step 3: Select Services */}
+        {/* Step 3: Select Employee (Lavador) */}
         {step === 3 && (
+          <Card>
+            <h3 className="mb-1 text-lg font-semibold">Asignar Lavador</h3>
+            <p className="mb-4 text-sm text-gray-500">Opcional — puedes asignarlo despues desde el detalle de la orden.</p>
+
+            {employeesLoading ? (
+              <div className="flex justify-center py-8"><Spinner size="lg" /></div>
+            ) : (
+              <div className="space-y-2">
+                {/* Sin asignar option */}
+                <div
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
+                    selectedAssigneeId === null ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedAssigneeId(null)}
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200">
+                    <UserCheck className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-600">Sin asignar</p>
+                    <p className="text-xs text-gray-400">La orden quedara pendiente de asignacion</p>
+                  </div>
+                  {selectedAssigneeId === null && <Check className="h-5 w-5 text-blue-600" />}
+                </div>
+
+                {employees.map((emp) => (
+                  <div
+                    key={emp.user.id}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
+                      selectedAssigneeId === emp.user.id ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => setSelectedAssigneeId(emp.user.id)}
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                      {(emp.user.name || emp.user.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{emp.user.name || emp.user.email}</p>
+                      <p className="text-xs text-gray-400 capitalize">{emp.role.toLowerCase()}</p>
+                    </div>
+                    {selectedAssigneeId === emp.user.id && <Check className="h-5 w-5 text-blue-600" />}
+                  </div>
+                ))}
+
+                {employees.length === 0 && (
+                  <p className="text-center text-sm text-gray-500 py-4">No hay empleados registrados en el equipo</p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-between">
+              <Button variant="secondary" onClick={() => setStep(2)}><ArrowLeft className="mr-2 h-4 w-4" /> Atras</Button>
+              <Button onClick={() => setStep(4)}>Siguiente <ArrowRight className="ml-2 h-4 w-4" /></Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Step 4: Select Services */}
+        {step === 4 && (
           <Card>
             <h3 className="mb-4 text-lg font-semibold">Seleccionar Servicios</h3>
             <div className="space-y-2">
@@ -285,16 +370,16 @@ export default function NewOrderPage() {
               </div>
             )}
             <div className="mt-6 flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(2)}><ArrowLeft className="mr-2 h-4 w-4" /> Atras</Button>
-              <Button disabled={selectedServices.length === 0} onClick={() => setStep(4)}>
+              <Button variant="secondary" onClick={() => setStep(3)}><ArrowLeft className="mr-2 h-4 w-4" /> Atras</Button>
+              <Button disabled={selectedServices.length === 0} onClick={() => setStep(5)}>
                 Siguiente <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </Card>
         )}
 
-        {/* Step 4: Confirm */}
-        {step === 4 && selectedClient && (
+        {/* Step 5: Confirm */}
+        {step === 5 && selectedClient && (
           <Card>
             <h3 className="mb-4 text-lg font-semibold">Confirmar Orden</h3>
             <div className="space-y-3">
@@ -308,6 +393,14 @@ export default function NewOrderPage() {
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.plate} -{" "}
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.brand}{" "}
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.model}
+                </p>
+              </div>
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm text-gray-500">Lavador asignado</p>
+                <p className="font-medium">
+                  {selectedAssignee
+                    ? (selectedAssignee.user.name || selectedAssignee.user.email)
+                    : <span className="text-gray-400">Sin asignar</span>}
                 </p>
               </div>
               <div className="rounded-lg bg-gray-50 p-4">
@@ -337,7 +430,7 @@ export default function NewOrderPage() {
               </div>
             </div>
             <div className="mt-6 flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(3)}><ArrowLeft className="mr-2 h-4 w-4" /> Atras</Button>
+              <Button variant="secondary" onClick={() => setStep(4)}><ArrowLeft className="mr-2 h-4 w-4" /> Atras</Button>
               <Button onClick={handleSubmit} loading={submitting}>
                 <Check className="mr-2 h-4 w-4" /> Crear Orden
               </Button>

@@ -75,7 +75,11 @@ export default function TeamPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage("Invitacion enviada");
+        if (data.emailError) {
+          showMessage(`Invitacion creada pero el correo no se pudo enviar: ${data.emailError}. Comparte el enlace manualmente.`, true);
+        } else {
+          showMessage("Invitacion enviada correctamente");
+        }
         setInviteEmail("");
         loadData();
       } else {

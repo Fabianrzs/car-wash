@@ -88,15 +88,24 @@ export async function POST(request: Request) {
       include: { tenant: { select: { name: true } } },
     });
 
-    sendInvitationEmail(
-      email,
-      session.user.name ?? session.user.email ?? "Un administrador",
-      invitation.tenant.name,
-      token,
-      invitation.role
-    ).catch((err) => console.error("Error sending invitation email:", err));
+    let emailError: string | null = null;
+    try {
+      await sendInvitationEmail(
+        email,
+        session.user.name ?? session.user.email ?? "Un administrador",
+        invitation.tenant.name,
+        token,
+        invitation.role
+      );
+    } catch (err) {
+      console.error("Error sending invitation email:", err);
+      emailError = err instanceof Error ? err.message : "Error desconocido al enviar el correo";
+    }
 
-    return NextResponse.json(invitation, { status: 201 });
+    return NextResponse.json(
+      { ...invitation, emailError },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al invitar miembro:", error);

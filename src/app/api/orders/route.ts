@@ -113,6 +113,7 @@ export async function POST(request: Request) {
       clientId: body.clientId,
       vehicleId: body.vehicleId,
       notes: body.notes,
+      assignedToId: body.assignedToId || null,
       items: (body.items || []).map((item: { serviceTypeId: string; quantity: number }) => ({
         serviceTypeId: item.serviceTypeId,
         quantity: item.quantity || 1,
@@ -189,6 +190,9 @@ export async function POST(request: Request) {
           vehicle: { connect: { id: validatedData.vehicleId } },
           createdBy: { connect: { id: session.user.id } },
           tenant: { connect: { id: tenantId } },
+          ...(validatedData.assignedToId
+            ? { assignedTo: { connect: { id: validatedData.assignedToId } } }
+            : {}),
           items: {
             create: orderItems,
           },

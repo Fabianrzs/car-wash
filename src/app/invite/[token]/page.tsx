@@ -30,6 +30,15 @@ export default function InvitePage() {
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
 
+  // Register form state
+  const [showRegister, setShowRegister] = useState(false);
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [registered, setRegistered] = useState(false);
+
   useEffect(() => {
     async function fetchInvitation() {
       try {
@@ -41,6 +50,7 @@ export default function InvitePage() {
         }
         const data = await res.json();
         setInvitation(data);
+        setRegEmail(data.email);
       } catch {
         setError("Error al cargar la invitación");
       } finally {
@@ -83,6 +93,30 @@ export default function InvitePage() {
     }
   }
 
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setRegistering(true);
+    setRegisterError(null);
+
+    try {
+      const res = await fetch("/api/auth/register-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: regName, email: regEmail, password: regPassword, token }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRegisterError(data.error ?? "Error al crear la cuenta");
+        return;
+      }
+      setRegistered(true);
+    } catch {
+      setRegisterError("Error al crear la cuenta");
+    } finally {
+      setRegistering(false);
+    }
+  }
+
   if (loading || status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -118,6 +152,27 @@ export default function InvitePage() {
     );
   }
 
+  if (registered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md w-full mx-auto p-8 text-center">
+          <div className="text-green-500 text-5xl mb-4">✓</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">¡Cuenta creada!</h1>
+          <p className="text-gray-600 mb-6">
+            Tu cuenta fue creada y ya eres parte de{" "}
+            <strong>{invitation?.tenant.name}</strong>. Ahora inicia sesión para continuar.
+          </p>
+          <a
+            href={`/login?callbackUrl=/dashboard`}
+            className="inline-block py-3 px-6 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Iniciar sesión
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!invitation) return null;
 
   return (
@@ -132,17 +187,82 @@ export default function InvitePage() {
         </p>
 
         {!session ? (
-          <div>
-            <p className="text-sm text-gray-500 mb-4">
-              Necesitas iniciar sesión para aceptar esta invitación.
-            </p>
-            <button
-              onClick={handleAccept}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Iniciar sesión para aceptar
-            </button>
-          </div>
+          !showRegister ? (
+            <div>
+              <button
+                onClick={handleAccept}
+                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Iniciar sesión para aceptar
+              </button>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-500">
+                  ¿No tienes cuenta?{" "}
+                  <button
+                    onClick={() => setShowRegister(true)}
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Crear cuenta aquí
+                  </button>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <h2 className="font-semibold text-gray-800">Crear tu cuenta</h2>
+              {registerError && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{registerError}</p>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                <input
+                  type="text"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  required
+                  placeholder="Juan Pérez"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  required
+                  placeholder="correo@ejemplo.com"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <input
+                  type="password"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Mínimo 6 caracteres"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={registering}
+                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {registering ? "Creando cuenta..." : "Crear cuenta y unirme"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowRegister(false)}
+                className="w-full text-sm text-gray-500 hover:text-gray-700"
+              >
+                Ya tengo cuenta
+              </button>
+            </form>
+          )
         ) : (
           <div>
             <p className="text-sm text-gray-500 mb-4">

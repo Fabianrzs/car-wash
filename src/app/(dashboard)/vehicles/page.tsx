@@ -21,7 +21,7 @@ interface Vehicle {
   year: number | null;
   color: string | null;
   vehicleType: string;
-  client: { id: string; firstName: string; lastName: string };
+  clients: Array<{ clientId: string; client: { id: string; firstName: string; lastName: string } }>;
 }
 
 export default function VehiclesPage() {
@@ -102,12 +102,24 @@ export default function VehiclesPage() {
                       <TableCell className="hidden md:table-cell">{VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</TableCell>
                       <TableCell className="hidden md:table-cell">{v.color || "-"}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <button
-                          className="text-blue-600 hover:underline"
-                          onClick={() => router.push(`/clients/${v.client.id}`)}
-                        >
-                          {v.client.firstName} {v.client.lastName}
-                        </button>
+                        {v.clients.length === 0 ? (
+                          <span className="text-gray-400">—</span>
+                        ) : (
+                          <div className="space-y-0.5">
+                            {v.clients.slice(0, 2).map((cv) => (
+                              <button
+                                key={cv.client.id}
+                                className="block text-blue-600 hover:underline text-sm"
+                                onClick={() => router.push(`/clients/${cv.client.id}`)}
+                              >
+                                {cv.client.firstName} {cv.client.lastName}
+                              </button>
+                            ))}
+                            {v.clients.length > 2 && (
+                              <span className="text-xs text-gray-400">+{v.clients.length - 2} más</span>
+                            )}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button size="sm" variant="ghost" onClick={() => router.push(`/vehicles/${v.id}`)}>

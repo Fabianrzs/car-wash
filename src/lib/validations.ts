@@ -86,6 +86,7 @@ export const orderSchema = z.object({
   clientId: z.string().min(1, "El cliente es requerido"),
   vehicleId: z.string().min(1, "El vehiculo es requerido"),
   notes: z.string().max(1000).optional().or(z.literal("")),
+  assignedToId: z.string().optional().nullable(),
   items: z.array(orderItemSchema).min(1, "Debe agregar al menos un servicio"),
 });
 
