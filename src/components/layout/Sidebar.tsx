@@ -31,7 +31,6 @@ const managerNavigation = [
 
 const employeeNavigation = [
   { name: "Mis Órdenes", href: "/mis-ordenes", icon: ListTodo },
-  { name: "Ordenes", href: "/orders", icon: ClipboardList },
 ];
 
 export default function Sidebar() {
@@ -45,7 +44,7 @@ export default function Sidebar() {
   const showTeam = role === null || role === "OWNER" || role === "ADMIN";
   const showBilling = role === null || role === "OWNER";
 
-  const configNavigation = [
+  const configNavigation = isEmployee ? [] : [
     { name: "Ajustes", href: "/settings", icon: Settings, show: true },
     { name: "Equipo", href: "/team", icon: UserPlus, show: showTeam },
     { name: "Facturacion", href: "/billing", icon: CreditCard, show: showBilling },
@@ -122,11 +121,14 @@ export default function Sidebar() {
             );
           })}
 
-          {/* Separator */}
-          <div className="my-2 border-t border-gray-200" />
-          <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Configuracion
-          </p>
+          {configNavigation.length > 0 && (
+            <>
+              <div className="my-2 border-t border-gray-200" />
+              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Configuracion
+              </p>
+            </>
+          )}
 
           {configNavigation.filter((item) => item.show).map((item) => {
             const isActive =

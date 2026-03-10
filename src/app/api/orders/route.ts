@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || "";
     const clientId = searchParams.get("clientId") || "";
     const assignedToMe = searchParams.get("assignedToMe") === "true";
+    const unassigned = searchParams.get("unassigned") === "true";
 
     const where: Prisma.ServiceOrderWhereInput = { tenantId };
 
@@ -39,6 +40,11 @@ export async function GET(request: Request) {
 
     if (assignedToMe) {
       where.assignedToId = session.user.id;
+    }
+
+    if (unassigned) {
+      where.assignedToId = null;
+      if (!status) where.status = "PENDING";
     }
 
     const [orders, total] = await Promise.all([

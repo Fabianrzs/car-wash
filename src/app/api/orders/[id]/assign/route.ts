@@ -16,21 +16,27 @@ export async function PATCH(
     const { tenantId } = await requireTenant(request.headers);
     const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
-    if (tenantUser.role === "EMPLOYEE") {
-      return NextResponse.json({ error: "Sin permisos para asignar ordenes" }, { status: 403 });
-    }
-
     const { id } = await params;
     const body = await request.json();
     const { assignedToId } = body;
 
     const existingOrder = await prisma.serviceOrder.findFirst({
       where: { id, tenantId },
-      select: { id: true },
+      select: { id: true, assignedToId: true, status: true },
     });
 
     if (!existingOrder) {
       return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
+    }
+
+    if (tenantUser.role === "EMPLOYEE") {
+      // Employees can only self-assign unassigned orders
+      if (assignedToId !== session.user.id) {
+        return NextResponse.json({ error: "Solo puedes asignarte órdenes a ti mismo" }, { status: 403 });
+      }
+      if (existingOrder.assignedToId) {
+        return NextResponse.json({ error: "Esta orden ya tiene un lavador asignado" }, { status: 400 });
+      }
     }
 
     if (assignedToId !== null && assignedToId !== undefined) {

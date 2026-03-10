@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DollarSign, ClipboardList, Clock, Users } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
@@ -19,6 +20,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
+import { useTenantRole } from "@/hooks/useTenantRole";
 
 interface ReportStats {
   totalIncome: number;
@@ -52,10 +54,16 @@ interface Order {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const role = useTenantRole();
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (role === "EMPLOYEE") router.replace("/mis-ordenes");
+  }, [role, router]);
 
   useEffect(() => {
     async function fetchData() {
