@@ -1,6 +1,11 @@
 import NextAuth from "next-auth";
 import authConfig from "@/lib/auth.config";
-import { getCookieDomain } from "@/lib/domain";
+
+// Must match exactly what middleware.ts uses in getToken()
+const isProduction = process.env.NODE_ENV === "production";
+const sessionCookieName = isProduction
+  ? "__Secure-next-auth.session-token"
+  : "next-auth.session-token";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
@@ -8,13 +13,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token",
+      name: sessionCookieName,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain: getCookieDomain(),
+        secure: isProduction,
+        // No domain: same-origin is sufficient (no subdomain routing)
       },
     },
   },
