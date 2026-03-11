@@ -178,7 +178,7 @@ export default function NewOrderPage() {
   };
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title="Nueva Orden" description={`Paso ${step} de ${STEPS.length}`} />
 
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
@@ -189,12 +189,12 @@ export default function NewOrderPage() {
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                step > i + 1 ? "bg-green-500 text-white" : step === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+                step > i + 1 ? "bg-emerald-500 text-white" : step === i + 1 ? "bg-violet-600 text-white" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
               }`}>
                 {step > i + 1 ? <Check className="h-4 w-4" /> : i + 1}
               </div>
-              <span className={`ml-2 text-sm ${step === i + 1 ? "font-medium" : "text-gray-500"}`}>{label}</span>
-              {i < STEPS.length - 1 && <div className="mx-4 h-px w-8 bg-gray-300" />}
+              <span className={`ml-2 text-sm ${step === i + 1 ? "font-medium text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}`}>{label}</span>
+              {i < STEPS.length - 1 && <div className="mx-4 h-px w-8 bg-slate-300 dark:bg-slate-700" />}
             </div>
           ))}
         </div>
@@ -202,10 +202,10 @@ export default function NewOrderPage() {
         {/* Step 1: Select Client */}
         {step === 1 && (
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">Seleccionar Cliente</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Seleccionar Cliente</h3>
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   placeholder="Escribe al menos 3 letras para buscar..."
                   value={clientSearch}
@@ -219,18 +219,18 @@ export default function NewOrderPage() {
               {clients.map((c) => (
                 <div
                   key={c.id}
-                  className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-blue-50"
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 p-3 transition-colors hover:border-violet-200 hover:bg-violet-50 dark:border-slate-700 dark:hover:border-violet-800 dark:hover:bg-violet-900/10"
                   onClick={() => selectClient(c)}
                 >
                   <div>
-                    <p className="font-medium">{c.firstName} {c.lastName}</p>
-                    <p className="text-sm text-gray-500">{c.phone}</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{c.firstName} {c.lastName}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{c.phone}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400" />
+                  <ArrowRight className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                 </div>
               ))}
               {clients.length === 0 && clientSearch.length >= 3 && !loading && (
-                <p className="text-center text-sm text-gray-500">No se encontraron clientes</p>
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">No se encontraron clientes</p>
               )}
             </div>
           </Card>
@@ -239,12 +239,12 @@ export default function NewOrderPage() {
         {/* Step 2: Select Vehicle */}
         {step === 2 && selectedClient && (
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">
-              Seleccionar Vehiculo de {selectedClient.firstName} {selectedClient.lastName}
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">
+              Seleccionar Vehículo de {selectedClient.firstName} {selectedClient.lastName}
             </h3>
             {clientVehicles.length === 0 ? (
               <div className="text-center">
-                <p className="mb-4 text-gray-500">Este cliente no tiene vehiculos registrados</p>
+                <p className="mb-4 text-slate-500 dark:text-slate-400">Este cliente no tiene vehículos registrados</p>
                 <Button onClick={() => router.push(`/vehicles/new?clientId=${selectedClient.id}`)}>
                   Registrar Vehiculo
                 </Button>
@@ -255,17 +255,17 @@ export default function NewOrderPage() {
                   <div
                     key={v.id}
                     className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                      selectedVehicleId === v.id ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                      selectedVehicleId === v.id ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => setSelectedVehicleId(v.id)}
                   >
                     <div>
-                      <p className="font-medium">{v.plate}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{v.plate}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         {v.brand} {v.model} - {VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}
                       </p>
                     </div>
-                    {selectedVehicleId === v.id && <Check className="h-5 w-5 text-blue-600" />}
+                    {selectedVehicleId === v.id && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
                   </div>
                 ))}
               </div>
@@ -280,8 +280,8 @@ export default function NewOrderPage() {
         {/* Step 3: Select Employee (Lavador) */}
         {step === 3 && (
           <Card>
-            <h3 className="mb-1 text-lg font-semibold">Asignar Lavador</h3>
-            <p className="mb-4 text-sm text-gray-500">Opcional — puedes asignarlo despues desde el detalle de la orden.</p>
+            <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">Asignar Lavador</h3>
+            <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Opcional — puedes asignarlo después desde el detalle de la orden.</p>
 
             {employeesLoading ? (
               <div className="flex justify-center py-8"><Spinner size="lg" /></div>
@@ -290,41 +290,41 @@ export default function NewOrderPage() {
                 {/* Sin asignar option */}
                 <div
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                    selectedAssigneeId === null ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                    selectedAssigneeId === null ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => setSelectedAssigneeId(null)}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200">
-                    <UserCheck className="h-5 w-5 text-gray-400" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                    <UserCheck className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-600">Sin asignar</p>
-                    <p className="text-xs text-gray-400">La orden quedara pendiente de asignacion</p>
+                    <p className="font-medium text-slate-700 dark:text-slate-300">Sin asignar</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">La orden quedará pendiente de asignación</p>
                   </div>
-                  {selectedAssigneeId === null && <Check className="h-5 w-5 text-blue-600" />}
+                  {selectedAssigneeId === null && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
                 </div>
 
                 {employees.map((emp) => (
                   <div
                     key={emp.user.id}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                      selectedAssigneeId === emp.user.id ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                      selectedAssigneeId === emp.user.id ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => setSelectedAssigneeId(emp.user.id)}
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
                       {(emp.user.name || emp.user.email).charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">{emp.user.name || emp.user.email}</p>
-                      <p className="text-xs text-gray-400 capitalize">{emp.role.toLowerCase()}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{emp.user.name || emp.user.email}</p>
+                      <p className="text-xs capitalize text-slate-400 dark:text-slate-500">{emp.role.toLowerCase()}</p>
                     </div>
-                    {selectedAssigneeId === emp.user.id && <Check className="h-5 w-5 text-blue-600" />}
+                    {selectedAssigneeId === emp.user.id && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
                   </div>
                 ))}
 
                 {employees.length === 0 && (
-                  <p className="text-center text-sm text-gray-500 py-4">No hay empleados registrados en el equipo</p>
+                  <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No hay empleados registrados en el equipo</p>
                 )}
               </div>
             )}
@@ -339,7 +339,7 @@ export default function NewOrderPage() {
         {/* Step 4: Select Services */}
         {step === 4 && (
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">Seleccionar Servicios</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Seleccionar Servicios</h3>
             <div className="space-y-2">
               {services.map((svc) => {
                 const isSelected = selectedServices.some((s) => s.serviceTypeId === svc.id);
@@ -347,26 +347,26 @@ export default function NewOrderPage() {
                   <div
                     key={svc.id}
                     className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                      isSelected ? "border-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                      isSelected ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => toggleService(svc)}
                   >
                     <div>
-                      <p className="font-medium">{svc.name}</p>
-                      <p className="text-sm text-gray-500">{svc.description} - {svc.duration} min</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{svc.name}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{svc.description} - {svc.duration} min</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-blue-600">{formatCurrency(svc.price)}</span>
-                      {isSelected && <Check className="h-5 w-5 text-blue-600" />}
+                      <span className="font-semibold text-violet-600 dark:text-violet-400">{formatCurrency(svc.price)}</span>
+                      {isSelected && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
                     </div>
                   </div>
                 );
               })}
             </div>
             {selectedServices.length > 0 && (
-              <div className="mt-4 rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Servicios seleccionados: {selectedServices.length}</p>
-                <p className="text-xl font-bold">Total: {formatCurrency(total)}</p>
+              <div className="mt-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Servicios seleccionados: {selectedServices.length}</p>
+                <p className="text-xl font-bold text-slate-900 dark:text-slate-100">Total: {formatCurrency(total)}</p>
               </div>
             )}
             <div className="mt-6 flex justify-between">
@@ -381,47 +381,47 @@ export default function NewOrderPage() {
         {/* Step 5: Confirm */}
         {step === 5 && selectedClient && (
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">Confirmar Orden</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Confirmar Orden</h3>
             <div className="space-y-3">
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Cliente</p>
-                <p className="font-medium">{selectedClient.firstName} {selectedClient.lastName}</p>
+              <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Cliente</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{selectedClient.firstName} {selectedClient.lastName}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Vehiculo</p>
-                <p className="font-medium">
+              <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Vehículo</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.plate} -{" "}
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.brand}{" "}
                   {clientVehicles.find((v) => v.id === selectedVehicleId)?.model}
                 </p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Lavador asignado</p>
-                <p className="font-medium">
+              <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Lavador asignado</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">
                   {selectedAssignee
                     ? (selectedAssignee.user.name || selectedAssignee.user.email)
-                    : <span className="text-gray-400">Sin asignar</span>}
+                    : <span className="text-slate-400 dark:text-slate-500">Sin asignar</span>}
                 </p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="mb-2 text-sm text-gray-500">Servicios</p>
+              <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">Servicios</p>
                 {selectedServices.map((s) => (
-                  <div key={s.serviceTypeId} className="flex justify-between py-1">
+                  <div key={s.serviceTypeId} className="flex justify-between py-1 text-sm text-slate-700 dark:text-slate-300">
                     <span>{s.name} x{s.quantity}</span>
                     <span className="font-medium">{formatCurrency(s.price * s.quantity)}</span>
                   </div>
                 ))}
-                <div className="mt-2 border-t pt-2">
+                <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span className="text-blue-600">{formatCurrency(total)}</span>
+                    <span className="text-slate-900 dark:text-slate-100">Total</span>
+                    <span className="text-violet-600 dark:text-violet-400">{formatCurrency(total)}</span>
                   </div>
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Notas (opcional)</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Notas (opcional)</label>
                 <textarea
-                  className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-md border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

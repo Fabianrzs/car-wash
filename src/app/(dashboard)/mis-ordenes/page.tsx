@@ -153,17 +153,17 @@ export default function MisOrdenesPage() {
   };
 
   const statCards = [
-    { label: "Asignadas hoy", value: stats?.today ?? 0, icon: CalendarDays, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "En progreso",   value: stats?.byStatus.IN_PROGRESS ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Completadas",   value: stats?.totalCompleted ?? 0, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Ingresos",      value: formatCurrency(stats?.totalRevenue ?? 0), icon: DollarSign, color: "text-slate-700", bg: "bg-slate-100", isText: true },
+    { label: "Asignadas hoy", value: stats?.today ?? 0, icon: CalendarDays, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
+    { label: "En progreso",   value: stats?.byStatus.IN_PROGRESS ?? 0, icon: Clock, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20" },
+    { label: "Completadas",   value: stats?.totalCompleted ?? 0, icon: CheckCircle, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+    { label: "Ingresos",      value: formatCurrency(stats?.totalRevenue ?? 0), icon: DollarSign, color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-800", isText: true },
   ];
 
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900">Mis Órdenes</h2>
-        <p className="mt-1 text-sm text-slate-500">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Mis Órdenes</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
       </div>
 
       {/* Stats */}
@@ -171,15 +171,15 @@ export default function MisOrdenesPage() {
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4"
+            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
           >
             <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", card.bg)}>
               <card.icon className={cn("h-5 w-5", card.color)} />
             </div>
             <div>
-              <p className="text-xs text-slate-500">{card.label}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{card.label}</p>
               {statsLoading ? (
-                <div className="mt-1 h-5 w-10 animate-pulse rounded bg-slate-200" />
+                <div className="mt-1 h-5 w-10 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
               ) : (
                 <p className={cn("text-lg font-semibold", card.color)}>{card.value}</p>
               )}
@@ -191,19 +191,19 @@ export default function MisOrdenesPage() {
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       {/* Main tabs */}
-      <div className="mb-5 flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 w-fit">
+      <div className="mb-5 flex w-fit gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60">
         <button
           onClick={() => setMainTab("mine")}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-            mainTab === "mine" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mainTab === "mine" ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           )}
         >
           Mis Órdenes
           {stats && (
             <span className={cn(
               "rounded-full px-1.5 py-0.5 text-[11px] font-medium",
-              mainTab === "mine" ? "bg-indigo-100 text-indigo-700" : "bg-slate-200 text-slate-500"
+              mainTab === "mine" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
             )}>
               {(stats.byStatus.PENDING) + (stats.byStatus.IN_PROGRESS)}
             </span>
@@ -213,14 +213,14 @@ export default function MisOrdenesPage() {
           onClick={() => setMainTab("unassigned")}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-            mainTab === "unassigned" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mainTab === "unassigned" ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           )}
         >
           Sin Asignar
           {!loadingUnassigned && (
             <span className={cn(
               "rounded-full px-1.5 py-0.5 text-[11px] font-medium",
-              mainTab === "unassigned" ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-500"
+              mainTab === "unassigned" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
             )}>
               {unassignedOrders.length}
             </span>
@@ -240,15 +240,15 @@ export default function MisOrdenesPage() {
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   statusTab === tab.value
-                    ? "bg-indigo-600 text-white"
-                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "bg-violet-600 text-white dark:bg-violet-500"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                 )}
               >
                 {tab.label}
                 {stats && (
                   <span className={cn(
                     "rounded-full px-1.5 py-0.5 text-[10px]",
-                    statusTab === tab.value ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                    statusTab === tab.value ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
                   )}>
                     {tab.value === "PENDING"
                       ? stats.byStatus.PENDING
@@ -263,7 +263,7 @@ export default function MisOrdenesPage() {
 
           {loadingMine ? (
             <div className="flex justify-center py-16">
-              <Spinner size="lg" className="text-indigo-600" />
+              <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
             </div>
           ) : myOrders.length === 0 ? (
             <EmptyState
@@ -277,7 +277,7 @@ export default function MisOrdenesPage() {
                 statusTab === "PENDING" ? (
                   <button
                     onClick={() => setMainTab("unassigned")}
-                    className="text-sm text-indigo-600 hover:underline"
+                    className="text-sm text-violet-600 hover:underline dark:text-violet-400"
                   >
                     Ver órdenes sin asignar →
                   </button>
@@ -303,13 +303,13 @@ export default function MisOrdenesPage() {
       {/* SIN ASIGNAR panel */}
       {mainTab === "unassigned" && (
         <>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
             Órdenes pendientes sin lavador asignado. Haz clic en{" "}
-            <strong className="text-slate-700">Tomar</strong> para asignarte una.
+            <strong className="text-slate-700 dark:text-slate-300">Tomar</strong> para asignarte una.
           </p>
           {loadingUnassigned ? (
             <div className="flex justify-center py-16">
-              <Spinner size="lg" className="text-indigo-600" />
+              <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
             </div>
           ) : unassignedOrders.length === 0 ? (
             <EmptyState icon={UserCheck} title="No hay órdenes sin asignar" />
@@ -343,10 +343,10 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-        <Icon className="h-7 w-7 text-slate-400" />
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+        <Icon className="h-7 w-7 text-slate-400 dark:text-slate-500" />
       </div>
-      <p className="text-sm font-medium text-slate-700">{title}</p>
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{title}</p>
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
@@ -364,9 +364,9 @@ function OrderCard({
   onView: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-indigo-600">{order.orderNumber}</span>
+        <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">{order.orderNumber}</span>
         <Badge variant={badgeVariant(order.status)}>
           {ORDER_STATUS_LABELS[order.status]}
         </Badge>
@@ -376,8 +376,8 @@ function OrderCard({
         <Field label="Vehículo" value={`${order.vehicle.plate} · ${order.vehicle.brand} ${order.vehicle.model}`} />
         <Field label="Servicios" value={order.items.map((i) => i.serviceType.name).join(", ")} truncate />
         <div className="flex items-center justify-between pt-1">
-          <span className="text-xs text-slate-400">{formatDate(order.createdAt)}</span>
-          <span className="text-sm font-semibold text-slate-900">{formatCurrency(order.totalAmount)}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.createdAt)}</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(order.totalAmount)}</span>
         </div>
       </div>
       <div className="flex gap-2">
@@ -421,10 +421,10 @@ function UnassignedCard({
   onView: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-amber-200 bg-white p-5">
+    <div className="rounded-xl border border-amber-200 bg-white p-5 dark:border-amber-800/50 dark:bg-slate-900">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-indigo-600">{order.orderNumber}</span>
-        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+        <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">{order.orderNumber}</span>
+        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-500/25">
           Sin asignar
         </span>
       </div>
@@ -433,8 +433,8 @@ function UnassignedCard({
         <Field label="Vehículo" value={`${order.vehicle.plate} · ${order.vehicle.brand} ${order.vehicle.model}`} />
         <Field label="Servicios" value={order.items.map((i) => i.serviceType.name).join(", ")} truncate />
         <div className="flex items-center justify-between pt-1">
-          <span className="text-xs text-slate-400">{formatDate(order.createdAt)}</span>
-          <span className="text-sm font-semibold text-slate-900">{formatCurrency(order.totalAmount)}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.createdAt)}</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(order.totalAmount)}</span>
         </div>
       </div>
       <div className="flex gap-2">
@@ -465,8 +465,8 @@ function Field({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={cn("text-sm text-slate-700", truncate && "truncate")}>{value}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+      <p className={cn("text-sm text-slate-700 dark:text-slate-300", truncate && "truncate")}>{value}</p>
     </div>
   );
 }

@@ -111,7 +111,7 @@ export default function OrdersPage() {
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       {/* View toggle */}
-      <div className="mb-4 flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 w-fit">
+      <div className="mb-4 flex w-fit gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60">
         {(["all", "mine"] as const).map((v) => (
           <button
             key={v}
@@ -119,8 +119,8 @@ export default function OrdersPage() {
             className={cn(
               "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
               view === v
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             )}
           >
             {v === "all" ? "Todas" : "Mis órdenes"}
@@ -137,8 +137,8 @@ export default function OrdersPage() {
             className={cn(
               "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               status === tab.value
-                ? "bg-indigo-600 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                ? "bg-violet-600 text-white dark:bg-violet-500"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
             )}
           >
             {tab.label}
@@ -159,7 +159,7 @@ export default function OrdersPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="lg" className="text-indigo-600" />
+          <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
         </div>
       ) : (
         <>
@@ -190,7 +190,7 @@ export default function OrdersPage() {
               ) : (
                 orders.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell className="font-medium text-indigo-600">
+                    <TableCell className="font-medium text-violet-600 dark:text-violet-400">
                       {o.orderNumber}
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">

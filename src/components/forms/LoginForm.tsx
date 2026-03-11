@@ -49,13 +49,13 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
+    <div className="w-full max-w-md space-y-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-          <Droplets className="h-6 w-6 text-blue-600" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900/30">
+          <Droplets className="h-6 w-6 text-violet-600 dark:text-violet-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Iniciar Sesión</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Ingresa tus credenciales para acceder al sistema
         </p>
       </div>
@@ -96,17 +96,17 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
         <p>
           ¿No tienes una cuenta?{" "}
           <Link
             href="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300"
           >
             Registrate
           </Link>
         </p>
-        <Link href="/" className="font-medium text-gray-600 hover:text-gray-800">
+        <Link href="/" className="font-medium text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
           Volver al inicio
         </Link>
       </div>

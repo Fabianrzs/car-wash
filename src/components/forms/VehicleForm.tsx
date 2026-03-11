@@ -223,7 +223,7 @@ export default function VehicleForm({
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Placa *
           </label>
           <Input
@@ -234,12 +234,12 @@ export default function VehicleForm({
             className="uppercase"
           />
           {errors.plate && (
-            <p className="mt-1 text-sm text-red-600">{errors.plate}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.plate}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Tipo de Vehiculo
           </label>
           <Select
@@ -256,7 +256,7 @@ export default function VehicleForm({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Marca *
           </label>
           <Input
@@ -266,12 +266,12 @@ export default function VehicleForm({
             placeholder="Toyota, Chevrolet..."
           />
           {errors.brand && (
-            <p className="mt-1 text-sm text-red-600">{errors.brand}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.brand}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Modelo *
           </label>
           <Input
@@ -281,12 +281,12 @@ export default function VehicleForm({
             placeholder="Corolla, Spark..."
           />
           {errors.model && (
-            <p className="mt-1 text-sm text-red-600">{errors.model}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.model}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Ano
           </label>
           <Input
@@ -297,12 +297,12 @@ export default function VehicleForm({
             placeholder="2024"
           />
           {errors.year && (
-            <p className="mt-1 text-sm text-red-600">{errors.year}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.year}</p>
           )}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Color
           </label>
           <Input
@@ -315,7 +315,7 @@ export default function VehicleForm({
 
         {/* Clients section */}
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Clientes *
           </label>
 
@@ -325,13 +325,13 @@ export default function VehicleForm({
               {selectedClients.map((c) => (
                 <span
                   key={c.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                  className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-sm text-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
                 >
                   {c.firstName} {c.lastName}
                   <button
                     type="button"
                     onClick={() => removeClient(c.id)}
-                    className="ml-1 text-blue-600 hover:text-blue-900"
+                    className="ml-1 text-violet-600 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-200"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -352,13 +352,13 @@ export default function VehicleForm({
               placeholder="Buscar cliente por nombre o telefono..."
             />
             {showDropdown && searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
                 {searchResults.map((client) => (
                   <button
                     key={client.id}
                     type="button"
                     onClick={() => addClient(client)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     {client.firstName} {client.lastName} — {client.phone}
                   </button>
@@ -373,13 +373,13 @@ export default function VehicleForm({
               <button
                 type="button"
                 onClick={() => setShowNewClient(true)}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-violet-600 hover:underline dark:text-violet-400"
               >
                 + Crear nuevo cliente
               </button>
             ) : (
-              <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
-                <p className="text-sm font-medium text-blue-800">Nuevo cliente</p>
+              <div className="mt-2 space-y-3 rounded-lg border border-violet-200 bg-violet-50 p-4 dark:border-violet-800 dark:bg-violet-900/20">
+                <p className="text-sm font-medium text-violet-800 dark:text-violet-300">Nuevo cliente</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <Input
@@ -388,7 +388,7 @@ export default function VehicleForm({
                       onChange={(e) => setNewClient((p) => ({ ...p, firstName: e.target.value }))}
                     />
                     {newClientErrors.firstName && (
-                      <p className="mt-1 text-xs text-red-600">{newClientErrors.firstName}</p>
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{newClientErrors.firstName}</p>
                     )}
                   </div>
                   <div>
@@ -398,7 +398,7 @@ export default function VehicleForm({
                       onChange={(e) => setNewClient((p) => ({ ...p, lastName: e.target.value }))}
                     />
                     {newClientErrors.lastName && (
-                      <p className="mt-1 text-xs text-red-600">{newClientErrors.lastName}</p>
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{newClientErrors.lastName}</p>
                     )}
                   </div>
                   <div>
@@ -408,7 +408,7 @@ export default function VehicleForm({
                       onChange={(e) => setNewClient((p) => ({ ...p, phone: e.target.value }))}
                     />
                     {newClientErrors.phone && (
-                      <p className="mt-1 text-xs text-red-600">{newClientErrors.phone}</p>
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{newClientErrors.phone}</p>
                     )}
                   </div>
                 </div>
@@ -439,7 +439,7 @@ export default function VehicleForm({
           </div>
 
           {errors.clientIds && (
-            <p className="mt-1 text-sm text-red-600">{errors.clientIds}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.clientIds}</p>
           )}
         </div>
       </div>

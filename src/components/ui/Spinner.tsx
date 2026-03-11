@@ -36,7 +36,7 @@ export default function Spinner({ size = "md", className }: SpinnerProps) {
   );
 }
 
-export function PageLoader({ color = "text-indigo-600" }: { color?: string }) {
+export function PageLoader({ color = "text-violet-600 dark:text-violet-400" }: { color?: string }) {
   return (
     <div className="flex h-64 items-center justify-center">
       <Spinner size="lg" className={color} />

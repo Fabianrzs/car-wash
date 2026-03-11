@@ -99,18 +99,18 @@ export default function ClientsPage() {
           className={cn(
             "inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
             filterFrequent
-              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-400"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
           )}
         >
-          <Star className={cn("h-3.5 w-3.5", filterFrequent && "fill-indigo-600 text-indigo-600")} />
+          <Star className={cn("h-3.5 w-3.5", filterFrequent && "fill-violet-600 text-violet-600 dark:fill-violet-400 dark:text-violet-400")} />
           Frecuentes
         </button>
       </div>
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Spinner className="text-indigo-600" />
+          <Spinner className="text-violet-600 dark:text-violet-400" />
         </div>
       ) : (
         <>

@@ -11,7 +11,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={id} className="text-sm font-medium text-slate-700">
+          <label
+            htmlFor={id}
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+          >
             {label}
           </label>
         )}
@@ -19,13 +22,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={id}
           className={cn(
-            "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400",
-            error && "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10",
+            "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-150 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400",
+            "dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-violet-400 dark:focus:ring-violet-400/15 dark:disabled:bg-slate-900 dark:disabled:text-slate-600",
+            error &&
+              "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10 dark:border-rose-600 dark:focus:border-rose-500 dark:focus:ring-rose-500/10",
             className
           )}
           {...props}
         />
-        {error && <p className="text-xs text-rose-600">{error}</p>}
+        {error && (
+          <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>
+        )}
       </div>
     );
   }

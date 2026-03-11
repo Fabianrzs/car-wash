@@ -135,7 +135,7 @@ export default function TenantGuard({ children }: TenantGuardProps) {
   if (error && !showSelector) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
       </div>
     );
   }
@@ -146,20 +146,20 @@ export default function TenantGuard({ children }: TenantGuardProps) {
 
       <Modal isOpen={showSelector} onClose={() => {}} title="Seleccionar Lavadero">
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Selecciona el lavadero que deseas gestionar.
           </p>
 
           {/* Search — only for SUPER_ADMIN */}
           {isSuperAdmin && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Buscar por nombre o slug..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
             </div>
           )}
@@ -171,9 +171,9 @@ export default function TenantGuard({ children }: TenantGuardProps) {
                 <Spinner />
               </div>
             ) : error ? (
-              <p className="py-8 text-center text-sm text-red-500">{error}</p>
+              <p className="py-8 text-center text-sm text-rose-500 dark:text-rose-400">{error}</p>
             ) : tenants.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-400">
+              <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
                 No se encontraron lavaderos
               </p>
             ) : (
@@ -184,14 +184,14 @@ export default function TenantGuard({ children }: TenantGuardProps) {
                   onClick={() => setSelected(tenant)}
                   className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
                     selected?.id === tenant.id
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300 dark:border-violet-600"
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Building2 className="h-5 w-5 shrink-0 text-gray-400" />
+                  <Building2 className="h-5 w-5 shrink-0 text-slate-400 dark:text-slate-500" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{tenant.name}</p>
-                    <p className="truncate text-xs text-gray-500">{tenant.slug}</p>
+                    <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{tenant.name}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{tenant.slug}</p>
                   </div>
                 </button>
               ))
@@ -199,12 +199,12 @@ export default function TenantGuard({ children }: TenantGuardProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 border-t border-gray-200 pt-4">
+          <div className="flex gap-3 border-t border-slate-200 pt-4 dark:border-slate-700">
             {isSuperAdmin && (
               <button
                 type="button"
                 onClick={() => router.push("/admin")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <Shield className="h-4 w-4" />
                 Ir al Panel Admin
@@ -214,7 +214,7 @@ export default function TenantGuard({ children }: TenantGuardProps) {
               type="button"
               onClick={handleConfirm}
               disabled={!selected}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-violet-500 dark:hover:bg-violet-600"
             >
               Confirmar
             </button>

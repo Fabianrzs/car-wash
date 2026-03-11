@@ -1,15 +1,19 @@
 export const ORDER_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendiente",
+  PENDING:     "Pendiente",
   IN_PROGRESS: "En Progreso",
-  COMPLETED: "Completada",
-  CANCELLED: "Cancelada",
+  COMPLETED:   "Completada",
+  CANCELLED:   "Cancelada",
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
-  PENDING:     "bg-amber-50 text-amber-700 ring-amber-600/20",
-  IN_PROGRESS: "bg-blue-50 text-blue-700 ring-blue-600/20",
-  COMPLETED:   "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  CANCELLED:   "bg-slate-100 text-slate-500 ring-slate-400/20",
+  PENDING:
+    "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-500/25",
+  IN_PROGRESS:
+    "bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/20 dark:text-violet-400 dark:ring-violet-500/25",
+  COMPLETED:
+    "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-500/25",
+  CANCELLED:
+    "bg-slate-100 text-slate-500 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-600/20",
 };
 
 export const VEHICLE_TYPE_LABELS: Record<string, string> = {

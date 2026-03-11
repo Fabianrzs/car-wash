@@ -115,19 +115,19 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
     return (
       <>
         {showWarning && (
-          <div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+            <Clock className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-amber-800">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
                 Tu plan vence en {planStatus.daysLeft} día{planStatus.daysLeft !== 1 ? "s" : ""}
               </p>
-              <p className="text-xs text-amber-600">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
                 Renueva tu suscripción para no perder acceso.
               </p>
             </div>
             <button
               onClick={() => router.push("/billing")}
-              className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700"
+              className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
             >
               Renovar
             </button>
@@ -142,13 +142,13 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
   const Icon = config.icon;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl shadow-slate-900/20">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
-          <Icon className="h-7 w-7 text-rose-600" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm dark:bg-slate-950/70">
+      <div className="mx-4 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-2xl shadow-slate-900/20 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-900/20">
+          <Icon className="h-7 w-7 text-rose-600 dark:text-rose-400" />
         </div>
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">{config.title}</h2>
-        <p className="mb-6 text-sm text-slate-500">{config.description}</p>
+        <h2 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{config.title}</h2>
+        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">{config.description}</p>
         {config.showButton && (
           <button
             onClick={() => {
@@ -157,7 +157,7 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
                 : config.buttonPath;
               router.push(path);
             }}
-            className="w-full rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+            className="w-full rounded-md bg-violet-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-700 active:bg-violet-800 dark:bg-violet-500 dark:hover:bg-violet-600"
           >
             {config.buttonLabel}
           </button>

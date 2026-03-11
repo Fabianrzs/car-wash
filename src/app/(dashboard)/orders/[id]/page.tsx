@@ -153,12 +153,12 @@ export default function OrderDetailPage() {
       <Alert variant="error">{error}</Alert>
     </div>
   );
-  if (!order) return <div className="p-6 text-center text-gray-500">Orden no encontrada</div>;
+  if (!order) return <div className="p-6 text-center text-slate-500 dark:text-slate-400">Orden no encontrada</div>;
 
   const canAssign = currentUserRole === "OWNER" || currentUserRole === "ADMIN";
 
   return (
-    <div className="p-6">
+    <div>
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
       <PageHeader title={`Orden ${order.orderNumber}`}>
         <Button variant="secondary" onClick={() => router.push("/orders")}>
@@ -166,12 +166,12 @@ export default function OrderDetailPage() {
         </Button>
       </PageHeader>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Order Info */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Card>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Detalle de la Orden</h3>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Detalle de la Orden</h3>
               <Badge variant={badgeVariant(order.status)}>
                 {ORDER_STATUS_LABELS[order.status]}
               </Badge>
@@ -179,56 +179,59 @@ export default function OrderDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-gray-500">Cliente</p>
-                <p className="font-medium">
-                  <button className="text-blue-600 hover:underline" onClick={() => router.push(`/clients/${order.client.id}`)}>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Cliente</p>
+                <p className="mt-0.5 font-medium">
+                  <button
+                    className="text-violet-600 hover:text-violet-700 hover:underline dark:text-violet-400 dark:hover:text-violet-300"
+                    onClick={() => router.push(`/clients/${order.client.id}`)}
+                  >
                     {order.client.firstName} {order.client.lastName}
                   </button>
                 </p>
-                <p className="text-gray-400">{order.client.phone}</p>
+                <p className="text-slate-400 dark:text-slate-500">{order.client.phone}</p>
               </div>
               <div>
-                <p className="text-gray-500">Vehiculo</p>
-                <p className="font-medium">{order.vehicle.plate}</p>
-                <p className="text-gray-400">{order.vehicle.brand} {order.vehicle.model}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Vehículo</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{order.vehicle.plate}</p>
+                <p className="text-slate-400 dark:text-slate-500">{order.vehicle.brand} {order.vehicle.model}</p>
               </div>
               <div>
-                <p className="text-gray-500">Creada por</p>
-                <p className="font-medium">{order.createdBy?.name || "Sistema"}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Creada por</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{order.createdBy?.name || "Sistema"}</p>
               </div>
               <div>
-                <p className="text-gray-500">Fecha de creacion</p>
-                <p className="font-medium">{formatDate(order.createdAt)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Fecha de creación</p>
+                <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{formatDate(order.createdAt)}</p>
               </div>
               {order.startedAt && (
                 <div>
-                  <p className="text-gray-500">Iniciada</p>
-                  <p className="font-medium">{formatDate(order.startedAt)}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Iniciada</p>
+                  <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{formatDate(order.startedAt)}</p>
                 </div>
               )}
               {order.completedAt && (
                 <div>
-                  <p className="text-gray-500">Completada</p>
-                  <p className="font-medium">{formatDate(order.completedAt)}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Completada</p>
+                  <p className="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{formatDate(order.completedAt)}</p>
                 </div>
               )}
             </div>
 
             {order.notes && (
-              <div className="mt-4 rounded-lg bg-gray-50 p-3">
-                <p className="text-sm text-gray-500">Notas</p>
-                <p className="text-sm">{order.notes}</p>
+              <div className="mt-4 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Notas</p>
+                <p className="mt-0.5 text-sm text-slate-700 dark:text-slate-300">{order.notes}</p>
               </div>
             )}
           </Card>
 
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">Servicios</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Servicios</h3>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Servicio</TableHead>
-                  <TableHead>Duracion</TableHead>
+                  <TableHead>Duración</TableHead>
                   <TableHead>Cantidad</TableHead>
                   <TableHead>Precio Unit.</TableHead>
                   <TableHead>Subtotal</TableHead>
@@ -246,10 +249,10 @@ export default function OrderDetailPage() {
                 ))}
               </TableBody>
             </Table>
-            <div className="mt-4 flex justify-end border-t pt-4">
+            <div className="mt-4 flex justify-end border-t border-slate-100 pt-4 dark:border-slate-800">
               <div className="text-right">
-                <p className="text-sm text-gray-500">Total</p>
-                <p className="text-2xl font-bold text-blue-600">{formatCurrency(order.totalAmount)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
+                <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">{formatCurrency(order.totalAmount)}</p>
               </div>
             </div>
           </Card>
@@ -258,7 +261,7 @@ export default function OrderDetailPage() {
         {/* Actions Sidebar */}
         <div>
           <Card>
-            <h3 className="mb-4 text-lg font-semibold">Acciones</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Acciones</h3>
             <div className="space-y-3">
               {order.status === "PENDING" && (
                 <>
@@ -282,7 +285,7 @@ export default function OrderDetailPage() {
               {order.status === "IN_PROGRESS" && (
                 <>
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
                     onClick={() => updateStatus("COMPLETED")}
                     loading={updating}
                   >
@@ -299,9 +302,9 @@ export default function OrderDetailPage() {
                 </>
               )}
               {(order.status === "COMPLETED" || order.status === "CANCELLED") && (
-                <p className="text-center text-sm text-gray-500">
-                  Esta orden esta {ORDER_STATUS_LABELS[order.status].toLowerCase()}.
-                  No se pueden realizar mas acciones.
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                  Esta orden está {ORDER_STATUS_LABELS[order.status].toLowerCase()}.
+                  No se pueden realizar más acciones.
                 </p>
               )}
             </div>
@@ -309,12 +312,12 @@ export default function OrderDetailPage() {
 
           {/* Assignment */}
           <Card className="mt-4">
-            <h3 className="mb-3 text-lg font-semibold flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-gray-400" /> Asignado a
+            <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+              <UserCheck className="h-4 w-4 text-slate-400 dark:text-slate-500" /> Asignado a
             </h3>
             {canAssign ? (
               <select
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-violet-500"
                 value={order.assignedTo?.id ?? ""}
                 onChange={(e) => assignOrder(e.target.value || null)}
                 disabled={assigning}
@@ -327,56 +330,56 @@ export default function OrderDetailPage() {
                 ))}
               </select>
             ) : (
-              <p className="text-sm text-gray-700">
-                {order.assignedTo?.name ?? <span className="text-gray-400">Sin asignar</span>}
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                {order.assignedTo?.name ?? <span className="text-slate-400 dark:text-slate-500">Sin asignar</span>}
               </p>
             )}
           </Card>
 
           {/* Timeline */}
           <Card className="mt-4">
-            <h3 className="mb-4 text-lg font-semibold">Historial</h3>
+            <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Historial</h3>
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-blue-500" />
-                  <div className="w-px flex-1 bg-gray-200" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+                  <div className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Orden creada</p>
-                  <p className="text-xs text-gray-500">{formatDate(order.createdAt)}</p>
+                <div className="-mt-0.5">
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Orden creada</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.createdAt)}</p>
                 </div>
               </div>
               {order.startedAt && (
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                    <div className="w-px flex-1 bg-gray-200" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    <div className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">Servicio iniciado</p>
-                    <p className="text-xs text-gray-500">{formatDate(order.startedAt)}</p>
+                  <div className="-mt-0.5">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Servicio iniciado</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.startedAt)}</p>
                   </div>
                 </div>
               )}
               {order.completedAt && (
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="h-3 w-3 rounded-full bg-green-500" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">Servicio completado</p>
-                    <p className="text-xs text-gray-500">{formatDate(order.completedAt)}</p>
+                  <div className="-mt-0.5">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Servicio completado</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(order.completedAt)}</p>
                   </div>
                 </div>
               )}
               {order.status === "CANCELLED" && (
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="h-3 w-3 rounded-full bg-red-500" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-rose-500" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">Orden cancelada</p>
+                  <div className="-mt-0.5">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Orden cancelada</p>
                   </div>
                 </div>
               )}

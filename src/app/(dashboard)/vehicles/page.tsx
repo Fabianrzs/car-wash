@@ -86,7 +86,7 @@ export default function VehiclesPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="lg" className="text-indigo-600" />
+          <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
         </div>
       ) : (
         <>
@@ -134,7 +134,7 @@ export default function VehiclesPage() {
                           {v.clients.slice(0, 2).map((cv) => (
                             <button
                               key={cv.client.id}
-                              className="block text-xs text-indigo-600 hover:underline"
+                              className="block text-xs text-violet-600 hover:underline dark:text-violet-400"
                               onClick={() => router.push(`/clients/${cv.client.id}`)}
                             >
                               {cv.client.firstName} {cv.client.lastName}

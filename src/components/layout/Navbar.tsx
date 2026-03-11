@@ -6,22 +6,23 @@ import { useState, useEffect } from "react";
 import { LogOut, Shield, Building2, X } from "lucide-react";
 import Link from "next/link";
 import { getSelectedTenant, clearSelectedTenant } from "@/lib/tenant-cookie";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard":    "Dashboard",
-  "/clients":      "Clientes",
-  "/vehicles":     "Vehículos",
-  "/services":     "Servicios",
-  "/orders":       "Órdenes",
-  "/mis-ordenes":  "Mis Órdenes",
-  "/reports":      "Reportes",
-  "/settings":     "Ajustes",
-  "/team":         "Equipo",
-  "/billing":      "Facturación",
-  "/admin":        "Admin",
-  "/admin/tenants":"Tenants",
-  "/admin/plans":  "Planes",
-  "/admin/users":  "Usuarios",
+  "/dashboard":     "Dashboard",
+  "/clients":       "Clientes",
+  "/vehicles":      "Vehículos",
+  "/services":      "Servicios",
+  "/orders":        "Órdenes",
+  "/mis-ordenes":   "Mis Órdenes",
+  "/reports":       "Reportes",
+  "/settings":      "Ajustes",
+  "/team":          "Equipo",
+  "/billing":       "Facturación",
+  "/admin":         "Admin",
+  "/admin/tenants": "Tenants",
+  "/admin/plans":   "Planes",
+  "/admin/users":   "Usuarios",
 };
 
 function getPageTitle(pathname: string | null): string {
@@ -73,19 +74,21 @@ export default function Navbar() {
   const firstName = displayName.split(" ")[0];
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
-      <h1 className="text-sm font-semibold text-slate-900">{title}</h1>
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950 md:px-6">
+      <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        {title}
+      </h1>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Tenant badge for super admin */}
         {isSuperAdmin && tenantSlug && !pathname?.startsWith("/admin") && (
-          <span className="flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+          <span className="flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:border-violet-800 dark:bg-violet-900/25 dark:text-violet-400">
             <Building2 className="h-3 w-3" />
             {tenantSlug}
             <button
               type="button"
               onClick={handleChangeTenant}
-              className="ml-0.5 rounded p-0.5 hover:bg-indigo-100"
+              className="ml-0.5 rounded p-0.5 hover:bg-violet-100 dark:hover:bg-violet-900/50"
               title="Cambiar lavadero"
             >
               <X className="h-2.5 w-2.5" />
@@ -97,27 +100,33 @@ export default function Navbar() {
         {isSuperAdmin && !pathname?.startsWith("/admin") && (
           <Link
             href="/admin"
-            className="flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100"
+            className="flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/25 dark:text-violet-400 dark:hover:bg-violet-900/40"
           >
             <Shield className="h-3 w-3" />
             Admin
           </Link>
         )}
 
+        {/* Theme toggle */}
+        <ThemeToggle />
+
+        {/* Separator */}
+        <div className="mx-1 h-4 w-px bg-slate-200 dark:bg-slate-700" />
+
         {/* User */}
-        <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-semibold text-white">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-[11px] font-semibold text-white">
             {getInitials(session?.user?.name)}
           </div>
           {firstName && (
-            <span className="hidden text-sm font-medium text-slate-700 sm:block">
+            <span className="hidden text-sm font-medium text-slate-700 dark:text-slate-300 sm:block">
               {firstName}
             </span>
           )}
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             title="Cerrar sesión"
           >
             <LogOut className="h-4 w-4" />
