@@ -8,13 +8,20 @@ export async function generateOrderNumber(tenantId: string, tx?: TransactionClie
   const datePrefix = format(new Date(), "yyyyMMdd");
   const prefix = `ORD-${datePrefix}-`;
 
-  // Count existing orders with this prefix to avoid string-sort issues and timezone bugs
-  const count = await db.serviceOrder.count({
-    where: {
-      tenantId,
-      orderNumber: { startsWith: prefix },
-    },
+  // Get the most recently created order for this tenant with today's prefix.
+  // Sorting by createdAt desc is correct regardless of gaps in sequence
+  // (deleted orders, failed inserts, etc.).
+  const lastOrder = await db.serviceOrder.findFirst({
+    where: { tenantId, orderNumber: { startsWith: prefix } },
+    orderBy: { createdAt: "desc" },
+    select: { orderNumber: true },
   });
 
-  return `${prefix}${String(count + 1).padStart(3, "0")}`;
+  let sequence = 1;
+  if (lastOrder) {
+    const lastSeq = parseInt(lastOrder.orderNumber.split("-").pop() ?? "0", 10);
+    if (!isNaN(lastSeq) && lastSeq > 0) sequence = lastSeq + 1;
+  }
+
+  return `${prefix}${String(sequence).padStart(3, "0")}`;
 }
