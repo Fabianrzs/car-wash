@@ -6,19 +6,19 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-200",
-  COMPLETED: "bg-green-100 text-green-800 border-green-200",
-  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  PENDING:     "bg-amber-50 text-amber-700 ring-amber-600/20",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 ring-blue-600/20",
+  COMPLETED:   "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+  CANCELLED:   "bg-slate-100 text-slate-500 ring-slate-400/20",
 };
 
 export const VEHICLE_TYPE_LABELS: Record<string, string> = {
-  SEDAN: "Sedan",
-  SUV: "Camioneta",
-  TRUCK: "Camion",
+  SEDAN:      "Sedán",
+  SUV:        "Camioneta",
+  TRUCK:      "Camión",
   MOTORCYCLE: "Motocicleta",
-  VAN: "Van",
-  OTHER: "Otro",
+  VAN:        "Van",
+  OTHER:      "Otro",
 };
 
 export const ITEMS_PER_PAGE = 10;

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, CreditCard, ShieldOff, Clock } from "lucide-react";
 
-const CACHE_TTL_MS = 60_000; // 1 minute
+const CACHE_TTL_MS = 60_000;
 
 interface PlanStatus {
   isBlocked: boolean;
@@ -35,8 +35,8 @@ const BLOCK_CONFIG: Record<string, {
   },
   trial_expired: {
     icon: AlertTriangle,
-    title: "Tu periodo de servicio ha expirado",
-    description: "Tu periodo de servicio ha finalizado. Renueva tu plan para continuar usando el sistema.",
+    title: "Tu período de servicio expiró",
+    description: "Tu período de servicio ha finalizado. Renueva tu plan para continuar.",
     showButton: true,
     buttonLabel: "Renovar Plan",
     buttonPath: "/billing",
@@ -44,14 +44,14 @@ const BLOCK_CONFIG: Record<string, {
   payment_overdue: {
     icon: Clock,
     title: "Tienes un pago pendiente",
-    description: "Tienes una factura pendiente de pago. Realiza el pago para continuar usando el sistema.",
+    description: "Hay una factura pendiente. Realiza el pago para continuar usando el sistema.",
     showButton: true,
     buttonLabel: "Pagar Ahora",
     buttonPath: "/billing",
   },
   inactive: {
     icon: ShieldOff,
-    title: "Tu cuenta esta inactiva",
+    title: "Tu cuenta está inactiva",
     description: "Tu cuenta ha sido desactivada. Contacta al administrador para reactivarla.",
     showButton: false,
     buttonLabel: "",
@@ -59,7 +59,6 @@ const BLOCK_CONFIG: Record<string, {
   },
 };
 
-// Module-level cache shared across navigations within the same session
 let cachedStatus: PlanStatus | null = null;
 let cacheExpiresAt = 0;
 
@@ -71,20 +70,16 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
 
   useEffect(() => {
     const now = Date.now();
-
-    // Use cached value if still fresh
     if (cachedStatus && now < cacheExpiresAt) {
       setPlanStatus(cachedStatus);
       return;
     }
-
-    // Avoid parallel fetches on rapid navigation
     if (fetchingRef.current) return;
     fetchingRef.current = true;
 
     fetch("/api/tenant/plan-status")
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
+        if (!res.ok) throw new Error("Failed");
         return res.json();
       })
       .then((status: PlanStatus) => {
@@ -93,8 +88,10 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
         setPlanStatus(status);
       })
       .catch(() => {
-        // Fail-open: don't block on network errors
-        const fallback: PlanStatus = { isBlocked: false, reason: null, trialEndsAt: null, planName: null, daysLeft: null, pendingInvoiceId: null };
+        const fallback: PlanStatus = {
+          isBlocked: false, reason: null, trialEndsAt: null,
+          planName: null, daysLeft: null, pendingInvoiceId: null,
+        };
         cachedStatus = fallback;
         cacheExpiresAt = Date.now() + CACHE_TTL_MS;
         setPlanStatus(fallback);
@@ -102,10 +99,8 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
       .finally(() => { fetchingRef.current = false; });
   }, [pathname]);
 
-  // Don't block exempt paths
   const isExempt = EXEMPT_PATHS.some((p) => pathname.startsWith(p));
 
-  // Show expiration warning banner (not blocking)
   const showWarning =
     planStatus &&
     !planStatus.isBlocked &&
@@ -114,28 +109,25 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
     planStatus.daysLeft <= 7 &&
     !isExempt;
 
-  if (!planStatus) {
-    return <>{children}</>;
-  }
+  if (!planStatus) return <>{children}</>;
 
-  // Not blocked - show children (with optional warning)
   if (!planStatus.isBlocked || isExempt) {
     return (
       <>
         {showWarning && (
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-            <Clock className="h-5 w-5 shrink-0 text-yellow-600" />
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <Clock className="h-4 w-4 shrink-0 text-amber-600" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-yellow-800">
-                Tu plan vence en {planStatus.daysLeft} dia{planStatus.daysLeft !== 1 ? "s" : ""}
+              <p className="text-sm font-medium text-amber-800">
+                Tu plan vence en {planStatus.daysLeft} día{planStatus.daysLeft !== 1 ? "s" : ""}
               </p>
-              <p className="text-xs text-yellow-600">
-                Renueva tu suscripcion para no perder acceso.
+              <p className="text-xs text-amber-600">
+                Renueva tu suscripción para no perder acceso.
               </p>
             </div>
             <button
               onClick={() => router.push("/billing")}
-              className="rounded-lg bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-700"
+              className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700"
             >
               Renovar
             </button>
@@ -149,15 +141,14 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
   const config = BLOCK_CONFIG[planStatus.reason!] || BLOCK_CONFIG.no_plan;
   const Icon = config.icon;
 
-  // Don't render children when blocked — keep sensitive content out of the DOM
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-          <Icon className="h-8 w-8 text-red-600" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl shadow-slate-900/20">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+          <Icon className="h-7 w-7 text-rose-600" />
         </div>
-        <h2 className="mb-2 text-xl font-bold text-gray-900">{config.title}</h2>
-        <p className="mb-6 text-sm text-gray-600">{config.description}</p>
+        <h2 className="mb-2 text-lg font-semibold text-slate-900">{config.title}</h2>
+        <p className="mb-6 text-sm text-slate-500">{config.description}</p>
         {config.showButton && (
           <button
             onClick={() => {
@@ -166,7 +157,7 @@ export default function PlanBlockingGuard({ children }: { children: React.ReactN
                 : config.buttonPath;
               router.push(path);
             }}
-            className="w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="w-full rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
           >
             {config.buttonLabel}
           </button>

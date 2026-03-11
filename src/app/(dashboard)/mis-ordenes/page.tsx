@@ -7,10 +7,10 @@ import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import {
   Play,
   CheckCircle,
@@ -42,28 +42,31 @@ interface Stats {
 }
 
 const STATUS_TABS = [
-  { label: "Pendientes", value: "PENDING" },
+  { label: "Pendientes",  value: "PENDING" },
   { label: "En Progreso", value: "IN_PROGRESS" },
   { label: "Completadas", value: "COMPLETED" },
 ];
 
 const badgeVariant = (s: string) =>
-  s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
+  s === "COMPLETED"   ? "success"
+  : s === "IN_PROGRESS" ? "info"
+  : s === "CANCELLED"   ? "danger"
+  : "warning";
 
 export default function MisOrdenesPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const [mainTab, setMainTab] = useState<"mine" | "unassigned">("mine");
+  const [mainTab, setMainTab]     = useState<"mine" | "unassigned">("mine");
   const [statusTab, setStatusTab] = useState("PENDING");
-  const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [myOrders, setMyOrders]               = useState<Order[]>([]);
   const [unassignedOrders, setUnassignedOrders] = useState<Order[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loadingMine, setLoadingMine] = useState(true);
+  const [stats, setStats]         = useState<Stats | null>(null);
+  const [loadingMine, setLoadingMine]           = useState(true);
   const [loadingUnassigned, setLoadingUnassigned] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [statsLoading, setStatsLoading]         = useState(true);
+  const [error, setError]         = useState("");
+  const [updating, setUpdating]   = useState<string | null>(null);
 
   const fetchStats = useCallback(() => {
     setStatsLoading(true);
@@ -150,119 +153,103 @@ export default function MisOrdenesPage() {
   };
 
   const statCards = [
-    {
-      label: "Asignadas hoy",
-      value: stats?.today ?? 0,
-      icon: CalendarDays,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "En progreso",
-      value: stats?.byStatus.IN_PROGRESS ?? 0,
-      icon: Clock,
-      color: "text-yellow-600",
-      bg: "bg-yellow-50",
-    },
-    {
-      label: "Completadas",
-      value: stats?.totalCompleted ?? 0,
-      icon: CheckCircle,
-      color: "text-green-600",
-      bg: "bg-green-50",
-    },
-    {
-      label: "Ingresos generados",
-      value: formatCurrency(stats?.totalRevenue ?? 0),
-      icon: DollarSign,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-      isText: true,
-    },
+    { label: "Asignadas hoy", value: stats?.today ?? 0, icon: CalendarDays, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "En progreso",   value: stats?.byStatus.IN_PROGRESS ?? 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Completadas",   value: stats?.totalCompleted ?? 0, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Ingresos",      value: formatCurrency(stats?.totalRevenue ?? 0), icon: DollarSign, color: "text-slate-700", bg: "bg-slate-100", isText: true },
   ];
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mis Órdenes</h1>
-        <p className="text-sm text-gray-500 mt-1">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900">Mis Órdenes</h2>
+        <p className="mt-1 text-sm text-slate-500">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-6">
+      {/* Stats */}
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((card) => (
-          <Card key={card.label} className="flex items-center gap-4 p-5">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
-              <card.icon className={`h-6 w-6 ${card.color}`} />
+          <div
+            key={card.label}
+            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4"
+          >
+            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", card.bg)}>
+              <card.icon className={cn("h-5 w-5", card.color)} />
             </div>
             <div>
-              <p className="text-xs text-gray-500">{card.label}</p>
+              <p className="text-xs text-slate-500">{card.label}</p>
               {statsLoading ? (
-                <div className="mt-1 h-6 w-10 animate-pulse rounded bg-gray-200" />
+                <div className="mt-1 h-5 w-10 animate-pulse rounded bg-slate-200" />
               ) : (
-                <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                <p className={cn("text-lg font-semibold", card.color)}>{card.value}</p>
               )}
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       {/* Main tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
+      <div className="mb-5 flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 w-fit">
         <button
           onClick={() => setMainTab("mine")}
-          className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
-            mainTab === "mine" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-          }`}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+            mainTab === "mine" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          )}
         >
           Mis Órdenes
           {stats && (
-            <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-              mainTab === "mine" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"
-            }`}>
+            <span className={cn(
+              "rounded-full px-1.5 py-0.5 text-[11px] font-medium",
+              mainTab === "mine" ? "bg-indigo-100 text-indigo-700" : "bg-slate-200 text-slate-500"
+            )}>
               {(stats.byStatus.PENDING) + (stats.byStatus.IN_PROGRESS)}
             </span>
           )}
         </button>
         <button
           onClick={() => setMainTab("unassigned")}
-          className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
-            mainTab === "unassigned" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-          }`}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+            mainTab === "unassigned" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          )}
         >
           Sin Asignar
           {!loadingUnassigned && (
-            <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-              mainTab === "unassigned" ? "bg-orange-100 text-orange-700" : "bg-gray-200 text-gray-500"
-            }`}>
+            <span className={cn(
+              "rounded-full px-1.5 py-0.5 text-[11px] font-medium",
+              mainTab === "unassigned" ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-500"
+            )}>
               {unassignedOrders.length}
             </span>
           )}
         </button>
       </div>
 
-      {/* MIS ÓRDENES */}
+      {/* MIS ÓRDENES panel */}
       {mainTab === "mine" && (
         <>
           {/* Status sub-tabs */}
-          <div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
+          <div className="mb-4 flex gap-1.5">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setStatusTab(tab.value)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   statusTab === tab.value
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                    ? "bg-indigo-600 text-white"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                )}
               >
                 {tab.label}
                 {stats && (
-                  <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
-                    statusTab === tab.value ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"
-                  }`}>
+                  <span className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px]",
+                    statusTab === tab.value ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                  )}>
                     {tab.value === "PENDING"
                       ? stats.byStatus.PENDING
                       : tab.value === "IN_PROGRESS"
@@ -275,32 +262,28 @@ export default function MisOrdenesPage() {
           </div>
 
           {loadingMine ? (
-            <div className="flex justify-center py-12"><Spinner size="lg" /></div>
+            <div className="flex justify-center py-16">
+              <Spinner size="lg" className="text-indigo-600" />
+            </div>
           ) : myOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <ClipboardList className="h-8 w-8 text-gray-400" />
-              </div>
-              <p className="text-lg font-medium text-gray-700">
-                {statusTab === "PENDING"
-                  ? "No tienes órdenes pendientes"
-                  : statusTab === "IN_PROGRESS"
-                  ? "No tienes órdenes en progreso"
-                  : "No hay órdenes completadas"}
-              </p>
-              {statusTab === "PENDING" && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Revisa la pestaña{" "}
+            <EmptyState
+              icon={ClipboardList}
+              title={
+                statusTab === "PENDING"     ? "Sin órdenes pendientes"
+                : statusTab === "IN_PROGRESS" ? "Sin órdenes en progreso"
+                : "Sin órdenes completadas"
+              }
+              action={
+                statusTab === "PENDING" ? (
                   <button
                     onClick={() => setMainTab("unassigned")}
-                    className="text-blue-600 hover:underline"
+                    className="text-sm text-indigo-600 hover:underline"
                   >
-                    Sin Asignar
-                  </button>{" "}
-                  para tomar nuevas órdenes
-                </p>
-              )}
-            </div>
+                    Ver órdenes sin asignar →
+                  </button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {myOrders.map((order) => (
@@ -317,80 +300,54 @@ export default function MisOrdenesPage() {
         </>
       )}
 
-      {/* SIN ASIGNAR */}
+      {/* SIN ASIGNAR panel */}
       {mainTab === "unassigned" && (
         <>
-          <p className="text-sm text-gray-500 mb-4">
-            Órdenes pendientes sin lavador asignado. Haz clic en <strong>Tomar</strong> para asignarte una.
+          <p className="mb-4 text-sm text-slate-500">
+            Órdenes pendientes sin lavador asignado. Haz clic en{" "}
+            <strong className="text-slate-700">Tomar</strong> para asignarte una.
           </p>
-
           {loadingUnassigned ? (
-            <div className="flex justify-center py-12"><Spinner size="lg" /></div>
-          ) : unassignedOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <UserCheck className="h-8 w-8 text-gray-400" />
-              </div>
-              <p className="text-lg font-medium text-gray-700">No hay órdenes sin asignar</p>
-              <p className="text-sm text-gray-500 mt-1">Todas las órdenes pendientes tienen lavador asignado</p>
+            <div className="flex justify-center py-16">
+              <Spinner size="lg" className="text-indigo-600" />
             </div>
+          ) : unassignedOrders.length === 0 ? (
+            <EmptyState icon={UserCheck} title="No hay órdenes sin asignar" />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {unassignedOrders.map((order) => (
-                <div
+                <UnassignedCard
                   key={order.id}
-                  className="rounded-xl border border-orange-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-blue-600">#{order.orderNumber}</span>
-                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                      Sin asignar
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Cliente</p>
-                      <p className="font-medium text-sm">{order.client.firstName} {order.client.lastName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Vehículo</p>
-                      <p className="text-sm text-gray-700">{order.vehicle.plate} — {order.vehicle.brand} {order.vehicle.model}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Servicios</p>
-                      <p className="text-sm text-gray-700 truncate">{order.items.map((i) => i.serviceType.name).join(", ")}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
-                      <span className="font-semibold text-gray-900">{formatCurrency(order.totalAmount)}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => takeOrder(order.id)}
-                      loading={updating === order.id}
-                    >
-                      <UserCheck className="mr-1 h-3.5 w-3.5" /> Tomar orden
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => router.push(`/orders/${order.id}`)}
-                      title="Ver detalle"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                  order={order}
+                  updating={updating}
+                  onTake={takeOrder}
+                  onView={() => router.push(`/orders/${order.id}`)}
+                />
               ))}
             </div>
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  action,
+}: {
+  icon: React.ElementType;
+  title: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+        <Icon className="h-7 w-7 text-slate-400" />
+      </div>
+      <p className="text-sm font-medium text-slate-700">{title}</p>
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }
@@ -407,33 +364,22 @@ function OrderCard({
   onView: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-blue-600">#{order.orderNumber}</span>
+    <div className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-semibold text-indigo-600">{order.orderNumber}</span>
         <Badge variant={badgeVariant(order.status)}>
           {ORDER_STATUS_LABELS[order.status]}
         </Badge>
       </div>
-
-      <div className="space-y-2 mb-4">
-        <div>
-          <p className="text-xs text-gray-500">Cliente</p>
-          <p className="font-medium text-sm">{order.client.firstName} {order.client.lastName}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Vehículo</p>
-          <p className="text-sm text-gray-700">{order.vehicle.plate} — {order.vehicle.brand} {order.vehicle.model}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Servicios</p>
-          <p className="text-sm text-gray-700 truncate">{order.items.map((i) => i.serviceType.name).join(", ")}</p>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
-          <span className="font-semibold text-gray-900">{formatCurrency(order.totalAmount)}</span>
+      <div className="mb-4 space-y-2">
+        <Field label="Cliente" value={`${order.client.firstName} ${order.client.lastName}`} />
+        <Field label="Vehículo" value={`${order.vehicle.plate} · ${order.vehicle.brand} ${order.vehicle.model}`} />
+        <Field label="Servicios" value={order.items.map((i) => i.serviceType.name).join(", ")} truncate />
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-slate-400">{formatDate(order.createdAt)}</span>
+          <span className="text-sm font-semibold text-slate-900">{formatCurrency(order.totalAmount)}</span>
         </div>
       </div>
-
       <div className="flex gap-2">
         {order.status === "PENDING" && (
           <Button
@@ -442,23 +388,85 @@ function OrderCard({
             onClick={() => onUpdateStatus(order.id, "IN_PROGRESS")}
             loading={updating === order.id}
           >
-            <Play className="mr-1 h-3.5 w-3.5" /> Iniciar
+            <Play className="h-3.5 w-3.5" /> Iniciar
           </Button>
         )}
         {order.status === "IN_PROGRESS" && (
           <Button
             size="sm"
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700"
             onClick={() => onUpdateStatus(order.id, "COMPLETED")}
             loading={updating === order.id}
           >
-            <CheckCircle className="mr-1 h-3.5 w-3.5" /> Completar
+            <CheckCircle className="h-3.5 w-3.5" /> Completar
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={onView} title="Ver detalle">
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className="h-3.5 w-3.5" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function UnassignedCard({
+  order,
+  updating,
+  onTake,
+  onView,
+}: {
+  order: Order;
+  updating: string | null;
+  onTake: (id: string) => void;
+  onView: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-white p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-semibold text-indigo-600">{order.orderNumber}</span>
+        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+          Sin asignar
+        </span>
+      </div>
+      <div className="mb-4 space-y-2">
+        <Field label="Cliente" value={`${order.client.firstName} ${order.client.lastName}`} />
+        <Field label="Vehículo" value={`${order.vehicle.plate} · ${order.vehicle.brand} ${order.vehicle.model}`} />
+        <Field label="Servicios" value={order.items.map((i) => i.serviceType.name).join(", ")} truncate />
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-slate-400">{formatDate(order.createdAt)}</span>
+          <span className="text-sm font-semibold text-slate-900">{formatCurrency(order.totalAmount)}</span>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          className="flex-1"
+          onClick={() => onTake(order.id)}
+          loading={updating === order.id}
+        >
+          <UserCheck className="h-3.5 w-3.5" /> Tomar orden
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onView} title="Ver detalle">
+          <ExternalLink className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  truncate,
+}: {
+  label: string;
+  value: string;
+  truncate?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
+      <p className={cn("text-sm text-slate-700", truncate && "truncate")}>{value}</p>
     </div>
   );
 }

@@ -37,20 +37,9 @@ interface Order {
   totalAmount: string | number;
   status: string;
   createdAt: string;
-  client: {
-    firstName: string;
-    lastName: string;
-  };
-  vehicle: {
-    plate: string;
-    brand: string;
-    model: string;
-  };
-  items: {
-    serviceType: {
-      name: string;
-    };
-  }[];
+  client: { firstName: string; lastName: string };
+  vehicle: { plate: string; brand: string; model: string };
+  items: { serviceType: { name: string } }[];
 }
 
 export default function DashboardPage() {
@@ -69,19 +58,11 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const [dailyData, ordersData] = await Promise.all([
-          fetchApi<ReportStats>("/api/reports?period=daily").catch((err) => {
-            console.error("Error al cargar stats:", err);
-            return null;
-          }),
-          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch((err) => {
-            console.error("Error al cargar ordenes recientes:", err);
-            return null;
-          }),
+          fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
+          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch(() => null),
         ]);
-
         if (dailyData) setStats(dailyData);
-        else setError("No se pudieron cargar las estadisticas del dia.");
-
+        else setError("No se pudieron cargar las estadísticas del día.");
         if (ordersData) setRecentOrders((ordersData.orders || []).slice(0, 10));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar datos");
@@ -89,7 +70,6 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
@@ -105,50 +85,54 @@ export default function DashboardPage() {
     <div>
       <PageHeader
         title="Panel de Control"
-        description="Resumen general del negocio"
+        description="Resumen operativo del día"
       />
 
-      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
+      {error && <Alert variant="error" className="mb-6">{error}</Alert>}
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Ingresos Hoy"
           value={formatCurrency(stats?.totalIncome || 0)}
           icon={DollarSign}
-          description="Total facturado del dia"
+          description="Total facturado del día"
         />
         <StatsCard
-          title="Ordenes Hoy"
+          title="Órdenes Hoy"
           value={stats?.orderCount || 0}
           icon={ClipboardList}
-          description="Ordenes registradas hoy"
+          description="Órdenes registradas hoy"
         />
         <StatsCard
           title="En Proceso"
           value={stats?.inProgressOrders || 0}
           icon={Clock}
-          description="Ordenes en curso"
+          description="Órdenes en curso"
         />
         <StatsCard
           title="Clientes Atendidos"
           value={stats?.uniqueClients || 0}
           icon={Users}
-          description="Clientes unicos del dia"
+          description="Clientes únicos del día"
         />
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Ordenes Recientes
-          </h3>
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900">Órdenes Recientes</h3>
+          <Link
+            href="/orders"
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            Ver todas →
+          </Link>
         </div>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>#Orden</TableHead>
+              <TableHead># Orden</TableHead>
               <TableHead>Cliente</TableHead>
-              <TableHead className="hidden md:table-cell">Vehiculo</TableHead>
+              <TableHead className="hidden md:table-cell">Vehículo</TableHead>
               <TableHead className="hidden md:table-cell">Servicio</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Estado</TableHead>
@@ -158,8 +142,8 @@ export default function DashboardPage() {
           <TableBody>
             {recentOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-500">
-                  No hay ordenes recientes
+                <TableCell colSpan={7} className="py-10 text-center text-slate-400">
+                  No hay órdenes recientes
                 </TableCell>
               </TableRow>
             ) : (
@@ -168,30 +152,29 @@ export default function DashboardPage() {
                   <TableCell>
                     <Link
                       href={`/orders/${order.id}`}
-                      className="font-medium text-blue-600 hover:text-blue-800"
+                      className="font-medium text-indigo-600 hover:text-indigo-800"
                     >
                       {order.orderNumber}
                     </Link>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium text-slate-900">
                     {order.client.firstName} {order.client.lastName}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {order.vehicle.plate} - {order.vehicle.brand}{" "}
-                    {order.vehicle.model}
+                  <TableCell className="hidden text-slate-500 md:table-cell">
+                    {order.vehicle.plate} · {order.vehicle.brand} {order.vehicle.model}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {order.items
-                      .map((item) => item.serviceType.name)
-                      .join(", ")}
+                  <TableCell className="hidden text-slate-500 md:table-cell">
+                    {order.items.map((item) => item.serviceType.name).join(", ")}
                   </TableCell>
-                  <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
+                  <TableCell className="font-medium">
+                    {formatCurrency(order.totalAmount)}
+                  </TableCell>
                   <TableCell>
                     <Badge className={ORDER_STATUS_COLORS[order.status]}>
                       {ORDER_STATUS_LABELS[order.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden text-sm text-gray-500 md:table-cell">
+                  <TableCell className="hidden text-xs text-slate-400 md:table-cell">
                     {formatDate(order.createdAt)}
                   </TableCell>
                 </TableRow>

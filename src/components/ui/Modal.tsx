@@ -24,31 +24,23 @@ export default function Modal({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-
-    if (isOpen) {
-      dialog.showModal();
-    } else {
-      dialog.close();
-    }
+    if (isOpen) dialog.showModal();
+    else dialog.close();
   }, [isOpen]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-
     const handleCancel = (e: Event) => {
       e.preventDefault();
       onClose();
     };
-
     dialog.addEventListener("cancel", handleCancel);
     return () => dialog.removeEventListener("cancel", handleCancel);
   }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if (e.target === dialogRef.current) {
-      onClose();
-    }
+    if (e.target === dialogRef.current) onClose();
   };
 
   if (!isOpen) return null;
@@ -57,22 +49,22 @@ export default function Modal({
     <dialog
       ref={dialogRef}
       className={cn(
-        "fixed inset-0 m-auto w-full max-w-lg rounded-xl border-0 bg-white p-0 shadow-xl backdrop:bg-black/50",
+        "fixed inset-0 m-auto w-full max-w-lg rounded-2xl border-0 bg-white p-0 shadow-2xl shadow-slate-900/10",
         className
       )}
       onClick={handleBackdropClick}
     >
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="px-4 py-3 md:px-6 md:py-4">{children}</div>
+      <div className="px-6 py-5">{children}</div>
     </dialog>
   );
 }

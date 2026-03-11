@@ -1,7 +1,6 @@
 "use client";
 
 import { type LucideIcon } from "lucide-react";
-import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
@@ -25,33 +24,39 @@ export default function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={cn("p-4 md:p-6", className)}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900 md:text-3xl">{value}</p>
-          {description && (
-            <p className="mt-1 text-sm text-gray-500">{description}</p>
-          )}
-          {trend && (
-            <div className="mt-2 flex items-center gap-1">
-              <span
-                className={cn(
-                  "text-sm font-medium",
-                  trend.isPositive ? "text-green-600" : "text-red-600"
-                )}
-              >
-                {trend.isPositive ? "+" : "-"}
-                {Math.abs(trend.value)}%
-              </span>
-              <span className="text-sm text-gray-500">vs periodo anterior</span>
-            </div>
-          )}
-        </div>
-        <div className="rounded-lg bg-blue-50 p-3">
-          <Icon className="h-6 w-6 text-blue-600" />
+    <div
+      className={cn(
+        "rounded-xl border border-slate-200 bg-white p-5",
+        className
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          {title}
+        </p>
+        <div className="rounded-lg bg-slate-100 p-2">
+          <Icon className="h-4 w-4 text-slate-600" />
         </div>
       </div>
-    </Card>
+      <div className="mt-3">
+        <p className="text-2xl font-semibold text-slate-900">{value}</p>
+        {description && (
+          <p className="mt-0.5 text-xs text-slate-400">{description}</p>
+        )}
+        {trend && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <span
+              className={cn(
+                "text-xs font-medium",
+                trend.isPositive ? "text-emerald-600" : "text-rose-600"
+              )}
+            >
+              {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}%
+            </span>
+            <span className="text-xs text-slate-400">vs ayer</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

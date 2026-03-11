@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Eye, Plus, Search } from "lucide-react";
+import { Eye, Plus, Search, Star } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Pagination from "@/components/ui/Pagination";
 import Input from "@/components/ui/Input";
@@ -18,9 +18,9 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import PageHeader from "@/components/layout/PageHeader";
-import { ITEMS_PER_PAGE } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
 
 interface Client {
   id: string;
@@ -29,10 +29,7 @@ interface Client {
   phone: string;
   email: string | null;
   isFrequent: boolean;
-  _count?: {
-    vehicles: number;
-    orders: number;
-  };
+  _count?: { vehicles: number; orders: number };
 }
 
 export default function ClientsPage() {
@@ -54,14 +51,18 @@ export default function ClientsPage() {
         const params = new URLSearchParams({ page: String(page) });
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (filterFrequent) params.set("isFrequent", "true");
-
-        const data = await fetchApi<{ clients: Client[]; pages?: number; totalPages?: number }>(`/api/clients?${params}`);
+        const data = await fetchApi<{
+          clients: Client[];
+          pages?: number;
+          totalPages?: number;
+        }>(`/api/clients?${params}`);
         if (!cancelled) {
           setClients(data.clients || []);
           setTotalPages(data.pages || data.totalPages || 1);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar clientes");
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Error al cargar clientes");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -70,20 +71,12 @@ export default function ClientsPage() {
     return () => { cancelled = true; };
   }, [page, debouncedSearch, filterFrequent]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
-    setPage(1);
-  }
-
   return (
     <div>
-      <PageHeader
-        title="Clientes"
-        description="Gestion de clientes del autolavado"
-      >
+      <PageHeader title="Clientes" description="Gestión de clientes del autolavado">
         <Link href="/clients/new">
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nuevo Cliente
           </Button>
         </Link>
@@ -91,75 +84,82 @@ export default function ClientsPage() {
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <Input
             value={search}
-            onChange={handleSearchChange}
-            placeholder="Buscar por nombre, telefono o email..."
-            className="pl-10"
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Buscar por nombre, teléfono o email..."
+            className="pl-9"
           />
         </div>
-        <Button
-          variant={filterFrequent ? "primary" : "secondary"}
-          onClick={() => {
-            setFilterFrequent(!filterFrequent);
-            setPage(1);
-          }}
+        <button
+          onClick={() => { setFilterFrequent(!filterFrequent); setPage(1); }}
+          className={cn(
+            "inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+            filterFrequent
+              ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          )}
         >
-          {filterFrequent ? "Mostrando Frecuentes" : "Filtrar Frecuentes"}
-        </Button>
+          <Star className={cn("h-3.5 w-3.5", filterFrequent && "fill-indigo-600 text-indigo-600")} />
+          Frecuentes
+        </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white">
-        {loading ? (
-          <div className="flex h-48 items-center justify-center">
-            <Spinner />
-          </div>
-        ) : (
+      {loading ? (
+        <div className="flex h-48 items-center justify-center">
+          <Spinner className="text-indigo-600" />
+        </div>
+      ) : (
+        <>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Telefono</TableHead>
+                <TableHead>Teléfono</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden md:table-cell">Vehiculos</TableHead>
-                <TableHead className="hidden md:table-cell">Ordenes</TableHead>
-                <TableHead>Frecuente</TableHead>
-                <TableHead>Acciones</TableHead>
+                <TableHead className="hidden md:table-cell">Vehículos</TableHead>
+                <TableHead className="hidden md:table-cell">Órdenes</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500">
+                  <TableCell colSpan={7} className="py-12 text-center text-slate-400">
                     No se encontraron clientes
                   </TableCell>
                 </TableRow>
               ) : (
                 clients.map((client) => (
                   <TableRow key={client.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-slate-900">
                       {client.firstName} {client.lastName}
                     </TableCell>
-                    <TableCell>{client.phone}</TableCell>
-                    <TableCell className="hidden text-gray-500 md:table-cell">
-                      {client.email || "-"}
+                    <TableCell className="text-slate-600">{client.phone}</TableCell>
+                    <TableCell className="hidden text-slate-400 md:table-cell">
+                      {client.email || "—"}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{client._count?.vehicles || 0}</TableCell>
-                    <TableCell className="hidden md:table-cell">{client._count?.orders || 0}</TableCell>
+                    <TableCell className="hidden text-center md:table-cell">
+                      {client._count?.vehicles ?? 0}
+                    </TableCell>
+                    <TableCell className="hidden text-center md:table-cell">
+                      {client._count?.orders ?? 0}
+                    </TableCell>
                     <TableCell>
-                      {client.isFrequent && (
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Frecuente
-                        </Badge>
+                      {client.isFrequent ? (
+                        <Badge variant="success">Frecuente</Badge>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
                       )}
                     </TableCell>
                     <TableCell>
                       <Link href={`/clients/${client.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" title="Ver detalle">
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
                     </TableCell>
@@ -168,10 +168,9 @@ export default function ClientsPage() {
               )}
             </TableBody>
           </Table>
-        )}
-
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-      </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
+      )}
     </div>
   );
 }

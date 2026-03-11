@@ -8,30 +8,35 @@ import Link from "next/link";
 import { getSelectedTenant, clearSelectedTenant } from "@/lib/tenant-cookie";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/clients": "Clientes",
-  "/vehicles": "Vehiculos",
-  "/services": "Servicios",
-  "/orders": "Ordenes",
-  "/reports": "Reportes",
-  "/settings": "Ajustes",
-  "/team": "Equipo",
-  "/billing": "Facturacion",
-  "/admin": "Admin",
-  "/admin/tenants": "Tenants",
-  "/admin/plans": "Planes",
-  "/admin/users": "Usuarios",
+  "/dashboard":    "Dashboard",
+  "/clients":      "Clientes",
+  "/vehicles":     "Vehículos",
+  "/services":     "Servicios",
+  "/orders":       "Órdenes",
+  "/mis-ordenes":  "Mis Órdenes",
+  "/reports":      "Reportes",
+  "/settings":     "Ajustes",
+  "/team":         "Equipo",
+  "/billing":      "Facturación",
+  "/admin":        "Admin",
+  "/admin/tenants":"Tenants",
+  "/admin/plans":  "Planes",
+  "/admin/users":  "Usuarios",
 };
 
 function getPageTitle(pathname: string | null): string {
   if (!pathname) return "Dashboard";
-
   for (const [path, title] of Object.entries(pageTitles)) {
-    if (pathname === path || pathname.startsWith(path + "/")) {
-      return title;
-    }
+    if (pathname === path || pathname.startsWith(path + "/")) return title;
   }
   return "Dashboard";
+}
+
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "U";
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts[0].substring(0, 2).toUpperCase();
 }
 
 export default function Navbar() {
@@ -44,8 +49,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!isSuperAdmin) return;
-    const cookieSlug = getSelectedTenant();
-    if (cookieSlug) setTenantSlug(cookieSlug);
+    const slug = getSelectedTenant();
+    if (slug) setTenantSlug(slug);
   }, [isSuperAdmin]);
 
   const handleChangeTenant = () => {
@@ -54,10 +59,8 @@ export default function Navbar() {
   };
 
   const handleSignOut = () => {
-    // Clear all client-accessible cookies and session storage before sign-out
     clearSelectedTenant();
     sessionStorage.clear();
-    // Clear any remaining non-HttpOnly cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
         .replace(/^ +/, "")
@@ -66,49 +69,60 @@ export default function Navbar() {
     signOut({ callbackUrl: "/login" });
   };
 
-  return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
-      <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
-        {title}
-      </h1>
+  const displayName = session?.user?.name || session?.user?.email || "";
+  const firstName = displayName.split(" ")[0];
 
-      <div className="flex items-center gap-2 md:gap-4">
+  return (
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+      <h1 className="text-sm font-semibold text-slate-900">{title}</h1>
+
+      <div className="flex items-center gap-2">
+        {/* Tenant badge for super admin */}
         {isSuperAdmin && tenantSlug && !pathname?.startsWith("/admin") && (
-          <span className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700">
-            <Building2 className="h-3.5 w-3.5" />
+          <span className="flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+            <Building2 className="h-3 w-3" />
             {tenantSlug}
             <button
               type="button"
               onClick={handleChangeTenant}
-              className="ml-1 rounded p-0.5 hover:bg-blue-100"
+              className="ml-0.5 rounded p-0.5 hover:bg-indigo-100"
               title="Cambiar lavadero"
             >
-              <X className="h-3 w-3" />
+              <X className="h-2.5 w-2.5" />
             </button>
           </span>
         )}
-        {session?.user?.globalRole === "SUPER_ADMIN" && !pathname?.startsWith("/admin") && (
+
+        {/* Admin link */}
+        {isSuperAdmin && !pathname?.startsWith("/admin") && (
           <Link
             href="/admin"
-            className="flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-sm font-medium text-purple-700 hover:bg-purple-100"
+            className="flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100"
           >
-            <Shield className="h-3.5 w-3.5" />
+            <Shield className="h-3 w-3" />
             Admin
           </Link>
         )}
-        {session?.user && (
-          <span className="hidden text-sm text-gray-600 sm:block">
-            {session.user.name || session.user.email}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-        >
-          <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Cerrar sesion</span>
-        </button>
+
+        {/* User */}
+        <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-semibold text-white">
+            {getInitials(session?.user?.name)}
+          </div>
+          {firstName && (
+            <span className="hidden text-sm font-medium text-slate-700 sm:block">
+              {firstName}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            title="Cerrar sesión"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </header>
   );

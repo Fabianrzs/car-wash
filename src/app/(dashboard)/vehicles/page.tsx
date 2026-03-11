@@ -7,10 +7,17 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/Table";
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Search } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 
 interface Vehicle {
@@ -21,7 +28,10 @@ interface Vehicle {
   year: number | null;
   color: string | null;
   vehicleType: string;
-  clients: Array<{ clientId: string; client: { id: string; firstName: string; lastName: string } }>;
+  clients: Array<{
+    clientId: string;
+    client: { id: string; firstName: string; lastName: string };
+  }>;
 }
 
 export default function VehiclesPage() {
@@ -39,11 +49,13 @@ export default function VehiclesPage() {
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (search) params.set("search", search);
-      const data = await fetchApi<{ vehicles: Vehicle[]; pages: number }>(`/api/vehicles?${params}`);
+      const data = await fetchApi<{ vehicles: Vehicle[]; pages: number }>(
+        `/api/vehicles?${params}`
+      );
       setVehicles(data.vehicles || []);
       setTotalPages(data.pages || 1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar vehiculos");
+      setError(err instanceof Error ? err.message : "Error al cargar vehículos");
     } finally {
       setLoading(false);
     }
@@ -53,89 +65,107 @@ export default function VehiclesPage() {
 
   return (
     <div>
-      <PageHeader title="Vehiculos" description="Gestion de vehiculos registrados">
+      <PageHeader title="Vehículos" description="Gestión de vehículos registrados">
         <Button onClick={() => router.push("/vehicles/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Nuevo Vehiculo
+          <Plus className="h-4 w-4" />
+          Nuevo Vehículo
         </Button>
       </PageHeader>
 
-      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
-      <div className="mt-6">
-        <div className="mb-4 w-full md:max-w-sm">
-          <Input
-            placeholder="Buscar por placa..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          />
+      <div className="mb-4 relative w-full md:max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+        <Input
+          placeholder="Buscar por placa..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="pl-9"
+        />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <Spinner size="lg" className="text-indigo-600" />
         </div>
-
-        {loading ? (
-          <div className="flex justify-center py-12"><Spinner size="lg" /></div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Placa</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Modelo</TableHead>
+                <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                <TableHead className="hidden md:table-cell">Color</TableHead>
+                <TableHead className="hidden md:table-cell">Clientes</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableHead>Placa</TableHead>
-                  <TableHead>Marca</TableHead>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                  <TableHead className="hidden md:table-cell">Color</TableHead>
-                  <TableHead className="hidden md:table-cell">Cliente</TableHead>
-                  <TableHead>Acciones</TableHead>
+                  <TableCell
+                    colSpan={7}
+                    className="py-12 text-center text-slate-400"
+                  >
+                    No se encontraron vehículos
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vehicles.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-500">
-                      No se encontraron vehiculos
+              ) : (
+                vehicles.map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell className="font-medium text-slate-900">
+                      {v.plate}
+                    </TableCell>
+                    <TableCell className="text-slate-700">{v.brand}</TableCell>
+                    <TableCell className="text-slate-700">{v.model}</TableCell>
+                    <TableCell className="hidden text-slate-500 md:table-cell">
+                      {VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}
+                    </TableCell>
+                    <TableCell className="hidden text-slate-500 md:table-cell">
+                      {v.color || "—"}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {v.clients.length === 0 ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <div className="space-y-0.5">
+                          {v.clients.slice(0, 2).map((cv) => (
+                            <button
+                              key={cv.client.id}
+                              className="block text-xs text-indigo-600 hover:underline"
+                              onClick={() => router.push(`/clients/${cv.client.id}`)}
+                            >
+                              {cv.client.firstName} {cv.client.lastName}
+                            </button>
+                          ))}
+                          {v.clients.length > 2 && (
+                            <span className="text-xs text-slate-400">
+                              +{v.clients.length - 2} más
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => router.push(`/vehicles/${v.id}`)}
+                        title="Ver detalle"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  vehicles.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-medium">{v.plate}</TableCell>
-                      <TableCell>{v.brand}</TableCell>
-                      <TableCell>{v.model}</TableCell>
-                      <TableCell className="hidden md:table-cell">{VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</TableCell>
-                      <TableCell className="hidden md:table-cell">{v.color || "-"}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {v.clients.length === 0 ? (
-                          <span className="text-gray-400">—</span>
-                        ) : (
-                          <div className="space-y-0.5">
-                            {v.clients.slice(0, 2).map((cv) => (
-                              <button
-                                key={cv.client.id}
-                                className="block text-blue-600 hover:underline text-sm"
-                                onClick={() => router.push(`/clients/${cv.client.id}`)}
-                              >
-                                {cv.client.firstName} {cv.client.lastName}
-                              </button>
-                            ))}
-                            {v.clients.length > 2 && (
-                              <span className="text-xs text-gray-400">+{v.clients.length - 2} más</span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="ghost" onClick={() => router.push(`/vehicles/${v.id}`)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </>
-        )}
-      </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
+      )}
     </div>
   );
 }

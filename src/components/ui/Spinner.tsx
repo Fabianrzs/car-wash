@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 const sizeClasses = {
-  sm: "h-4 w-4",
-  md: "h-6 w-6",
+  sm: "h-3.5 w-3.5",
+  md: "h-5 w-5",
   lg: "h-8 w-8",
 };
 
@@ -36,8 +36,7 @@ export default function Spinner({ size = "md", className }: SpinnerProps) {
   );
 }
 
-/** Full-page centered loading state. */
-export function PageLoader({ color = "text-blue-600" }: { color?: string }) {
+export function PageLoader({ color = "text-indigo-600" }: { color?: string }) {
   return (
     <div className="flex h-64 items-center justify-center">
       <Spinner size="lg" className={color} />

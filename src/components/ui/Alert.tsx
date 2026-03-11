@@ -1,10 +1,18 @@
 import { cn } from "@/lib/utils";
+import { CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
 
 const variantClasses = {
-  success: "border-green-500 bg-green-50 text-green-800",
-  error: "border-red-500 bg-red-50 text-red-800",
-  warning: "border-yellow-500 bg-yellow-50 text-yellow-800",
-  info: "border-blue-500 bg-blue-50 text-blue-800",
+  success: "bg-emerald-50 border-emerald-500 text-emerald-800",
+  error:   "bg-rose-50 border-rose-500 text-rose-800",
+  warning: "bg-amber-50 border-amber-500 text-amber-800",
+  info:    "bg-sky-50 border-sky-500 text-sky-800",
+};
+
+const variantIcons = {
+  success: CheckCircle2,
+  error:   XCircle,
+  warning: AlertTriangle,
+  info:    Info,
 };
 
 interface AlertProps {
@@ -20,17 +28,21 @@ export default function Alert({
   children,
   className,
 }: AlertProps) {
+  const Icon = variantIcons[variant];
   return (
     <div
       className={cn(
-        "rounded-lg border-l-4 p-4",
+        "flex gap-3 rounded-lg border-l-4 p-4",
         variantClasses[variant],
         className
       )}
       role="alert"
     >
-      {title && <p className="mb-1 font-semibold">{title}</p>}
-      <div className="text-sm">{children}</div>
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <div>
+        {title && <p className="mb-0.5 text-sm font-semibold">{title}</p>}
+        <div className="text-sm">{children}</div>
+      </div>
     </div>
   );
 }

@@ -8,19 +8,27 @@ import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/Table";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Search, Eye } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
 
 const STATUS_TABS = [
-  { label: "Todas", value: "" },
+  { label: "Todas",      value: "" },
   { label: "Pendientes", value: "PENDING" },
   { label: "En Proceso", value: "IN_PROGRESS" },
-  { label: "Completadas", value: "COMPLETED" },
+  { label: "Completadas",value: "COMPLETED" },
   { label: "Canceladas", value: "CANCELLED" },
 ];
 
@@ -55,11 +63,8 @@ export default function OrdersPage() {
     setView(v);
     setPage(1);
     const url = new URL(window.location.href);
-    if (v === "mine") {
-      url.searchParams.set("view", "mine");
-    } else {
-      url.searchParams.delete("view");
-    }
+    if (v === "mine") url.searchParams.set("view", "mine");
+    else url.searchParams.delete("view");
     router.replace(url.pathname + url.search);
   };
 
@@ -73,13 +78,16 @@ export default function OrdersPage() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (status) params.set("status", status);
         if (view === "mine") params.set("assignedToMe", "true");
-        const data = await fetchApi<{ orders: Order[]; pages: number }>(`/api/orders?${params}`);
+        const data = await fetchApi<{ orders: Order[]; pages: number }>(
+          `/api/orders?${params}`
+        );
         if (!cancelled) {
           setOrders(data.orders || []);
           setTotalPages(data.pages || 1);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar ordenes");
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Error al cargar órdenes");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -88,116 +96,146 @@ export default function OrdersPage() {
     return () => { cancelled = true; };
   }, [page, debouncedSearch, status, view]);
 
-  const badgeVariant = (s: string) =>
-    s === "COMPLETED" ? "success" : s === "IN_PROGRESS" ? "info" : s === "CANCELLED" ? "danger" : "warning";
-
   return (
     <div>
-      <PageHeader title="Ordenes de Servicio" description="Gestion de ordenes de lavado">
+      <PageHeader
+        title="Órdenes de Servicio"
+        description="Gestión de órdenes de lavado"
+      >
         <Button onClick={() => router.push("/orders/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Nueva Orden
+          <Plus className="h-4 w-4" />
+          Nueva Orden
         </Button>
       </PageHeader>
 
-      {error && <Alert variant="error" className="mt-4">{error}</Alert>}
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
-      <div className="mt-6">
-        {/* View tabs */}
-        <div className="mb-4 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
-          {[{ label: "Todas", value: "all" as const }, { label: "Mis órdenes", value: "mine" as const }].map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setViewWithUrl(t.value)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                view === t.value
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => { setStatus(tab.value); setPage(1); }}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:px-4 md:py-2 ${
-                status === tab.value
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mb-4 w-full md:max-w-sm">
-          <Input
-            placeholder="Buscar por numero de orden..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          />
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-12"><Spinner size="lg" /></div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead># Orden</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Vehiculo</TableHead>
-                  <TableHead className="hidden md:table-cell">Servicios</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="hidden lg:table-cell">Asignado a</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-gray-500">No se encontraron ordenes</TableCell>
-                  </TableRow>
-                ) : (
-                  orders.map((o) => (
-                    <TableRow key={o.id}>
-                      <TableCell className="font-medium">{o.orderNumber}</TableCell>
-                      <TableCell>{o.client.firstName} {o.client.lastName}</TableCell>
-                      <TableCell className="hidden md:table-cell">{o.vehicle.plate}</TableCell>
-                      <TableCell className="hidden max-w-[200px] truncate md:table-cell">
-                        {o.items.map((i) => i.serviceType.name).join(", ")}
-                      </TableCell>
-                      <TableCell className="font-medium">{formatCurrency(o.totalAmount)}</TableCell>
-                      <TableCell>
-                        <Badge variant={badgeVariant(o.status)}>{ORDER_STATUS_LABELS[o.status]}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-gray-600">
-                        {o.assignedTo?.name ?? <span className="text-gray-400">—</span>}
-                      </TableCell>
-                      <TableCell className="hidden text-sm md:table-cell">{formatDate(o.createdAt)}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="ghost" onClick={() => router.push(`/orders/${o.id}`)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </>
-        )}
+      {/* View toggle */}
+      <div className="mb-4 flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 w-fit">
+        {(["all", "mine"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setViewWithUrl(v)}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+              view === v
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            {v === "all" ? "Todas" : "Mis órdenes"}
+          </button>
+        ))}
       </div>
+
+      {/* Status filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => { setStatus(tab.value); setPage(1); }}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              status === tab.value
+                ? "bg-indigo-600 text-white"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="mb-4 relative w-full md:max-w-xs">
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+        <Input
+          placeholder="Buscar por número..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="pl-9"
+        />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <Spinner size="lg" className="text-indigo-600" />
+        </div>
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead># Orden</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead className="hidden md:table-cell">Vehículo</TableHead>
+                <TableHead className="hidden md:table-cell">Servicios</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="hidden lg:table-cell">Asignado a</TableHead>
+                <TableHead className="hidden md:table-cell">Fecha</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={9}
+                    className="py-12 text-center text-slate-400"
+                  >
+                    No se encontraron órdenes
+                  </TableCell>
+                </TableRow>
+              ) : (
+                orders.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-medium text-indigo-600">
+                      {o.orderNumber}
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-900">
+                      {o.client.firstName} {o.client.lastName}
+                    </TableCell>
+                    <TableCell className="hidden text-slate-500 md:table-cell">
+                      {o.vehicle.plate}
+                    </TableCell>
+                    <TableCell className="hidden max-w-[180px] truncate text-slate-500 md:table-cell">
+                      {o.items.map((i) => i.serviceType.name).join(", ")}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {formatCurrency(o.totalAmount)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={ORDER_STATUS_COLORS[o.status]}>
+                        {ORDER_STATUS_LABELS[o.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden text-slate-500 lg:table-cell">
+                      {o.assignedTo?.name ?? (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden text-xs text-slate-400 md:table-cell">
+                      {formatDate(o.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => router.push(`/orders/${o.id}`)}
+                        title="Ver detalle"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
   page: number;
@@ -17,26 +17,35 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="mt-4 flex items-center justify-center gap-2">
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={page <= 1}
-        onClick={() => onPageChange(page - 1)}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <span className="text-sm text-gray-600">
-        Pagina {page} de {totalPages}
-      </span>
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={page >= totalPages}
-        onClick={() => onPageChange(page + 1)}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+      <p className="text-xs text-slate-500">
+        Página{" "}
+        <span className="font-medium text-slate-700">{page}</span>
+        {" "}de{" "}
+        <span className="font-medium text-slate-700">{totalPages}</span>
+      </p>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className={cn(
+            "inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          )}
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Anterior
+        </button>
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className={cn(
+            "inline-flex h-7 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          )}
+        >
+          Siguiente
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

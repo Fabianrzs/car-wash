@@ -8,7 +8,7 @@ interface TableProps {
 
 export function Table({ className, children }: TableProps) {
   return (
-    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+    <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table className={cn("w-full text-left text-sm", className)}>
         {children}
       </table>
@@ -24,7 +24,7 @@ export function TableHeader({
   children: React.ReactNode;
 }) {
   return (
-    <thead className={cn("border-b border-gray-200 bg-gray-50", className)}>
+    <thead className={cn("border-b border-slate-200 bg-slate-50/80", className)}>
       {children}
     </thead>
   );
@@ -38,7 +38,7 @@ export function TableBody({
   children: React.ReactNode;
 }) {
   return (
-    <tbody className={cn("divide-y divide-gray-200", className)}>
+    <tbody className={cn("divide-y divide-slate-100", className)}>
       {children}
     </tbody>
   );
@@ -52,12 +52,7 @@ export function TableRow({
   children: React.ReactNode;
 }) {
   return (
-    <tr
-      className={cn(
-        "transition-colors hover:bg-gray-50",
-        className
-      )}
-    >
+    <tr className={cn("transition-colors hover:bg-slate-50/60", className)}>
       {children}
     </tr>
   );
@@ -68,15 +63,11 @@ interface TableHeadProps extends ThHTMLAttributes<HTMLTableCellElement> {
   children: React.ReactNode;
 }
 
-export function TableHead({
-  className,
-  children,
-  ...props
-}: TableHeadProps) {
+export function TableHead({ className, children, ...props }: TableHeadProps) {
   return (
     <th
       className={cn(
-        "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 md:px-4 md:py-3",
+        "px-4 py-3 text-xs font-medium uppercase tracking-wide text-slate-500",
         className
       )}
       {...props}
@@ -91,14 +82,10 @@ interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
   children: React.ReactNode;
 }
 
-export function TableCell({
-  className,
-  children,
-  ...props
-}: TableCellProps) {
+export function TableCell({ className, children, ...props }: TableCellProps) {
   return (
     <td
-      className={cn("whitespace-nowrap px-3 py-2 text-gray-700 md:px-4 md:py-3", className)}
+      className={cn("whitespace-nowrap px-4 py-3 text-slate-700", className)}
       {...props}
     >
       {children}
