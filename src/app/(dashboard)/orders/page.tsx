@@ -179,7 +179,7 @@ export default function OrdersPage() {
                 <TableHead>Estado</TableHead>
                 <TableHead className="hidden lg:table-cell">Asignado a</TableHead>
                 <TableHead className="hidden md:table-cell">Fecha</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12"> </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
