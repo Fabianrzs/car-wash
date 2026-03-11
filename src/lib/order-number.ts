@@ -5,39 +5,16 @@ type TransactionClient = Omit<typeof prisma, "$connect" | "$disconnect" | "$on" 
 
 export async function generateOrderNumber(tenantId: string, tx?: TransactionClient): Promise<string> {
   const db = tx || prisma;
-  const today = new Date();
-  const datePrefix = format(today, "yyyyMMdd");
+  const datePrefix = format(new Date(), "yyyyMMdd");
+  const prefix = `ORD-${datePrefix}-`;
 
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-
-  const lastOrder = await db.serviceOrder.findFirst({
+  // Count existing orders with this prefix to avoid string-sort issues and timezone bugs
+  const count = await db.serviceOrder.count({
     where: {
       tenantId,
-      createdAt: {
-        gte: startOfDay,
-        lt: endOfDay,
-      },
-    },
-    orderBy: {
-      orderNumber: "desc",
-    },
-    select: {
-      orderNumber: true,
+      orderNumber: { startsWith: prefix },
     },
   });
 
-  let sequence = 1;
-
-  if (lastOrder) {
-    const parts = lastOrder.orderNumber.split("-");
-    const lastSequence = parseInt(parts[2], 10);
-    if (!isNaN(lastSequence)) {
-      sequence = lastSequence + 1;
-    }
-  }
-
-  const sequenceStr = sequence.toString().padStart(3, "0");
-
-  return `ORD-${datePrefix}-${sequenceStr}`;
+  return `${prefix}${String(count + 1).padStart(3, "0")}`;
 }

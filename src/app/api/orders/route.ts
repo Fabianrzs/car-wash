@@ -253,6 +253,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Conflicto al generar el número de orden. Intenta de nuevo." },
+        { status: 409 }
+      );
+    }
+
     console.error("Error al crear orden:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
