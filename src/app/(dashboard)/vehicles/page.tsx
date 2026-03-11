@@ -18,6 +18,7 @@ import {
 import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
 import { Plus, Eye, Search } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import Pagination from "@/components/ui/Pagination";
 
 interface Vehicle {
@@ -65,11 +66,14 @@ export default function VehiclesPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="vehicles" />
       <PageHeader title="Vehículos" description="Gestión de vehículos registrados">
-        <Button onClick={() => router.push("/vehicles/new")}>
-          <Plus className="h-4 w-4" />
-          Nuevo Vehículo
-        </Button>
+        <span data-onboarding="vehicles-new-btn">
+          <Button onClick={() => router.push("/vehicles/new")}>
+            <Plus className="h-4 w-4" />
+            Nuevo Vehículo
+          </Button>
+        </span>
       </PageHeader>
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
@@ -90,6 +94,7 @@ export default function VehiclesPage() {
         </div>
       ) : (
         <>
+          <div data-onboarding="vehicles-table">
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,7 +104,7 @@ export default function VehiclesPage() {
                 <TableHead className="hidden md:table-cell">Tipo</TableHead>
                 <TableHead className="hidden md:table-cell">Color</TableHead>
                 <TableHead className="hidden md:table-cell">Clientes</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12"> </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -163,6 +168,7 @@ export default function VehiclesPage() {
               )}
             </TableBody>
           </Table>
+          </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}

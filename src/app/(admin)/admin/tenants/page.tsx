@@ -11,6 +11,7 @@ import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
 
 import ManageTenantButton from "@/components/admin/ManageTenantButton";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface TenantItem {
   id: string;
@@ -105,17 +106,20 @@ export default function AdminTenantsPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="admin-tenants" />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
           Tenants ({total})
         </h1>
-        <Button onClick={openModal}>
-          <Plus className="mr-1 h-4 w-4" />
-          Nuevo Tenant
-        </Button>
+        <span data-onboarding="admin-tenants-new-btn">
+          <Button onClick={openModal}>
+            <Plus className="mr-1 h-4 w-4" />
+            Nuevo Tenant
+          </Button>
+        </span>
       </div>
 
-      <div className="mb-4">
+      <div data-onboarding="admin-tenants-search" className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
@@ -128,7 +132,7 @@ export default function AdminTenantsPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div data-onboarding="admin-tenants-table" className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>

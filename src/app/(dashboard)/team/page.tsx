@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Users, UserPlus, Mail, Trash2 } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { PageLoader } from "@/components/ui/Spinner";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -147,6 +148,7 @@ export default function TeamPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <OnboardingTour flowKey="team" />
       <div className="mb-6 flex items-center gap-2">
         <Users className="h-5 w-5 text-slate-400 dark:text-slate-500" />
         <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Equipo</h1>
@@ -154,7 +156,7 @@ export default function TeamPage() {
 
       {/* Invite form - only for OWNER */}
       {isOwner && (
-        <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:flex-row">
+        <form data-onboarding="team-invite-form" onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:flex-row">
           <div className="flex-1">
             <input
               type="email"
@@ -191,7 +193,7 @@ export default function TeamPage() {
       )}
 
       {/* Members */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div data-onboarding="team-members-list" className="mb-6 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Miembros ({members.length})</h2>
         </div>

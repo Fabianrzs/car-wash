@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreditCard, Check, AlertTriangle, Crown, Loader2, Clock, ArrowRight, XCircle } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { PageLoader } from "@/components/ui/Spinner";
 
 interface Plan {
@@ -118,6 +119,7 @@ export default function BillingPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
+      <OnboardingTour flowKey="billing" />
       <div className="mb-6 flex items-center gap-2">
         <CreditCard className="h-5 w-5 text-slate-400 dark:text-slate-500" />
         <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Facturacion</h1>
@@ -143,7 +145,7 @@ export default function BillingPage() {
       )}
 
       {/* Current Plan Info */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:p-6">
+      <div data-onboarding="billing-current-plan" className="mb-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:p-6">
         {billing?.plan ? (
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -274,7 +276,7 @@ export default function BillingPage() {
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Selecciona un plan para generar una factura. El servicio se activa una vez recibido el pago via PSE o tarjeta de credito.
       </p>
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-onboarding="billing-plans-grid" className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => {
           const isCurrent = billing?.plan?.id === plan.id;
           const features: string[] = Array.isArray(plan.features) ? plan.features : [];

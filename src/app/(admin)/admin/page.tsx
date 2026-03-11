@@ -13,6 +13,7 @@ import {
 
 import ManageTenantButton from "@/components/admin/ManageTenantButton";
 import { PageLoader } from "@/components/ui/Spinner";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface RecentTenant {
   id: string;
@@ -81,12 +82,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="admin-dashboard" />
       <h1 className="mb-6 text-2xl font-bold text-slate-900 dark:text-slate-100">
         Panel de Administracion
       </h1>
 
       {/* KPIs */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-onboarding="admin-kpis" className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -106,7 +108,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent Tenants */}
-      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div data-onboarding="admin-recent-tenants" className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800 md:px-6">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             Lavaderos Recientes

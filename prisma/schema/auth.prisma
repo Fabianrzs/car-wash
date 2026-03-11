@@ -14,7 +14,8 @@ model User {
   ordersCreated   ServiceOrder[] @relation("CreatedByUser")
   ordersAssigned  ServiceOrder[] @relation("AssignedToUser")
   tenantUsers     TenantUser[]
-  invitationsSent Invitation[]   @relation("InvitedByUser")
+  invitationsSent      Invitation[]               @relation("InvitedByUser")
+  onboardingCompletions UserOnboardingCompletion[]
 
   @@map("users")
 }

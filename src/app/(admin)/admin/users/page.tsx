@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface UserItem {
   id: string;
@@ -43,11 +44,12 @@ export default function AdminUsersPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="admin-users" />
       <h1 className="mb-6 text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
         Usuarios ({total})
       </h1>
 
-      <div className="mb-4">
+      <div data-onboarding="admin-users-search" className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
@@ -60,7 +62,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div data-onboarding="admin-users-table" className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>

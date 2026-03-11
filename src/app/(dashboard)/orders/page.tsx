@@ -23,6 +23,7 @@ import { Plus, Search, Eye } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 const STATUS_TABS = [
   { label: "Todas",      value: "" },
@@ -98,14 +99,17 @@ export default function OrdersPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="orders" />
       <PageHeader
         title="Órdenes de Servicio"
         description="Gestión de órdenes de lavado"
       >
-        <Button onClick={() => router.push("/orders/new")}>
-          <Plus className="h-4 w-4" />
-          Nueva Orden
-        </Button>
+        <span data-onboarding="orders-new-btn">
+          <Button onClick={() => router.push("/orders/new")}>
+            <Plus className="h-4 w-4" />
+            Nueva Orden
+          </Button>
+        </span>
       </PageHeader>
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
@@ -129,7 +133,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Status filter */}
-      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+      <div data-onboarding="orders-status-tabs" className="mb-4 flex flex-wrap items-center gap-1.5">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -147,7 +151,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Search */}
-      <div className="mb-4 relative w-full md:max-w-xs">
+      <div data-onboarding="orders-search" className="mb-4 relative w-full md:max-w-xs">
         <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
         <Input
           placeholder="Buscar por número..."
@@ -163,6 +167,7 @@ export default function OrdersPage() {
         </div>
       ) : (
         <>
+          <div data-onboarding="orders-table">
           <Table>
             <TableHeader>
               <TableRow>
@@ -233,6 +238,7 @@ export default function OrdersPage() {
               )}
             </TableBody>
           </Table>
+          </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}

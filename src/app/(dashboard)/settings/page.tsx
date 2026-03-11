@@ -5,6 +5,7 @@ import { Settings } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -69,6 +70,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <OnboardingTour flowKey="settings" />
       <div className="mb-6 flex items-center gap-2">
         <Settings className="h-5 w-5 text-slate-400 dark:text-slate-500" />
         <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -76,7 +78,7 @@ export default function SettingsPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:p-6">
+      <form data-onboarding="settings-form" onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:p-6">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Nombre</label>
           <input

@@ -11,6 +11,7 @@ import Alert from "@/components/ui/Alert";
 import { formatCurrency } from "@/lib/utils";
 import { fetchApi } from "@/lib/api";
 import { Plus, Clock, Pencil } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface ServiceType {
   id: string;
@@ -38,15 +39,18 @@ export default function ServicesPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="services" />
       <PageHeader title="Servicios" description="Tipos de servicio de lavado disponibles">
-        <Button onClick={() => router.push("/services/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
-        </Button>
+        <span data-onboarding="services-new-btn">
+          <Button onClick={() => router.push("/services/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
+          </Button>
+        </span>
       </PageHeader>
 
       {error && <Alert variant="error" className="mt-4">{error}</Alert>}
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-onboarding="services-grid" className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((s) => (
           <Card key={s.id} className={`cursor-pointer transition-shadow hover:shadow-md ${!s.isActive ? "opacity-60" : ""}`}>
             <div onClick={() => router.push(`/services/${s.id}`)}>

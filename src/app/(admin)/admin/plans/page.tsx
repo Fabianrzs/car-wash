@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
 import { PageLoader } from "@/components/ui/Spinner";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface PlanItem {
   id: string;
@@ -95,15 +96,18 @@ export default function AdminPlansPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="admin-plans" />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Planes</h1>
-        <Button onClick={openModal}>
-          <Plus className="mr-1 h-4 w-4" />
-          Nuevo Plan
-        </Button>
+        <span data-onboarding="admin-plans-new-btn">
+          <Button onClick={openModal}>
+            <Plus className="mr-1 h-4 w-4" />
+            Nuevo Plan
+          </Button>
+        </span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-onboarding="admin-plans-grid" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <div
             key={plan.id}

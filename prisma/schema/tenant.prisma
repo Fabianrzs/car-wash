@@ -17,6 +17,7 @@ model Plan {
   invoices          Invoice[]
   scheduledFromPlan ScheduledPlanChange[] @relation("FromPlan")
   scheduledToPlan   ScheduledPlanChange[] @relation("ToPlan")
+  onboardingFlows   OnboardingFlowPlan[]
 
   @@map("plans")
 }
@@ -50,6 +51,7 @@ model Tenant {
   payments             Payment[]
   scheduledPlanChanges ScheduledPlanChange[]
   paymentReminders     PaymentReminder[]
+  onboardingOverrides  OnboardingFlowTenant[]
 
   @@index([slug])
   @@index([planId])

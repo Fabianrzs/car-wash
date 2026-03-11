@@ -21,6 +21,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
 import { fetchApi } from "@/lib/api";
 import { useTenantRole } from "@/hooks/useTenantRole";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface ReportStats {
   totalIncome: number;
@@ -83,6 +84,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="dashboard" />
       <PageHeader
         title="Panel de Control"
         description="Resumen operativo del día"
@@ -90,7 +92,7 @@ export default function DashboardPage() {
 
       {error && <Alert variant="error" className="mb-6">{error}</Alert>}
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-onboarding="dashboard-stats" className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Ingresos Hoy"
           value={formatCurrency(stats?.totalIncome || 0)}
@@ -117,7 +119,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div>
+      <div data-onboarding="dashboard-recent-orders">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-900">Órdenes Recientes</h3>
           <Link

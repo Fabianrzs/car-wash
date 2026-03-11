@@ -10,6 +10,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import { formatCurrency } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants";
 import { DollarSign, ClipboardList, TrendingUp, CheckCircle, Download, Calendar, Search } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 const PERIODS = [
   { label: "Hoy", value: "daily" },
@@ -204,6 +205,7 @@ export default function ReportsPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="reports" />
       <PageHeader title="Reportes" description="Resumen de ingresos y detalle de ordenes">
         {tab === "resumen" && data && (
           <Button variant="secondary" onClick={exportSummaryCSV}>
@@ -240,7 +242,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Period selector */}
-      <div className="mb-6 flex flex-wrap items-center gap-2">
+      <div data-onboarding="reports-period-selector" className="mb-6 flex flex-wrap items-center gap-2">
         {PERIODS.map((p) => (
           <button
             key={p.value}
@@ -294,7 +296,7 @@ export default function ReportsPage() {
             </div>
           ) : data ? (
             <>
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div data-onboarding="reports-stats" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard title="Ingresos Totales" value={formatCurrency(data.totalIncome)} icon={DollarSign} />
                 <StatsCard title="Total Ordenes" value={String(data.orderCount)} icon={ClipboardList} />
                 <StatsCard title="Ticket Promedio" value={formatCurrency(data.averageOrderValue)} icon={TrendingUp} />

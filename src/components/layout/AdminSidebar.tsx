@@ -10,6 +10,7 @@ import {
   Shield,
   Menu,
   X,
+  Map,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Tenants", href: "/admin/tenants", icon: Building2 },
   { name: "Planes", href: "/admin/plans", icon: CreditCard },
   { name: "Usuarios", href: "/admin/users", icon: Users },
+  { name: "Onboarding", href: "/admin/onboarding", icon: Map },
 ];
 
 export default function AdminSidebar() {

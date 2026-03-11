@@ -21,6 +21,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { fetchApi } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface Client {
   id: string;
@@ -73,18 +74,21 @@ export default function ClientsPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="clients" />
       <PageHeader title="Clientes" description="Gestión de clientes del autolavado">
-        <Link href="/clients/new">
-          <Button>
-            <Plus className="h-4 w-4" />
-            Nuevo Cliente
-          </Button>
-        </Link>
+        <span data-onboarding="clients-new-btn">
+          <Link href="/clients/new">
+            <Button>
+              <Plus className="h-4 w-4" />
+              Nuevo Cliente
+            </Button>
+          </Link>
+        </span>
       </PageHeader>
 
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div data-onboarding="clients-search" className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <Input
@@ -114,6 +118,7 @@ export default function ClientsPage() {
         </div>
       ) : (
         <>
+          <div data-onboarding="clients-table">
           <Table>
             <TableHeader>
               <TableRow>
@@ -123,7 +128,7 @@ export default function ClientsPage() {
                 <TableHead className="hidden md:table-cell">Vehículos</TableHead>
                 <TableHead className="hidden md:table-cell">Órdenes</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12"> </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -168,6 +173,7 @@ export default function ClientsPage() {
               )}
             </TableBody>
           </Table>
+          </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}

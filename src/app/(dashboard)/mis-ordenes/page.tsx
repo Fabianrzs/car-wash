@@ -21,6 +21,7 @@ import {
   CalendarDays,
   UserCheck,
 } from "lucide-react";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 interface Order {
   id: string;
@@ -161,13 +162,14 @@ export default function MisOrdenesPage() {
 
   return (
     <div>
+      <OnboardingTour flowKey="mis-ordenes" />
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Mis Órdenes</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div data-onboarding="mis-ordenes-stats" className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -191,7 +193,7 @@ export default function MisOrdenesPage() {
       {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       {/* Main tabs */}
-      <div className="mb-5 flex w-fit gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60">
+      <div data-onboarding="mis-ordenes-main-tabs" className="mb-5 flex w-fit gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60">
         <button
           onClick={() => setMainTab("mine")}
           className={cn(
@@ -232,7 +234,7 @@ export default function MisOrdenesPage() {
       {mainTab === "mine" && (
         <>
           {/* Status sub-tabs */}
-          <div className="mb-4 flex gap-1.5">
+          <div data-onboarding="mis-ordenes-status-tabs" className="mb-4 flex gap-1.5">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.value}
