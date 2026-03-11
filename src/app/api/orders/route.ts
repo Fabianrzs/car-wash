@@ -130,110 +130,80 @@ export async function POST(request: Request) {
 
     const validatedData = orderSchema.parse(validationInput);
 
-    const order = await prisma.$transaction(async (tx) => {
-      const orderNumber = await generateOrderNumber(tenantId, tx);
+    const runTransaction = () =>
+      prisma.$transaction(async (tx) => {
+        const orderNumber = await generateOrderNumber(tenantId, tx);
 
-      const serviceTypeIds = validatedData.items.map(
-        (item) => item.serviceTypeId
-      );
-      const serviceTypes = await tx.serviceType.findMany({
-        where: {
-          id: { in: serviceTypeIds },
-          tenantId,
-          isActive: true,
-        },
+        const serviceTypeIds = validatedData.items.map((item) => item.serviceTypeId);
+        const serviceTypes = await tx.serviceType.findMany({
+          where: { id: { in: serviceTypeIds }, tenantId, isActive: true },
+        });
+
+        if (serviceTypes.length !== serviceTypeIds.length) {
+          throw new Error("Uno o mas servicios no son validos o estan inactivos");
+        }
+
+        const junction = await tx.clientVehicle.findFirst({
+          where: { clientId: validatedData.clientId, vehicleId: validatedData.vehicleId, tenantId },
+          select: { id: true },
+        });
+
+        if (!junction) {
+          const [clientExists, vehicleExists] = await Promise.all([
+            tx.client.findFirst({ where: { id: validatedData.clientId, tenantId }, select: { id: true } }),
+            tx.vehicle.findFirst({ where: { id: validatedData.vehicleId, tenantId }, select: { id: true } }),
+          ]);
+          if (!clientExists) throw new Error("El cliente no pertenece a este lavadero");
+          if (!vehicleExists) throw new Error("El vehiculo no pertenece a este lavadero");
+          throw new Error("El vehiculo no esta asociado a este cliente");
+        }
+
+        const priceMap = new Map(serviceTypes.map((st) => [st.id, Number(st.price)]));
+        let totalAmount = 0;
+        const orderItems = validatedData.items.map((item) => {
+          const unitPrice = priceMap.get(item.serviceTypeId)!;
+          const subtotal = unitPrice * item.quantity;
+          totalAmount += subtotal;
+          return { serviceType: { connect: { id: item.serviceTypeId } }, quantity: item.quantity, unitPrice, subtotal };
+        });
+
+        return tx.serviceOrder.create({
+          data: {
+            orderNumber,
+            status: "PENDING",
+            totalAmount,
+            notes: validatedData.notes || null,
+            client: { connect: { id: validatedData.clientId } },
+            vehicle: { connect: { id: validatedData.vehicleId } },
+            createdBy: { connect: { id: session.user.id } },
+            tenant: { connect: { id: tenantId } },
+            ...(validatedData.assignedToId
+              ? { assignedTo: { connect: { id: validatedData.assignedToId } } }
+              : {}),
+            items: { create: orderItems },
+          },
+          include: {
+            client: { select: { id: true, firstName: true, lastName: true } },
+            vehicle: { select: { id: true, plate: true, brand: true, model: true } },
+            items: { include: { serviceType: { select: { id: true, name: true } } } },
+          },
+        });
       });
 
-      if (serviceTypes.length !== serviceTypeIds.length) {
-        throw new Error("Uno o mas servicios no son validos o estan inactivos");
+    // Retry up to 3 times on orderNumber unique constraint collision
+    let order;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        order = await runTransaction();
+        break;
+      } catch (err) {
+        const isOrderNumberConflict =
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === "P2002";
+        if (isOrderNumberConflict && attempt < 2) continue;
+        throw err;
       }
-
-      // Validate client and vehicle belong to this tenant and are associated
-      const junction = await tx.clientVehicle.findFirst({
-        where: {
-          clientId: validatedData.clientId,
-          vehicleId: validatedData.vehicleId,
-          tenantId,
-        },
-        select: { id: true },
-      });
-
-      if (!junction) {
-        const [clientExists, vehicleExists] = await Promise.all([
-          tx.client.findFirst({ where: { id: validatedData.clientId, tenantId }, select: { id: true } }),
-          tx.vehicle.findFirst({ where: { id: validatedData.vehicleId, tenantId }, select: { id: true } }),
-        ]);
-        if (!clientExists) throw new Error("El cliente no pertenece a este lavadero");
-        if (!vehicleExists) throw new Error("El vehiculo no pertenece a este lavadero");
-        throw new Error("El vehiculo no esta asociado a este cliente");
-      }
-
-      const priceMap = new Map(
-        serviceTypes.map((st) => [st.id, Number(st.price)])
-      );
-
-      let totalAmount = 0;
-      const orderItems = validatedData.items.map((item) => {
-        const unitPrice = priceMap.get(item.serviceTypeId)!;
-        const subtotal = unitPrice * item.quantity;
-        totalAmount += subtotal;
-
-        return {
-          serviceType: { connect: { id: item.serviceTypeId } },
-          quantity: item.quantity,
-          unitPrice,
-          subtotal,
-        };
-      });
-
-      const createdOrder = await tx.serviceOrder.create({
-        data: {
-          orderNumber,
-          status: "PENDING",
-          totalAmount,
-          notes: validatedData.notes || null,
-          client: { connect: { id: validatedData.clientId } },
-          vehicle: { connect: { id: validatedData.vehicleId } },
-          createdBy: { connect: { id: session.user.id } },
-          tenant: { connect: { id: tenantId } },
-          ...(validatedData.assignedToId
-            ? { assignedTo: { connect: { id: validatedData.assignedToId } } }
-            : {}),
-          items: {
-            create: orderItems,
-          },
-        },
-        include: {
-          client: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          vehicle: {
-            select: {
-              id: true,
-              plate: true,
-              brand: true,
-              model: true,
-            },
-          },
-          items: {
-            include: {
-              serviceType: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      return createdOrder;
-    });
+    }
 
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
@@ -251,16 +221,6 @@ export async function POST(request: Request) {
       error.message.includes("no esta asociado")
     )) {
       return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return NextResponse.json(
-        { error: "Conflicto al generar el número de orden. Intenta de nuevo." },
-        { status: 409 }
-      );
     }
 
     console.error("Error al crear orden:", error);
