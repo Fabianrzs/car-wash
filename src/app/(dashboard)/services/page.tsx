@@ -56,10 +56,10 @@ export default function ServicesPage() {
                   {s.isActive ? "Activo" : "Inactivo"}
                 </Badge>
               </div>
-              <p className="mb-3 text-sm text-gray-500">{s.description || "Sin descripcion"}</p>
+              <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">{s.description || "Sin descripcion"}</p>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-blue-600">{formatCurrency(s.price)}</span>
-                <span className="flex items-center gap-1 text-sm text-gray-500">
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(s.price)}</span>
+                <span className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
                   <Clock className="h-4 w-4" /> {s.duration} min
                 </span>
               </div>
@@ -67,7 +67,7 @@ export default function ServicesPage() {
           </Card>
         ))}
         {services.length === 0 && (
-          <p className="col-span-full text-center text-gray-500">No hay servicios registrados</p>
+          <p className="col-span-full text-center text-slate-500 dark:text-slate-400">No hay servicios registrados</p>
         )}
       </div>
     </div>

@@ -189,7 +189,7 @@ export default function NewOrderPage() {
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                step > i + 1 ? "bg-emerald-500 text-white" : step === i + 1 ? "bg-violet-600 text-white" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                step > i + 1 ? "bg-emerald-500 text-white" : step === i + 1 ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
               }`}>
                 {step > i + 1 ? <Check className="h-4 w-4" /> : i + 1}
               </div>
@@ -219,7 +219,7 @@ export default function NewOrderPage() {
               {clients.map((c) => (
                 <div
                   key={c.id}
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 p-3 transition-colors hover:border-violet-200 hover:bg-violet-50 dark:border-slate-700 dark:hover:border-violet-800 dark:hover:bg-violet-900/10"
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 p-3 transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800/50"
                   onClick={() => selectClient(c)}
                 >
                   <div>
@@ -255,7 +255,7 @@ export default function NewOrderPage() {
                   <div
                     key={v.id}
                     className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                      selectedVehicleId === v.id ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                      selectedVehicleId === v.id ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900/30" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => setSelectedVehicleId(v.id)}
                   >
@@ -265,7 +265,7 @@ export default function NewOrderPage() {
                         {v.brand} {v.model} - {VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}
                       </p>
                     </div>
-                    {selectedVehicleId === v.id && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                    {selectedVehicleId === v.id && <Check className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />}
                   </div>
                 ))}
               </div>
@@ -290,7 +290,7 @@ export default function NewOrderPage() {
                 {/* Sin asignar option */}
                 <div
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                    selectedAssigneeId === null ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    selectedAssigneeId === null ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900/30" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => setSelectedAssigneeId(null)}
                 >
@@ -301,25 +301,25 @@ export default function NewOrderPage() {
                     <p className="font-medium text-slate-700 dark:text-slate-300">Sin asignar</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500">La orden quedará pendiente de asignación</p>
                   </div>
-                  {selectedAssigneeId === null && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                  {selectedAssigneeId === null && <Check className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />}
                 </div>
 
                 {employees.map((emp) => (
                   <div
                     key={emp.user.id}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                      selectedAssigneeId === emp.user.id ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                      selectedAssigneeId === emp.user.id ? "border-zinc-900 bg-zinc-50 dark:bg-zinc-900/10 dark:border-zinc-100" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => setSelectedAssigneeId(emp.user.id)}
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                       {(emp.user.name || emp.user.email).charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-slate-900 dark:text-slate-100">{emp.user.name || emp.user.email}</p>
                       <p className="text-xs capitalize text-slate-400 dark:text-slate-500">{emp.role.toLowerCase()}</p>
                     </div>
-                    {selectedAssigneeId === emp.user.id && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                    {selectedAssigneeId === emp.user.id && <Check className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />}
                   </div>
                 ))}
 
@@ -347,7 +347,7 @@ export default function NewOrderPage() {
                   <div
                     key={svc.id}
                     className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                      isSelected ? "border-violet-500 bg-violet-50 dark:bg-violet-900/10 dark:border-violet-600" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                      isSelected ? "border-zinc-900 bg-zinc-50 dark:bg-zinc-900/10 dark:border-zinc-100" : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                     onClick={() => toggleService(svc)}
                   >
@@ -356,8 +356,8 @@ export default function NewOrderPage() {
                       <p className="text-sm text-slate-500 dark:text-slate-400">{svc.description} - {svc.duration} min</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-violet-600 dark:text-violet-400">{formatCurrency(svc.price)}</span>
-                      {isSelected && <Check className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(svc.price)}</span>
+                      {isSelected && <Check className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />}
                     </div>
                   </div>
                 );
@@ -414,14 +414,14 @@ export default function NewOrderPage() {
                 <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-slate-900 dark:text-slate-100">Total</span>
-                    <span className="text-violet-600 dark:text-violet-400">{formatCurrency(total)}</span>
+                    <span className="text-slate-900 dark:text-slate-100">{formatCurrency(total)}</span>
                   </div>
                 </div>
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Notas (opcional)</label>
                 <textarea
-                  className="w-full rounded-md border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  className="w-full rounded-md border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

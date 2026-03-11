@@ -8,6 +8,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Alert from "@/components/ui/Alert";
 
 import ManageTenantButton from "@/components/admin/ManageTenantButton";
 
@@ -67,7 +68,6 @@ export default function AdminTenantsPage() {
     setFormData({ name: "", slug: "", email: "", phone: "", address: "", planId: "", ownerEmail: "" });
     setFormError("");
     setShowModal(true);
-    // Load plans for dropdown
     fetch("/api/admin/plans").then((r) => r.json()).then(setPlans).catch(() => {});
   };
 
@@ -106,7 +106,9 @@ export default function AdminTenantsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Tenants ({total})</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
+          Tenants ({total})
+        </h1>
         <Button onClick={openModal}>
           <Plus className="mr-1 h-4 w-4" />
           Nuevo Tenant
@@ -115,61 +117,67 @@ export default function AdminTenantsPage() {
 
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             placeholder="Buscar por nombre, slug o email..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
           />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-slate-50 text-left text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
-              <th className="px-4 py-3">Lavadero</th>
-              <th className="hidden px-4 py-3 md:table-cell">Plan</th>
-              <th className="px-4 py-3">Usuarios</th>
-              <th className="hidden px-4 py-3 md:table-cell">Clientes</th>
-              <th className="hidden px-4 py-3 md:table-cell">Ordenes</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3">Acciones</th>
+              <th className="px-4 py-3 font-medium">Lavadero</th>
+              <th className="hidden px-4 py-3 font-medium md:table-cell">Plan</th>
+              <th className="px-4 py-3 font-medium">Usuarios</th>
+              <th className="hidden px-4 py-3 font-medium md:table-cell">Clientes</th>
+              <th className="hidden px-4 py-3 font-medium md:table-cell">Ordenes</th>
+              <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                   Cargando...
                 </td>
               </tr>
             ) : tenants.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                   No hay tenants
                 </td>
               </tr>
             ) : (
               tenants.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50">
+                <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/tenants/${t.id}`} className="flex items-center gap-2 text-purple-600 hover:underline">
-                      <Building2 className="h-4 w-4" />
+                    <Link href={`/admin/tenants/${t.id}`} className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                       <div>
-                        <p className="font-medium">{t.name}</p>
-                        <p className="text-xs text-gray-400">{t.slug}</p>
+                        <p className="font-medium text-slate-900 underline-offset-2 hover:underline dark:text-slate-100">{t.name}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{t.slug}</p>
                       </div>
                     </Link>
                   </td>
-                  <td className="hidden px-4 py-3 md:table-cell">{t.plan?.name || "Sin plan"}</td>
-                  <td className="px-4 py-3">{t._count.tenantUsers}</td>
-                  <td className="hidden px-4 py-3 md:table-cell">{t._count.clients}</td>
-                  <td className="hidden px-4 py-3 md:table-cell">{t._count.serviceOrders}</td>
+                  <td className="hidden px-4 py-3 text-slate-600 dark:text-slate-400 md:table-cell">
+                    {t.plan?.name || <span className="text-slate-400 dark:text-slate-500">Sin plan</span>}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{t._count.tenantUsers}</td>
+                  <td className="hidden px-4 py-3 text-slate-700 dark:text-slate-300 md:table-cell">{t._count.clients}</td>
+                  <td className="hidden px-4 py-3 text-slate-700 dark:text-slate-300 md:table-cell">{t._count.serviceOrders}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${t.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      t.isActive
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        : "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
+                    }`}>
                       {t.isActive ? "Activo" : "Inactivo"}
                     </span>
                   </td>
@@ -185,12 +193,9 @@ export default function AdminTenantsPage() {
 
       <Pagination page={page} totalPages={pages} onPageChange={setPage} />
 
-      {/* Create Tenant Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nuevo Tenant">
         <form onSubmit={handleCreate} className="space-y-4">
-          {formError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{formError}</div>
-          )}
+          {formError && <Alert variant="error">{formError}</Alert>}
           <Input
             id="tenant-name"
             label="Nombre del lavadero"
@@ -227,12 +232,14 @@ export default function AdminTenantsPage() {
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
           />
           <div>
-            <label htmlFor="tenant-plan" className="mb-1 block text-sm font-medium text-gray-700">Plan</label>
+            <label htmlFor="tenant-plan" className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Plan
+            </label>
             <select
               id="tenant-plan"
               value={formData.planId}
               onChange={(e) => setFormData({ ...formData, planId: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
             >
               <option value="">Sin plan</option>
               {plans.map((p) => (

@@ -242,7 +242,7 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300"
             placeholder="Notas adicionales..."
           />
         </div>
@@ -254,7 +254,7 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
               name="isFrequent"
               checked={formData.isFrequent}
               onChange={handleChange}
-              className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-600"
+              className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900 dark:border-slate-600"
             />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Cliente frecuente
@@ -270,7 +270,7 @@ export default function ClientForm({ initialData, onSuccess }: ClientFormProps) 
                 type="checkbox"
                 checked={addVehicle}
                 onChange={(e) => setAddVehicle(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-600"
+                className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900 dark:border-slate-600"
               />
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Agregar vehiculo ahora

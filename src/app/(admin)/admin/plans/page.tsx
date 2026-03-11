@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CreditCard, Plus } from "lucide-react";
+import { CreditCard, Plus, Check } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Alert from "@/components/ui/Alert";
 import { PageLoader } from "@/components/ui/Spinner";
 
 interface PlanItem {
@@ -89,13 +90,13 @@ export default function AdminPlansPage() {
   };
 
   if (loading) {
-    return <PageLoader color="text-purple-600" />;
+    return <PageLoader />;
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Planes</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Planes</h1>
         <Button onClick={openModal}>
           <Plus className="mr-1 h-4 w-4" />
           Nuevo Plan
@@ -106,36 +107,41 @@ export default function AdminPlansPage() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="rounded-xl border border-gray-200 bg-white p-5"
+            className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="mb-3 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-600" />
-              <h2 className="font-semibold text-gray-900">{plan.name}</h2>
-              <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${plan.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <CreditCard className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">{plan.name}</h2>
+              <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${
+                plan.isActive
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                  : "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
+              }`}>
                 {plan.isActive ? "Activo" : "Inactivo"}
               </span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               ${Number(plan.price).toLocaleString("es-CO")}
-              <span className="text-sm font-normal text-gray-500">
-                /{plan.interval === "MONTHLY" ? "mes" : "ano"}
+              <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                /{plan.interval === "MONTHLY" ? "mes" : "año"}
               </span>
             </p>
             {plan.description && (
-              <p className="mt-2 text-sm text-gray-600">{plan.description}</p>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{plan.description}</p>
             )}
-            <div className="mt-3 space-y-1 text-sm text-gray-600">
+            <div className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-400">
               <p>Hasta {plan.maxUsers} usuarios</p>
               <p>Hasta {plan.maxOrdersPerMonth} ordenes/mes</p>
-              <p className="font-medium text-purple-600">
+              <p className="font-medium text-slate-900 dark:text-slate-100">
                 {plan._count.tenants} tenant{plan._count.tenants !== 1 ? "s" : ""}
               </p>
             </div>
             {Array.isArray(plan.features) && plan.features.length > 0 && (
-              <ul className="mt-3 space-y-1 text-sm text-gray-600">
+              <ul className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                 {(plan.features as string[]).map((f, i) => (
-                  <li key={i} className="flex items-center gap-1">
-                    <span className="text-green-500">&#10003;</span> {f}
+                  <li key={i} className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+                    {f}
                   </li>
                 ))}
               </ul>
@@ -144,18 +150,15 @@ export default function AdminPlansPage() {
         ))}
 
         {plans.length === 0 && (
-          <p className="col-span-full text-center text-gray-500">
+          <p className="col-span-full text-center text-slate-500 dark:text-slate-400">
             No hay planes creados.
           </p>
         )}
       </div>
 
-      {/* Create Plan Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nuevo Plan">
         <form onSubmit={handleCreate} className="space-y-4">
-          {formError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{formError}</div>
-          )}
+          {formError && <Alert variant="error">{formError}</Alert>}
           <Input
             id="plan-name"
             label="Nombre"
@@ -186,12 +189,14 @@ export default function AdminPlansPage() {
               required
             />
             <div>
-              <label htmlFor="plan-interval" className="mb-1 block text-sm font-medium text-gray-700">Intervalo</label>
+              <label htmlFor="plan-interval" className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Intervalo
+              </label>
               <select
                 id="plan-interval"
                 value={formData.interval}
                 onChange={(e) => setFormData({ ...formData, interval: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
               >
                 <option value="MONTHLY">Mensual</option>
                 <option value="YEARLY">Anual</option>

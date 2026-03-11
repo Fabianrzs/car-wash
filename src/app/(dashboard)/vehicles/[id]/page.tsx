@@ -53,12 +53,12 @@ export default function VehicleDetailPage() {
   };
 
   if (loading) return <div className="flex items-center justify-center p-12"><Spinner size="lg" /></div>;
-  if (!vehicle) return <div className="p-6 text-center text-gray-500">Vehiculo no encontrado</div>;
+  if (!vehicle) return <div className="p-6 text-center text-slate-500 dark:text-slate-400">Vehiculo no encontrado</div>;
 
   const clientIds: string[] = (vehicle.clients || []).map((cv: any) => cv.clientId);
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title={`${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`} description="Detalle del vehiculo">
         <Button variant="danger" onClick={() => setShowDelete(true)}>
           <Trash2 className="mr-2 h-4 w-4" /> Eliminar
@@ -75,7 +75,7 @@ export default function VehicleDetailPage() {
       </div>
 
       <Modal isOpen={showDelete} onClose={() => setShowDelete(false)} title="Confirmar eliminacion">
-        <p className="mb-4 text-gray-600">Estas seguro de eliminar el vehiculo <strong>{vehicle.plate}</strong>?</p>
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">Estas seguro de eliminar el vehiculo <strong className="text-slate-900 dark:text-slate-100">{vehicle.plate}</strong>?</p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setShowDelete(false)}>Cancelar</Button>
           <Button variant="danger" onClick={handleDelete} loading={deleting}>Eliminar</Button>

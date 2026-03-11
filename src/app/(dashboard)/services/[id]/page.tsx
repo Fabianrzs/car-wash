@@ -37,10 +37,10 @@ export default function ServiceDetailPage() {
   };
 
   if (loading) return <div className="flex justify-center p-12"><Spinner size="lg" /></div>;
-  if (!service) return <div className="p-6 text-center text-gray-500">Servicio no encontrado</div>;
+  if (!service) return <div className="p-6 text-center text-slate-500 dark:text-slate-400">Servicio no encontrado</div>;
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader title={`Editar: ${service.name}`} description="Modificar tipo de servicio">
         <Button variant="danger" onClick={() => setShowDelete(true)}>
           <Trash2 className="mr-2 h-4 w-4" /> Desactivar
@@ -57,8 +57,8 @@ export default function ServiceDetailPage() {
       </div>
 
       <Modal isOpen={showDelete} onClose={() => setShowDelete(false)} title="Desactivar servicio">
-        <p className="mb-4 text-gray-600">
-          El servicio <strong>{service.name}</strong> sera desactivado y no aparecera al crear nuevas ordenes.
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+          El servicio <strong className="text-slate-900 dark:text-slate-100">{service.name}</strong> sera desactivado y no aparecera al crear nuevas ordenes.
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setShowDelete(false)}>Cancelar</Button>

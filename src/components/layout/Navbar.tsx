@@ -82,13 +82,13 @@ export default function Navbar() {
       <div className="flex items-center gap-1.5">
         {/* Tenant badge for super admin */}
         {isSuperAdmin && tenantSlug && !pathname?.startsWith("/admin") && (
-          <span className="flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 dark:border-violet-800 dark:bg-violet-900/25 dark:text-violet-400">
+          <span className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <Building2 className="h-3 w-3" />
             {tenantSlug}
             <button
               type="button"
               onClick={handleChangeTenant}
-              className="ml-0.5 rounded p-0.5 hover:bg-violet-100 dark:hover:bg-violet-900/50"
+              className="ml-0.5 rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
               title="Cambiar lavadero"
             >
               <X className="h-2.5 w-2.5" />
@@ -100,7 +100,7 @@ export default function Navbar() {
         {isSuperAdmin && !pathname?.startsWith("/admin") && (
           <Link
             href="/admin"
-            className="flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/25 dark:text-violet-400 dark:hover:bg-violet-900/40"
+            className="flex items-center gap-1 rounded-md border border-slate-300 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <Shield className="h-3 w-3" />
             Admin
@@ -115,7 +115,7 @@ export default function Navbar() {
 
         {/* User */}
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-[11px] font-semibold text-white">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-[11px] font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
             {getInitials(session?.user?.name)}
           </div>
           {firstName && (

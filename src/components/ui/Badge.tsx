@@ -8,7 +8,7 @@ const variantClasses = {
   danger:
     "bg-rose-50 text-rose-600 ring-rose-500/20 dark:bg-rose-900/25 dark:text-rose-400 dark:ring-rose-500/25",
   info:
-    "bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/25 dark:text-violet-400 dark:ring-violet-500/25",
+    "bg-zinc-100 text-zinc-700 ring-zinc-400/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-600/25",
   default:
     "bg-slate-100 text-slate-600 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600/20",
 };

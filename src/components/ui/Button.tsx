@@ -4,7 +4,7 @@ import Spinner from "./Spinner";
 
 const variantClasses = {
   primary:
-    "bg-violet-600 text-white shadow-sm hover:bg-violet-700 active:bg-violet-800 focus-visible:ring-violet-500 dark:bg-violet-500 dark:hover:bg-violet-600 dark:active:bg-violet-700",
+    "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 active:bg-zinc-700 focus-visible:ring-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:active:bg-zinc-300 dark:focus-visible:ring-zinc-400",
   secondary:
     "border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600",
   danger:

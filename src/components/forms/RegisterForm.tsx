@@ -146,15 +146,15 @@ export default function RegisterForm() {
   return (
     <div className="w-full max-w-lg space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900/30">
-          <Droplets className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+          <Droplets className="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Crear Cuenta y Lavadero</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Registra tu cuenta y configura tu lavadero en minutos
         </p>
         {planName && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             <CheckCircle className="h-3 w-3" />
             Plan: {planName}
           </span>
@@ -257,7 +257,7 @@ export default function RegisterForm() {
                 setBusinessSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
                 setSlugAvailable(null);
               }}
-              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-violet-500"
+              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
               placeholder="mi-lavadero"
             />
             <span className="whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">.carwash.com</span>
@@ -284,7 +284,7 @@ export default function RegisterForm() {
       <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
         <p>
           ¿Ya tienes una cuenta?{" "}
-          <Link href="/login" className="font-medium text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300">
+          <Link href="/login" className="font-medium text-slate-900 underline-offset-2 hover:underline dark:text-slate-100">
             Inicia sesion
           </Link>
         </p>

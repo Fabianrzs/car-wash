@@ -51,8 +51,8 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-md space-y-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900/30">
-          <Droplets className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+          <Droplets className="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Iniciar Sesión</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -101,7 +101,7 @@ export default function LoginForm() {
           ¿No tienes una cuenta?{" "}
           <Link
             href="/register"
-            className="font-medium text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300"
+            className="font-medium text-slate-900 underline-offset-2 hover:underline dark:text-slate-100"
           >
             Registrate
           </Link>

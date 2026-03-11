@@ -10,11 +10,11 @@ interface ManageTenantButtonProps {
 
 export default function ManageTenantButton({
   slug,
-  className = "inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100",
+  className = "inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700",
 }: ManageTenantButtonProps) {
   const handleClick = () => {
-      setSelectedTenant(slug);
-      window.open("/dashboard", "_blank");
+    setSelectedTenant(slug);
+    window.open("/dashboard", "_blank");
   };
 
   return (

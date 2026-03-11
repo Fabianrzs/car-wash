@@ -9,7 +9,7 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   PENDING:
     "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-500/25",
   IN_PROGRESS:
-    "bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/20 dark:text-violet-400 dark:ring-violet-500/25",
+    "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-500/25",
   COMPLETED:
     "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-500/25",
   CANCELLED:

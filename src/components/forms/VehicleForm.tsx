@@ -325,13 +325,13 @@ export default function VehicleForm({
               {selectedClients.map((c) => (
                 <span
                   key={c.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-sm text-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
+                  className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                 >
                   {c.firstName} {c.lastName}
                   <button
                     type="button"
                     onClick={() => removeClient(c.id)}
-                    className="ml-1 text-violet-600 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-200"
+                    className="ml-1 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -373,13 +373,13 @@ export default function VehicleForm({
               <button
                 type="button"
                 onClick={() => setShowNewClient(true)}
-                className="text-sm text-violet-600 hover:underline dark:text-violet-400"
+                className="text-sm text-slate-600 underline-offset-2 hover:underline dark:text-slate-400"
               >
                 + Crear nuevo cliente
               </button>
             ) : (
-              <div className="mt-2 space-y-3 rounded-lg border border-violet-200 bg-violet-50 p-4 dark:border-violet-800 dark:bg-violet-900/20">
-                <p className="text-sm font-medium text-violet-800 dark:text-violet-300">Nuevo cliente</p>
+              <div className="mt-2 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Nuevo cliente</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <Input

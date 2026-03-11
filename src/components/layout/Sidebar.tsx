@@ -51,18 +51,15 @@ function NavItem({
       className={cn(
         "group relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-all duration-150",
         isActive
-          ? "bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+          ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-100"
       )}
     >
-      {isActive && (
-        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-violet-600 dark:bg-violet-400" />
-      )}
       <item.icon
         className={cn(
           "h-4 w-4 shrink-0 transition-colors",
           isActive
-            ? "text-violet-600 dark:text-violet-400"
+            ? "text-white dark:text-zinc-900"
             : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
         )}
       />
@@ -126,8 +123,8 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="flex h-14 shrink-0 items-center gap-2.5 px-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600">
-            <Droplets className="h-4 w-4 text-white" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-900 dark:bg-zinc-100">
+            <Droplets className="h-4 w-4 text-white dark:text-zinc-900" />
           </div>
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Car Wash Pro

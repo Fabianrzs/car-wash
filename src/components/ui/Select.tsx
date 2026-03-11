@@ -32,8 +32,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={id}
           className={cn(
-            "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 transition-colors duration-150 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400",
-            "dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-violet-400 dark:focus:ring-violet-400/15 dark:disabled:bg-slate-900",
+            "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 transition-colors duration-150 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400",
+            "dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10 dark:disabled:bg-slate-900",
             error &&
               "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10 dark:border-rose-600",
             className

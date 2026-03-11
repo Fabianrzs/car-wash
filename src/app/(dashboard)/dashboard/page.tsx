@@ -122,7 +122,7 @@ export default function DashboardPage() {
           <h3 className="text-sm font-semibold text-slate-900">Órdenes Recientes</h3>
           <Link
             href="/orders"
-            className="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+            className="text-xs font-medium text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
           >
             Ver todas →
           </Link>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                   <TableCell>
                     <Link
                       href={`/orders/${order.id}`}
-                      className="font-medium text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300"
+                      className="font-medium text-slate-900 underline-offset-2 hover:underline dark:text-slate-100"
                     >
                       {order.orderNumber}
                     </Link>

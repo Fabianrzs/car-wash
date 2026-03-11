@@ -220,11 +220,11 @@ export default function ReportsPage() {
       </PageHeader>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-gray-100 p-1">
+      <div className="mb-6 flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
         <button
           onClick={() => setTab("resumen")}
           className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "resumen" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+            tab === "resumen" ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           }`}
         >
           Resumen
@@ -232,7 +232,7 @@ export default function ReportsPage() {
         <button
           onClick={() => setTab("detalle")}
           className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "detalle" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+            tab === "detalle" ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           }`}
         >
           Detalle de Ordenes
@@ -246,7 +246,7 @@ export default function ReportsPage() {
             key={p.value}
             onClick={() => setPeriod(p.value)}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:px-4 md:py-2 ${
-              period === p.value ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              period === p.value ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
             }`}
           >
             {p.label}
@@ -258,21 +258,21 @@ export default function ReportsPage() {
         <Card className="mb-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Fecha Inicio</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Fecha Inicio</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Fecha Fin</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Fecha Fin</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300"
               />
             </div>
             <Button onClick={handleCustomSearch} disabled={!startDate || !endDate}>
@@ -289,8 +289,8 @@ export default function ReportsPage() {
           {loading ? (
             <div className="flex justify-center py-12"><Spinner size="lg" /></div>
           ) : error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-              <p className="text-red-700">{error}</p>
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-800 dark:bg-rose-900/20">
+              <p className="text-rose-700 dark:text-rose-400">{error}</p>
             </div>
           ) : data ? (
             <>
@@ -350,7 +350,7 @@ export default function ReportsPage() {
               )}
             </>
           ) : (
-            <p className="text-center text-gray-500">
+            <p className="text-center text-slate-500 dark:text-slate-400">
               {period === "custom" ? "Selecciona un rango de fechas y presiona \"Generar Reporte\"" : "No hay datos disponibles"}
             </p>
           )}
@@ -365,7 +365,7 @@ export default function ReportsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             >
               <option value="">Todos los estados</option>
               <option value="PENDING">Pendiente</option>
@@ -374,13 +374,13 @@ export default function ReportsPage() {
               <option value="CANCELLED">Cancelada</option>
             </select>
             <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Buscar cliente, placa, orden..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </div>
             <Button variant="secondary" onClick={handleOrderFilters}>
@@ -390,7 +390,7 @@ export default function ReportsPage() {
 
           {/* Summary bar */}
           {ordersData && (
-            <div className="mb-4 flex flex-wrap gap-3 rounded-lg bg-gray-50 px-4 py-3 text-sm md:gap-6">
+            <div className="mb-4 flex flex-wrap gap-3 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700 md:gap-6 dark:bg-slate-800/50 dark:text-slate-300">
               <span><strong>{ordersData.summary.orderCount}</strong> ordenes</span>
               <span><strong>{ordersData.summary.completedOrders}</strong> completadas</span>
               <span>Ingresos: <strong>{formatCurrency(ordersData.summary.totalIncome)}</strong></span>
@@ -401,61 +401,61 @@ export default function ReportsPage() {
           {loadingOrders ? (
             <div className="flex justify-center py-12"><Spinner size="lg" /></div>
           ) : flatRows.length > 0 ? (
-            <div className="overflow-x-auto rounded-lg border border-gray-300">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gray-200 text-left text-gray-700">
-                    <th className="border border-gray-300 px-2 py-2 font-semibold"># Orden</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Estado</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Cliente</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Telefono</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Placa</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Marca/Modelo</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Servicio</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold text-right">Cant.</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold text-right">P. Unit.</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold text-right">Subtotal</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold text-right">Total</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Creado Por</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Creacion</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Inicio</th>
-                    <th className="border border-gray-300 px-2 py-2 font-semibold">Completado</th>
+                  <tr className="bg-slate-100 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700"># Orden</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Estado</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Cliente</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Telefono</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Placa</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Marca/Modelo</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Servicio</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold text-right dark:border-slate-700">Cant.</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold text-right dark:border-slate-700">P. Unit.</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold text-right dark:border-slate-700">Subtotal</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold text-right dark:border-slate-700">Total</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Creado Por</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Creacion</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Inicio</th>
+                    <th className="border border-slate-200 px-2 py-2 font-semibold dark:border-slate-700">Completado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {flatRows.map((r, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="border border-gray-300 px-2 py-1.5 font-mono">{r.orderNumber}</td>
-                      <td className="border border-gray-300 px-2 py-1.5">
+                    <tr key={i} className={i % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50 dark:bg-slate-800/50"}>
+                      <td className="border border-slate-200 px-2 py-1.5 font-mono text-slate-900 dark:border-slate-700 dark:text-slate-100">{r.orderNumber}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 dark:border-slate-700">
                         <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                          r.status === "COMPLETED" ? "bg-green-100 text-green-700" :
-                          r.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-700" :
-                          r.status === "CANCELLED" ? "bg-red-100 text-red-700" :
-                          "bg-yellow-100 text-yellow-700"
+                          r.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                          r.status === "IN_PROGRESS" ? "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300" :
+                          r.status === "CANCELLED" ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" :
+                          "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                         }`}>
                           {ORDER_STATUS_LABELS[r.status] || r.status}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-2 py-1.5">{r.client.firstName} {r.client.lastName}</td>
-                      <td className="border border-gray-300 px-2 py-1.5">{r.client.phone}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 font-mono">{r.vehicle.plate}</td>
-                      <td className="border border-gray-300 px-2 py-1.5">{r.vehicle.brand} {r.vehicle.model}</td>
-                      <td className="border border-gray-300 px-2 py-1.5">{r.item.serviceName}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 text-right">{r.item.quantity}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 text-right">{formatCurrency(r.item.unitPrice)}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 text-right">{formatCurrency(r.item.subtotal)}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 text-right font-semibold">{formatCurrency(r.totalAmount)}</td>
-                      <td className="border border-gray-300 px-2 py-1.5">{r.createdBy.name}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 whitespace-nowrap">{formatDateShort(r.createdAt)}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 whitespace-nowrap">{formatDateShort(r.startedAt)}</td>
-                      <td className="border border-gray-300 px-2 py-1.5 whitespace-nowrap">{formatDateShort(r.completedAt)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.client.firstName} {r.client.lastName}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.client.phone}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 font-mono text-slate-900 dark:border-slate-700 dark:text-slate-100">{r.vehicle.plate}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.vehicle.brand} {r.vehicle.model}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.item.serviceName}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-right text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.item.quantity}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-right text-slate-700 dark:border-slate-700 dark:text-slate-300">{formatCurrency(r.item.unitPrice)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-right text-slate-700 dark:border-slate-700 dark:text-slate-300">{formatCurrency(r.item.subtotal)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-right font-semibold text-slate-900 dark:border-slate-700 dark:text-slate-100">{formatCurrency(r.totalAmount)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 text-slate-700 dark:border-slate-700 dark:text-slate-300">{r.createdBy.name}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 whitespace-nowrap text-slate-700 dark:border-slate-700 dark:text-slate-300">{formatDateShort(r.createdAt)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 whitespace-nowrap text-slate-700 dark:border-slate-700 dark:text-slate-300">{formatDateShort(r.startedAt)}</td>
+                      <td className="border border-slate-200 px-2 py-1.5 whitespace-nowrap text-slate-700 dark:border-slate-700 dark:text-slate-300">{formatDateShort(r.completedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-8">
+            <p className="py-8 text-center text-slate-500 dark:text-slate-400">
               {period === "custom" && (!startDate || !endDate)
                 ? "Selecciona un rango de fechas y presiona \"Generar Reporte\""
                 : "No hay ordenes en este periodo"}

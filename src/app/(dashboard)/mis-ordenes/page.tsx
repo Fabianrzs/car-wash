@@ -153,7 +153,7 @@ export default function MisOrdenesPage() {
   };
 
   const statCards = [
-    { label: "Asignadas hoy", value: stats?.today ?? 0, icon: CalendarDays, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
+    { label: "Asignadas hoy", value: stats?.today ?? 0, icon: CalendarDays, color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-800" },
     { label: "En progreso",   value: stats?.byStatus.IN_PROGRESS ?? 0, icon: Clock, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20" },
     { label: "Completadas",   value: stats?.totalCompleted ?? 0, icon: CheckCircle, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
     { label: "Ingresos",      value: formatCurrency(stats?.totalRevenue ?? 0), icon: DollarSign, color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-800", isText: true },
@@ -203,7 +203,7 @@ export default function MisOrdenesPage() {
           {stats && (
             <span className={cn(
               "rounded-full px-1.5 py-0.5 text-[11px] font-medium",
-              mainTab === "mine" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+              mainTab === "mine" ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
             )}>
               {(stats.byStatus.PENDING) + (stats.byStatus.IN_PROGRESS)}
             </span>
@@ -240,7 +240,7 @@ export default function MisOrdenesPage() {
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   statusTab === tab.value
-                    ? "bg-violet-600 text-white dark:bg-violet-500"
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                 )}
               >
@@ -263,7 +263,7 @@ export default function MisOrdenesPage() {
 
           {loadingMine ? (
             <div className="flex justify-center py-16">
-              <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
+              <Spinner size="lg" />
             </div>
           ) : myOrders.length === 0 ? (
             <EmptyState
@@ -277,7 +277,7 @@ export default function MisOrdenesPage() {
                 statusTab === "PENDING" ? (
                   <button
                     onClick={() => setMainTab("unassigned")}
-                    className="text-sm text-violet-600 hover:underline dark:text-violet-400"
+                    className="text-sm text-slate-600 underline-offset-2 hover:underline dark:text-slate-400"
                   >
                     Ver órdenes sin asignar →
                   </button>
@@ -309,7 +309,7 @@ export default function MisOrdenesPage() {
           </p>
           {loadingUnassigned ? (
             <div className="flex justify-center py-16">
-              <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
+              <Spinner size="lg" />
             </div>
           ) : unassignedOrders.length === 0 ? (
             <EmptyState icon={UserCheck} title="No hay órdenes sin asignar" />
@@ -366,7 +366,7 @@ function OrderCard({
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">{order.orderNumber}</span>
+        <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">{order.orderNumber}</span>
         <Badge variant={badgeVariant(order.status)}>
           {ORDER_STATUS_LABELS[order.status]}
         </Badge>
@@ -423,7 +423,7 @@ function UnassignedCard({
   return (
     <div className="rounded-xl border border-amber-200 bg-white p-5 dark:border-amber-800/50 dark:bg-slate-900">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">{order.orderNumber}</span>
+        <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">{order.orderNumber}</span>
         <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-500/25">
           Sin asignar
         </span>

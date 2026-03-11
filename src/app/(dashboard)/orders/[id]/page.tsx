@@ -182,7 +182,7 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-slate-500 dark:text-slate-400">Cliente</p>
                 <p className="mt-0.5 font-medium">
                   <button
-                    className="text-violet-600 hover:text-violet-700 hover:underline dark:text-violet-400 dark:hover:text-violet-300"
+                    className="text-slate-900 underline-offset-2 hover:underline dark:text-slate-100"
                     onClick={() => router.push(`/clients/${order.client.id}`)}
                   >
                     {order.client.firstName} {order.client.lastName}
@@ -252,7 +252,7 @@ export default function OrderDetailPage() {
             <div className="mt-4 flex justify-end border-t border-slate-100 pt-4 dark:border-slate-800">
               <div className="text-right">
                 <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
-                <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">{formatCurrency(order.totalAmount)}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(order.totalAmount)}</p>
               </div>
             </div>
           </Card>
@@ -317,7 +317,7 @@ export default function OrderDetailPage() {
             </h3>
             {canAssign ? (
               <select
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/10 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-violet-500"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-zinc-300"
                 value={order.assignedTo?.id ?? ""}
                 onChange={(e) => assignOrder(e.target.value || null)}
                 disabled={assigning}
@@ -342,7 +342,7 @@ export default function OrderDetailPage() {
             <div className="space-y-4">
               <div className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <div className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-zinc-900 dark:bg-zinc-300" />
                   <div className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />
                 </div>
                 <div className="-mt-0.5">

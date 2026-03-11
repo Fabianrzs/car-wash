@@ -6,6 +6,7 @@ import { Users, UserPlus, Mail, Trash2 } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import Alert from "@/components/ui/Alert";
 
 interface TeamMember {
   id: string;
@@ -21,6 +22,18 @@ interface InvitationItem {
   expiresAt: string;
   invitedBy: { name: string | null; email: string };
 }
+
+const ROLE_LABEL: Record<string, string> = {
+  OWNER: "Propietario",
+  ADMIN: "Admin",
+  EMPLOYEE: "Empleado",
+};
+
+const ROLE_BADGE: Record<string, string> = {
+  OWNER: "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900",
+  ADMIN: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200",
+  EMPLOYEE: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+};
 
 export default function TeamPage() {
   const { data: session } = useSession();
@@ -39,9 +52,11 @@ export default function TeamPage() {
   });
   const [removing, setRemoving] = useState(false);
 
-  // Check if current user is OWNER
   const currentMember = members.find((m) => m.user.id === session?.user?.id);
   const isOwner = currentMember?.role === "OWNER";
+
+  const inputClass = "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300";
+  const selectClass = "h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 
   const loadData = async () => {
     const [membersRes, invitationsRes] = await Promise.all([
@@ -133,58 +148,59 @@ export default function TeamPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex items-center gap-2">
-        <Users className="h-6 w-6 text-gray-400" />
-        <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Equipo</h1>
+        <Users className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Equipo</h1>
       </div>
 
       {/* Invite form - only for OWNER */}
       {isOwner && (
-        <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row">
+        <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:flex-row">
           <div className="flex-1">
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="email@ejemplo.com"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={inputClass}
             />
           </div>
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2"
+            className={selectClass}
           >
             <option value="EMPLOYEE">Empleado</option>
             <option value="ADMIN">Admin</option>
           </select>
-          <button
+          <Button
             type="submit"
             disabled={inviting || !inviteEmail}
-            className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
+            loading={inviting}
+            className="w-full sm:w-auto"
           >
             <UserPlus className="h-4 w-4" />
             Invitar
-          </button>
+          </Button>
         </form>
       )}
 
       {message && (
-        <p className={`mb-4 text-sm ${isError ? "text-red-600" : "text-green-600"}`}>
-          {message}
-        </p>
+        <div className="mb-4">
+          <Alert variant={isError ? "error" : "success"}>{message}</Alert>
+        </div>
       )}
 
       {/* Members */}
-      <div className="mb-6 rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-4 py-3">
-          <h2 className="font-semibold text-gray-900">Miembros ({members.length})</h2>
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Miembros ({members.length})</h2>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {members.map((m) => (
             <div key={m.id} className="flex items-center justify-between px-4 py-3">
               <div>
-                <p className="font-medium text-gray-900">{m.user.name || m.user.email}</p>
-                <p className="text-sm text-gray-500">{m.user.email}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{m.user.name || m.user.email}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{m.user.email}</p>
               </div>
               <div className="flex items-center gap-2">
                 {isOwner && m.role !== "OWNER" ? (
@@ -192,26 +208,22 @@ export default function TeamPage() {
                     <select
                       value={m.role}
                       onChange={(e) => handleChangeRole(m.id, e.target.value)}
-                      className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+                      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     >
                       <option value="ADMIN">Admin</option>
                       <option value="EMPLOYEE">Empleado</option>
                     </select>
                     <button
                       onClick={() => confirmRemove(m.id, m.user.name || m.user.email)}
-                      className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                      className="rounded-md p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
                       title="Remover miembro"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </>
                 ) : (
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    m.role === "OWNER" ? "bg-purple-100 text-purple-700" :
-                    m.role === "ADMIN" ? "bg-blue-100 text-blue-700" :
-                    "bg-gray-100 text-gray-700"
-                  }`}>
-                    {m.role === "OWNER" ? "Propietario" : m.role === "ADMIN" ? "Admin" : "Empleado"}
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_BADGE[m.role] || ROLE_BADGE.EMPLOYEE}`}>
+                    {ROLE_LABEL[m.role] || m.role}
                   </span>
                 )}
               </div>
@@ -222,26 +234,26 @@ export default function TeamPage() {
 
       {/* Pending invitations */}
       {invitations.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 px-4 py-3">
-            <h2 className="font-semibold text-gray-900">
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Invitaciones Pendientes ({invitations.length})
             </h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {invitations.map((inv) => (
               <div key={inv.id} className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
+                  <Mail className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   <div>
-                    <p className="font-medium text-gray-900">{inv.email}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{inv.email}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Invitado por {inv.invitedBy.name || inv.invitedBy.email}
                     </p>
                   </div>
                 </div>
-                <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
-                  {inv.role} - Pendiente
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  {ROLE_LABEL[inv.role] || inv.role} — Pendiente
                 </span>
               </div>
             ))}
@@ -255,8 +267,8 @@ export default function TeamPage() {
         onClose={() => setRemoveModal({ open: false, id: "", name: "" })}
         title="Confirmar eliminacion"
       >
-        <p className="mb-4 text-gray-600">
-          Estas seguro de remover a <strong>{removeModal.name}</strong> del equipo?
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+          Estas seguro de remover a <strong className="text-slate-900 dark:text-slate-100">{removeModal.name}</strong> del equipo?
           Esta accion no se puede deshacer.
         </p>
         <div className="flex justify-end gap-3">

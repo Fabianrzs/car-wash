@@ -137,7 +137,7 @@ export default function OrdersPage() {
             className={cn(
               "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               status === tab.value
-                ? "bg-violet-600 text-white dark:bg-violet-500"
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
             )}
           >
@@ -159,7 +159,7 @@ export default function OrdersPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Spinner size="lg" className="text-violet-600 dark:text-violet-400" />
+          <Spinner size="lg" />
         </div>
       ) : (
         <>
@@ -190,7 +190,7 @@ export default function OrdersPage() {
               ) : (
                 orders.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell className="font-medium text-violet-600 dark:text-violet-400">
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                       {o.orderNumber}
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">

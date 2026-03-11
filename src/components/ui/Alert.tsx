@@ -9,7 +9,7 @@ const variantClasses = {
   warning:
     "bg-amber-50 border-amber-500 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300",
   info:
-    "bg-violet-50 border-violet-500 text-violet-800 dark:bg-violet-900/20 dark:border-violet-700 dark:text-violet-300",
+    "bg-zinc-50 border-zinc-400 text-zinc-800 dark:bg-zinc-800/50 dark:border-zinc-600 dark:text-zinc-300",
 };
 
 const variantIcons = {

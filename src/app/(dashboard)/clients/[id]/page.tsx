@@ -82,12 +82,12 @@ export default function ClientDetailPage() {
   };
 
   if (loading) return <div className="flex items-center justify-center p-12"><Spinner size="lg" /></div>;
-  if (!client) return <div className="p-6 text-center text-gray-500">Cliente no encontrado</div>;
+  if (!client) return <div className="p-6 text-center text-slate-500 dark:text-slate-400">Cliente no encontrado</div>;
 
   const vehicles = client.vehicles.map((cv) => cv.vehicle);
 
   return (
-    <div className="p-6">
+    <div>
       <PageHeader
         title={`${client.firstName} ${client.lastName}`}
         description="Detalle y edicion del cliente"
@@ -124,20 +124,20 @@ export default function ClientDetailPage() {
               </Button>
             </div>
             {vehicles.length === 0 ? (
-              <p className="text-sm text-gray-500">Sin vehiculos registrados</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Sin vehiculos registrados</p>
             ) : (
               <div className="space-y-2">
                 {vehicles.map((v) => (
                   <div
                     key={v.id}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-gray-50"
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 p-3 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
                     onClick={() => router.push(`/vehicles/${v.id}`)}
                   >
                     <div>
                       <p className="font-medium">{v.plate}</p>
-                      <p className="text-sm text-gray-500">{v.brand} {v.model} - {VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{v.brand} {v.model} - {VEHICLE_TYPE_LABELS[v.vehicleType] || v.vehicleType}</p>
                     </div>
-                    {v.color && <span className="text-sm text-gray-400">{v.color}</span>}
+                    {v.color && <span className="text-sm text-slate-400 dark:text-slate-500">{v.color}</span>}
                   </div>
                 ))}
               </div>
@@ -147,7 +147,7 @@ export default function ClientDetailPage() {
           <Card>
             <h3 className="mb-4 text-lg font-semibold">Ultimas Ordenes</h3>
             {client.orders.length === 0 ? (
-              <p className="text-sm text-gray-500">Sin ordenes registradas</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Sin ordenes registradas</p>
             ) : (
               <Table>
                 <TableHeader>
@@ -163,7 +163,7 @@ export default function ClientDetailPage() {
                     <TableRow key={o.id}>
                       <TableCell>
                         <button
-                          className="text-blue-600 hover:underline"
+                          className="font-medium text-slate-900 underline-offset-2 hover:underline dark:text-slate-100"
                           onClick={() => router.push(`/orders/${o.id}`)}
                         >
                           {o.orderNumber}
@@ -190,8 +190,8 @@ export default function ClientDetailPage() {
       </div>
 
       <Modal isOpen={showDelete} onClose={() => setShowDelete(false)} title="Confirmar eliminacion">
-        <p className="mb-4 text-gray-600">
-          Estas seguro de eliminar al cliente <strong>{client.firstName} {client.lastName}</strong>?
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+          Estas seguro de eliminar al cliente <strong className="text-slate-900 dark:text-slate-100">{client.firstName} {client.lastName}</strong>?
           Esta accion no se puede deshacer.
         </p>
         <div className="flex justify-end gap-3">

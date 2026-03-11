@@ -43,72 +43,76 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-bold text-gray-900 md:text-2xl">
+      <h1 className="mb-6 text-xl font-bold text-slate-900 dark:text-slate-100 md:text-2xl">
         Usuarios ({total})
       </h1>
 
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/10"
           />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-slate-50 text-left text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
-              <th className="px-4 py-3">Usuario</th>
-              <th className="px-4 py-3">Rol Global</th>
-              <th className="px-4 py-3">Tenants</th>
-              <th className="hidden px-4 py-3 md:table-cell">Registrado</th>
+              <th className="px-4 py-3 font-medium">Usuario</th>
+              <th className="px-4 py-3 font-medium">Rol Global</th>
+              <th className="px-4 py-3 font-medium">Tenants</th>
+              <th className="hidden px-4 py-3 font-medium md:table-cell">Registrado</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                   Cargando...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                   No hay usuarios
                 </td>
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-50">
+                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{u.name || "—"}</p>
-                    <p className="text-xs text-gray-500">{u.email}</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{u.name || "—"}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.globalRole === "SUPER_ADMIN" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-700"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      u.globalRole === "SUPER_ADMIN"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    }`}>
                       {u.globalRole}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     {u.tenantUsers.length > 0 ? (
-                      <div className="space-y-0.5">
+                      <div className="flex flex-wrap gap-1">
                         {u.tenantUsers.map((tu, i) => (
-                          <span key={i} className="mr-1 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700">
+                          <span key={i} className="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             {tu.tenant.name} ({tu.role})
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-gray-400">Ninguno</span>
+                      <span className="text-slate-400 dark:text-slate-500">Ninguno</span>
                     )}
                   </td>
-                  <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
+                  <td className="hidden px-4 py-3 text-slate-500 dark:text-slate-400 md:table-cell">
                     {new Date(u.createdAt).toLocaleDateString("es-CO")}
                   </td>
                 </tr>

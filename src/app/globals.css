@@ -101,7 +101,10 @@ dialog[open] { animation: scale-in 0.18s ease-out both; }
 
 /* ─── Focus visible ring ─────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #7c3aed;
+  outline: 2px solid #18181b;
   outline-offset: 2px;
+}
+.dark :focus-visible {
+  outline-color: #d4d4d8;
 }
 :focus:not(:focus-visible) { outline: none; }
