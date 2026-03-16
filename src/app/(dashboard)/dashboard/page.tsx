@@ -60,7 +60,7 @@ export default function DashboardPage() {
       try {
         const [dailyData, ordersData] = await Promise.all([
           fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
-          fetchApi<{ orders: Order[] }>("/api/orders?page=1&status=").catch(() => null),
+          fetchApi<{ orders: Order[] }>("/api/orders?page=1").catch(() => null),
         ]);
         if (dailyData) setStats(dailyData);
         else setError("No se pudieron cargar las estadísticas del día.");
