@@ -5,6 +5,24 @@ export { vehicleSchema } from "@/modules/vehicles/validations/vehicle.validation
 export type { VehicleInput } from "@/modules/vehicles/validations/vehicle.validation";
 export { serviceTypeSchema } from "@/modules/services/validations/service.validation";
 export type { ServiceTypeInput } from "@/modules/services/validations/service.validation";
+export {
+  orderItemSchema,
+  orderSchema,
+  orderStatusSchema,
+  orderIdParamsSchema,
+  updateOrderNotesSchema,
+  orderAssignmentSchema,
+  listOrdersQuerySchema,
+} from "@/modules/orders/validations/order.validation";
+export type {
+  OrderItemInput,
+  OrderInput,
+  OrderStatusInput,
+  OrderIdParams,
+  UpdateOrderNotesInput,
+  OrderAssignmentInput,
+  ListOrdersQuery,
+} from "@/modules/orders/validations/order.validation";
 
 // =============================================
 // AUTH SCHEMAS
@@ -27,29 +45,6 @@ export const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contrasenas no coinciden",
   path: ["confirmPassword"],
-});
-
-// =============================================
-// ORDER SCHEMAS
-// =============================================
-
-export const orderItemSchema = z.object({
-  serviceTypeId: z.string().min(1, "El servicio es requerido"),
-  quantity: z.coerce.number().int().positive("La cantidad debe ser mayor a 0").default(1),
-  unitPrice: z.coerce.number().nonnegative().default(0),
-  subtotal: z.coerce.number().nonnegative().default(0),
-});
-
-export const orderSchema = z.object({
-  clientId: z.string().min(1, "El cliente es requerido"),
-  vehicleId: z.string().min(1, "El vehiculo es requerido"),
-  notes: z.string().max(1000).optional().or(z.literal("")),
-  assignedToId: z.string().optional().nullable(),
-  items: z.array(orderItemSchema).min(1, "Debe agregar al menos un servicio"),
-});
-
-export const orderStatusSchema = z.object({
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
 });
 
 // =============================================
@@ -98,9 +93,6 @@ export const invitationSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
-export type OrderItemInput = z.infer<typeof orderItemSchema>;
-export type OrderInput = z.infer<typeof orderSchema>;
-export type OrderStatusInput = z.infer<typeof orderStatusSchema>;
 export type TenantInput = z.infer<typeof tenantSchema>;
 export type TenantSettingsInput = z.infer<typeof tenantSettingsSchema>;
 export type PlanInput = z.infer<typeof planSchema>;

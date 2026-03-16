@@ -1,5 +1,6 @@
 import {TenantError} from "@/lib";
 import { ApiResponse } from "@/lib/http/response";
+import { ZodError } from "zod";
 
 export class HttpError extends Error {
   constructor(
