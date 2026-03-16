@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
-import { generatePayUReferenceCode } from "@/lib/invoice";
+import { generatePayUReferenceCode, markInvoicePaid } from "@/lib/payments/invoice";
 import { createPSEPayment, createCreditCardPayment } from "@/lib/payu";
-import { markInvoicePaid } from "@/lib/invoice";
 import { buildTenantUrl } from "@/lib/domain";
 
 export async function POST(request: Request) {
@@ -100,6 +99,7 @@ export async function POST(request: Request) {
         cardHolderName: payerInfo.cardHolderName || payerInfo.fullName,
         installments: payerInfo.installments || 1,
         paymentMethod: payerInfo.cardBrand || "VISA",
+        responseUrl,
         ipAddress,
         userAgent,
         cookie,

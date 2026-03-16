@@ -30,8 +30,8 @@ export default function ServicesPage() {
 
   useEffect(() => {
     fetchApi<ServiceType[]>("/api/services")
-      .then((data) => setServices(data))
-      .catch((err) => setError(err.message))
+      .then((data: ServiceType[]) => setServices(data))
+      .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 

@@ -3,7 +3,7 @@ import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { queryTransactionByReference } from "@/lib/payu";
-import { markInvoicePaid } from "@/lib/invoice";
+import { markInvoicePaid } from "@/lib/payments/invoice";
 
 export const dynamic = "force-dynamic";
 

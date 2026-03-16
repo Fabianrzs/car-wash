@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus, TenantError } from "@/lib/tenant";
+import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus, TenantError } from "@/lib";
 
 export const dynamic = "force-dynamic";
 
