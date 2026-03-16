@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { prisma } from "@/lib/prisma";
+import {prisma} from "@/database/prisma";
 
 type TransactionClient = Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -8,9 +8,7 @@ export async function generateOrderNumber(tenantId: string, tx?: TransactionClie
   const datePrefix = format(new Date(), "yyyyMMdd");
   const prefix = `ORD-${datePrefix}-`;
 
-  // Get the most recently created order for this tenant with today's prefix.
-  // Sorting by createdAt desc is correct regardless of gaps in sequence
-  // (deleted orders, failed inserts, etc.).
+
   const lastOrder = await db.serviceOrder.findFirst({
     where: { tenantId, orderNumber: { startsWith: prefix } },
     orderBy: { createdAt: "desc" },

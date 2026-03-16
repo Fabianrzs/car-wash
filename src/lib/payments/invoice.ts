@@ -1,8 +1,10 @@
-import { prisma } from "@/lib/prisma";
 
 // =============================================
 // Invoice Number Generation
 // =============================================
+
+
+import {prisma} from "@/lib/database";
 
 export async function generateInvoiceNumber(tenantId: string): Promise<string> {
   const now = new Date();

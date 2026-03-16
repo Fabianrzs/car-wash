@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getAppDomain, getProtocol } from "@/lib/domain";
+import {getAppDomain, getProtocol} from "@/lib/utils/domain";
 
 function getStripeClient() {
   const key = process.env.STRIPE_SECRET_KEY;

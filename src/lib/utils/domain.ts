@@ -22,7 +22,7 @@ function isIPAddress(host: string): boolean {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
 }
 
-/** Known shared-hosting platforms where wildcard subdomains are unavailable. */
+/** Known lib-hosting platforms where wildcard subdomains are unavailable. */
 const SHARED_PLATFORMS = [
   "vercel.app",
   "netlify.app",
@@ -107,7 +107,7 @@ export function getCookieDomain(): string | undefined {
 /**
  * Build a full URL for a tenant subdomain.
  *
- * When subdomains are NOT supported (IP, shared platform):
+ * When subdomains are NOT supported (IP, lib platform):
  *   → returns the same-origin URL (caller should use cookie-based tenant context).
  *
  * When subdomains ARE supported:
@@ -143,7 +143,7 @@ export function getBaseDomainUrl(path = "/"): string {
  *      "demo.carwash.com"    → "demo"
  *      "localhost:3000"      → null
  *      "192.168.1.8:3000"    → null  (IPs have no subdomains)
- *      "car-wash-drab.vercel.app" → null (shared platform, no subdomains)
+ *      "car-wash-drab.vercel.app" → null (lib platform, no subdomains)
  */
 export function extractTenantSlugFromHost(host: string): string | null {
   const hostOnly = host.replace(/:\d+$/, "");
