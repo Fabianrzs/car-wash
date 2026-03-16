@@ -28,7 +28,7 @@ import {
   X,
   ChevronRight,
 } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 
 export const metadata: Metadata = {
   title: "CarWashPro — Software de Gestión para Autolavados en Colombia",

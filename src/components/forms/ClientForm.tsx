@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
-import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import { VEHICLE_TYPE_LABELS } from "@/lib/utils/constants";
 
 interface ClientFormData {
   id?: string;

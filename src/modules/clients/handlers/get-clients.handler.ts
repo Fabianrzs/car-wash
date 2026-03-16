@@ -1,22 +1,17 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { ITEMS_PER_PAGE } from "@/lib/constants";
-import { requireTenant } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { ITEMS_PER_PAGE } from "@/lib/utils/constants";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext } from "@/middleware/tenant.middleware";
 import {
   handleClientHttpError,
-  unauthorizedResponse,
 } from "@/modules/clients/client.errors";
 import { listClientsService } from "@/modules/clients/services/list-clients.service";
 import { listClientsQuerySchema } from "@/modules/clients/validations/client.validation";
 
 export async function getClientsHandler(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
     const { searchParams } = new URL(request.url);
     const query = listClientsQuerySchema.parse({
       page: searchParams.get("page") ?? undefined,
@@ -34,7 +29,7 @@ export async function getClientsHandler(request: Request) {
       isFrequent: query.isFrequent,
     });
 
-    return NextResponse.json(result);
+    return ApiResponse.ok(result);
   } catch (error) {
     return handleClientHttpError(error, "Error al obtener clientes:");
   }

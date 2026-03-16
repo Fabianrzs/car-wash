@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogOut, Shield, Building2, X } from "lucide-react";
 import Link from "next/link";
-import { getSelectedTenant, clearSelectedTenant } from "@/lib/tenant-cookie";
+import { getSelectedTenant, clearSelectedTenant } from "@/lib/multitenancy/cookie";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const pageTitles: Record<string, string> = {

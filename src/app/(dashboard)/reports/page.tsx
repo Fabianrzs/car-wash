@@ -8,7 +8,7 @@ import Spinner from "@/components/ui/Spinner";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import StatsCard from "@/components/dashboard/StatsCard";
 import { formatCurrency } from "@/lib/utils";
-import { ORDER_STATUS_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS } from "@/lib/utils/constants";
 import { DollarSign, ClipboardList, TrendingUp, CheckCircle, Download, Calendar, Search } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 

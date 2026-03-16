@@ -8,7 +8,7 @@ import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Spinner from "@/components/ui/Spinner";
 import { formatCurrency } from "@/lib/utils";
-import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import { VEHICLE_TYPE_LABELS } from "@/lib/utils/constants";
 import { useDebounce } from "@/hooks/useDebounce";
 import Alert from "@/components/ui/Alert";
 import { ArrowLeft, ArrowRight, Check, Search, UserCheck } from "lucide-react";

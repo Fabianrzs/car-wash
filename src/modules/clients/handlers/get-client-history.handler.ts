@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { ITEMS_PER_PAGE } from "@/lib/constants";
-import { requireTenant } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { ITEMS_PER_PAGE } from "@/lib/utils/constants";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext } from "@/middleware/tenant.middleware";
 import {
   handleClientHttpError,
-  unauthorizedResponse,
 } from "@/modules/clients/client.errors";
 import { getClientHistoryService } from "@/modules/clients/services/get-client-history.service";
 import {
@@ -17,12 +16,8 @@ export async function getClientHistoryHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
     const routeParams = clientIdParamsSchema.parse(await params);
     const { searchParams } = new URL(request.url);
     const query = clientHistoryQuerySchema.parse({
@@ -36,7 +31,7 @@ export async function getClientHistoryHandler(
       take: ITEMS_PER_PAGE,
     });
 
-    return NextResponse.json(result);
+    return ApiResponse.ok(result);
   } catch (error) {
     return handleClientHttpError(error, "Error al obtener historial del cliente:");
   }

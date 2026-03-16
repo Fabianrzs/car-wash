@@ -1,4 +1,4 @@
-import { Prisma } from "@/generated/prisma/client";
+import { buildClientFilter } from "@/modules/clients/filters/client.filter";
 import { clientRepository } from "@/modules/clients/repositories/client.repository";
 
 interface ListClientsServiceInput {
@@ -16,20 +16,11 @@ export async function listClientsService({
   search,
   isFrequent,
 }: ListClientsServiceInput) {
-  const where: Prisma.ClientWhereInput = { tenantId };
-
-  if (search) {
-    where.OR = [
-      { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
-      { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
-      { phone: { contains: search, mode: Prisma.QueryMode.insensitive } },
-      { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
-    ];
-  }
-
-  if (typeof isFrequent === "boolean") {
-    where.isFrequent = isFrequent;
-  }
+  const where = buildClientFilter({
+    tenantId,
+    search,
+    isFrequent,
+  });
 
   const skip = (page - 1) * take;
 

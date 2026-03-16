@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { ApiResponse } from "@/lib/http/response";
 import {
-  requireTenant,
-  requireTenantMember,
-} from "@/lib/tenant";
+  requireAuth,
+} from "@/middleware/auth.middleware";
 import {
-  forbiddenResponse,
+  ensureManagementAccess,
+  requireTenantContext,
+} from "@/middleware/tenant.middleware";
+import {
   handleServiceHttpError,
-  unauthorizedResponse,
 } from "@/modules/services/service.errors";
 import { updateServiceService } from "@/modules/services/services/update-service.service";
 import {
@@ -20,21 +20,13 @@ export async function updateServiceHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    const tenantUser = await requireTenantMember(
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    await ensureManagementAccess(
       session.user.id,
       tenantId,
       session.user.globalRole
     );
-
-    if (tenantUser.role === "EMPLOYEE") {
-      return forbiddenResponse();
-    }
 
     const routeParams = serviceIdParamsSchema.parse(await params);
     const body = await request.json();
@@ -45,7 +37,7 @@ export async function updateServiceHandler(
       data,
     });
 
-    return NextResponse.json(service);
+    return ApiResponse.ok(service);
   } catch (error) {
     return handleServiceHttpError(error, "Error al actualizar servicio:");
   }

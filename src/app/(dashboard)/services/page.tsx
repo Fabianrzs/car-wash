@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import { formatCurrency } from "@/lib/utils";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/lib/utils/api";
 import { Plus, Clock, Pencil } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 

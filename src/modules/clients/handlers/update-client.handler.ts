@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext } from "@/middleware/tenant.middleware";
 import {
   handleClientHttpError,
-  unauthorizedResponse,
 } from "@/modules/clients/client.errors";
 import { updateClientService } from "@/modules/clients/services/update-client.service";
 import {
@@ -16,12 +15,8 @@ export async function updateClientHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
     const routeParams = clientIdParamsSchema.parse(await params);
     const body = await request.json();
     const data = clientSchema.parse(body);
@@ -31,7 +26,7 @@ export async function updateClientHandler(
       data,
     });
 
-    return NextResponse.json(client);
+    return ApiResponse.ok(client);
   } catch (error) {
     return handleClientHttpError(error, "Error al actualizar cliente:");
   }

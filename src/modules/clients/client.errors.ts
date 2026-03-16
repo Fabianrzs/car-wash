@@ -1,44 +1,24 @@
-import { ZodError } from "zod";
-import { NextResponse } from "next/server";
-import { TenantError, handleTenantError } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { HttpError, handleApiError } from "@/lib/http/errors";
 
-export class ClientModuleError extends Error {
+export class ClientModuleError extends HttpError {
   constructor(
     message: string,
     public readonly status: number
   ) {
-    super(message);
+    super(message, status);
     this.name = "ClientModuleError";
   }
 }
 
 export function unauthorizedResponse() {
-  return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  return ApiResponse.unauthorized();
 }
 
 export function handleClientHttpError(error: unknown, contextMessage: string) {
-  if (error instanceof TenantError) {
-    return handleTenantError(error);
-  }
-
-  if (error instanceof ClientModuleError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
-  }
-
-  if (error instanceof ZodError) {
-    return NextResponse.json(
-      {
-        error: "Datos de cliente invalidos",
-        details: error.flatten(),
-      },
-      { status: 400 }
-    );
-  }
-
-  console.error(contextMessage, error);
-  return NextResponse.json(
-    { error: "Error interno del servidor" },
-    { status: 500 }
-  );
+  return handleApiError(error, {
+    contextMessage,
+    validationMessage: "Datos de cliente invalidos",
+  });
 }
 

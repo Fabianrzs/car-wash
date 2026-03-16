@@ -1,5 +1,6 @@
 import { VehicleModuleError } from "@/modules/vehicles/vehicle.errors";
 import { vehicleRepository } from "@/modules/vehicles/repositories/vehicle.repository";
+import { runTransaction } from "@/database/transaction-manager";
 import {
   buildVehicleWritePayload,
   normalizeClientIds,
@@ -45,7 +46,7 @@ export async function updateVehicleService({
     throw new VehicleModuleError("Ya existe otro vehiculo con esa placa", 400);
   }
 
-  return vehicleRepository.withTransaction(async (database) => {
+  return runTransaction(async (database) => {
     const validClients = await vehicleRepository.findManyClients(
       {
         where: {

@@ -7,7 +7,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import {
   getSelectedTenant,
   setSelectedTenant as saveTenantCookie,
-} from "@/lib/tenant-cookie";
+} from "@/lib/multitenancy/cookie";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import { Search, Building2, Shield } from "lucide-react";

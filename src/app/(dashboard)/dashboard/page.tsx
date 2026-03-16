@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/Table";
 import PageHeader from "@/components/layout/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
-import { fetchApi } from "@/lib/api";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/utils/constants";
+import { fetchApi } from "@/lib/utils/api";
 import { useTenantRole } from "@/hooks/useTenantRole";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 

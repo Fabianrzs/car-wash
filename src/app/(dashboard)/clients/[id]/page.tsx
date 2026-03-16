@@ -11,7 +11,7 @@ import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, VEHICLE_TYPE_LABELS } from "@/lib/utils/constants";
 import { Trash2, Car } from "lucide-react";
 
 interface VehicleDetail {

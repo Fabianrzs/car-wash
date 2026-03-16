@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext } from "@/middleware/tenant.middleware";
 import {
   handleVehicleHttpError,
-  unauthorizedResponse,
 } from "@/modules/vehicles/vehicle.errors";
 import { detachVehicleClientService } from "@/modules/vehicles/services/detach-vehicle-client.service";
 import {
@@ -16,12 +15,8 @@ export async function detachVehicleClientHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
     const routeParams = vehicleIdParamsSchema.parse(await params);
     const { searchParams } = new URL(request.url);
     const query = vehicleClientQuerySchema.parse({
@@ -33,7 +28,7 @@ export async function detachVehicleClientHandler(
       clientId: query.clientId,
     });
 
-    return NextResponse.json(response);
+    return ApiResponse.ok(response);
   } catch (error) {
     return handleVehicleHttpError(error, "Error al desasociar cliente:");
   }

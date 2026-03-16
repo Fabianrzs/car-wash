@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
-import { setSelectedTenant } from "@/lib/tenant-cookie";
+import { setSelectedTenant } from "@/lib/multitenancy/cookie";
 
 interface ManageTenantButtonProps {
   slug: string;

@@ -15,8 +15,8 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/Table";
-import { VEHICLE_TYPE_LABELS } from "@/lib/constants";
-import { fetchApi } from "@/lib/api";
+import { VEHICLE_TYPE_LABELS } from "@/lib/utils/constants";
+import { fetchApi } from "@/lib/utils/api";
 import { Plus, Eye, Search } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import Pagination from "@/components/ui/Pagination";

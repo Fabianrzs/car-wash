@@ -1,5 +1,6 @@
 import { OrderStatus, Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
+import { BaseRepository } from "@/repositories/base.repository";
 
 export type ClientsDatabase = typeof prisma | Prisma.TransactionClient;
 
@@ -108,68 +109,66 @@ function getDatabase(database?: ClientsDatabase) {
   return database ?? prisma;
 }
 
-export const clientRepository = {
-  listSelect: clientListSelect,
-  detailInclude: clientDetailInclude,
-  historyInclude: clientHistoryInclude,
-  activeOrderStatuses: [OrderStatus.PENDING, OrderStatus.IN_PROGRESS] as const,
-
-  withTransaction<T>(callback: (database: Prisma.TransactionClient) => Promise<T>) {
-    return prisma.$transaction(callback);
-  },
+class ClientRepository extends BaseRepository<typeof prisma.client> {
+  readonly listSelect = clientListSelect;
+  readonly detailInclude = clientDetailInclude;
+  readonly historyInclude = clientHistoryInclude;
+  readonly activeOrderStatuses = [OrderStatus.PENDING, OrderStatus.IN_PROGRESS] as const;
 
   findMany(args: Prisma.ClientFindManyArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.findMany(args);
-  },
+  }
 
   findFirst(args: Prisma.ClientFindFirstArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.findFirst(args);
-  },
+  }
 
   create(args: Prisma.ClientCreateArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.create(args);
-  },
+  }
 
   update(args: Prisma.ClientUpdateArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.update(args);
-  },
+  }
 
   delete(args: Prisma.ClientDeleteArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.delete(args);
-  },
+  }
 
   count(args: Prisma.ClientCountArgs, database?: ClientsDatabase) {
     return getDatabase(database).client.count(args);
-  },
+  }
 
   findFirstVehicle(args: Prisma.VehicleFindFirstArgs, database?: ClientsDatabase) {
     return getDatabase(database).vehicle.findFirst(args);
-  },
+  }
 
   createVehicle(args: Prisma.VehicleCreateArgs, database?: ClientsDatabase) {
     return getDatabase(database).vehicle.create(args);
-  },
+  }
 
   createClientVehicle(
     args: Prisma.ClientVehicleCreateArgs,
     database?: ClientsDatabase
   ) {
     return getDatabase(database).clientVehicle.create(args);
-  },
+  }
 
   findManyServiceOrders(
     args: Prisma.ServiceOrderFindManyArgs,
     database?: ClientsDatabase
   ) {
     return getDatabase(database).serviceOrder.findMany(args);
-  },
+  }
 
   countServiceOrders(
     args: Prisma.ServiceOrderCountArgs,
     database?: ClientsDatabase
   ) {
     return getDatabase(database).serviceOrder.count(args);
-  },
-};
+  }
+}
+
+export const clientRepository = new ClientRepository(prisma.client);
 
 

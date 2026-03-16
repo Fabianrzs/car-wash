@@ -18,7 +18,7 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import PageHeader from "@/components/layout/PageHeader";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/lib/utils/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";

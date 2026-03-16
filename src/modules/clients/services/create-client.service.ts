@@ -1,5 +1,6 @@
 import { clientRepository } from "@/modules/clients/repositories/client.repository";
 import { type CreateClientInput } from "@/modules/clients/validations/client.validation";
+import { runTransaction } from "@/database/transaction-manager";
 import {
   buildClientWritePayload,
   buildVehicleWritePayload,
@@ -31,7 +32,7 @@ export async function createClientService({
     }
   }
 
-  return clientRepository.withTransaction(async (database) => {
+  return runTransaction(async (database) => {
     const client = await clientRepository.create(
       {
         data: {

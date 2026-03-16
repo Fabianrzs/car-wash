@@ -17,8 +17,8 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/constants";
-import { fetchApi } from "@/lib/api";
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/utils/constants";
+import { fetchApi } from "@/lib/utils/api";
 import { Plus, Search, Eye } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";

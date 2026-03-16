@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http/response";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext } from "@/middleware/tenant.middleware";
 import {
   handleVehicleHttpError,
-  unauthorizedResponse,
 } from "@/modules/vehicles/vehicle.errors";
 import { updateVehicleService } from "@/modules/vehicles/services/update-vehicle.service";
 import {
@@ -16,12 +15,8 @@ export async function updateVehicleHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return unauthorizedResponse();
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
     const routeParams = vehicleIdParamsSchema.parse(await params);
     const body = await request.json();
     const data = vehicleSchema.parse(body);
@@ -31,7 +26,7 @@ export async function updateVehicleHandler(
       data,
     });
 
-    return NextResponse.json(vehicle);
+    return ApiResponse.ok(vehicle);
   } catch (error) {
     return handleVehicleHttpError(error, "Error al actualizar vehiculo:");
   }

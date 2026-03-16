@@ -8,8 +8,8 @@ import Spinner from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { ORDER_STATUS_LABELS } from "@/lib/constants";
-import { fetchApi } from "@/lib/api";
+import { ORDER_STATUS_LABELS } from "@/lib/utils/constants";
+import { fetchApi } from "@/lib/utils/api";
 import { cn } from "@/lib/utils";
 import {
   Play,
