@@ -1,6 +1,5 @@
 import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
-import { getPSEBanksList } from "@/lib/payu";
-import { queryTransactionByReference } from "@/lib/payu";
+import { getPSEBanksList, queryTransactionByReference } from "@/lib/payments/payu";
 
 export async function getPaymentByIdService(tenantId: string, paymentId: string) {
   return tenantModuleRepository.findPaymentUnique({

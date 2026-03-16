@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, ensureManagementAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
 import { generatePayUReferenceCode, markInvoicePaid } from "@/lib/payments/invoice";
-import { createPSEPayment, createCreditCardPayment } from "@/lib/payu";
-import { buildTenantUrl } from "@/lib/domain";
+import { createPSEPayment, createCreditCardPayment } from "@/lib/payments/payu";
+import { buildTenantUrl } from "@/lib/utils/domain";
 import {
   createPaymentForInvoiceService,
   getInvoiceForPaymentService,
@@ -11,17 +12,9 @@ import {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
-
-    if (tenantUser.role === "EMPLOYEE") {
-      return NextResponse.json({ error: "No tienes permisos" }, { status: 403 });
-    }
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    await ensureManagementAccess(session.user.id, tenantId, session.user.globalRole);
 
     const body = await request.json();
     const { invoiceId, method, payerInfo } = body;
@@ -30,15 +23,15 @@ export async function POST(request: Request) {
     const invoice = await getInvoiceForPaymentService(tenantId, invoiceId);
 
     if (!invoice) {
-      return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 });
+      return ApiResponse.notFound("Factura no encontrada");
     }
 
     if (invoice.status === "PAID") {
-      return NextResponse.json({ error: "Esta factura ya fue pagada" }, { status: 400 });
+      return ApiResponse.badRequest("Esta factura ya fue pagada");
     }
 
     if (invoice.status === "CANCELLED") {
-      return NextResponse.json({ error: "Esta factura fue cancelada" }, { status: 400 });
+      return ApiResponse.badRequest("Esta factura fue cancelada");
     }
 
     const referenceCode = generatePayUReferenceCode(invoiceId);
@@ -99,13 +92,12 @@ export async function POST(request: Request) {
         cardHolderName: payerInfo.cardHolderName || payerInfo.fullName,
         installments: payerInfo.installments || 1,
         paymentMethod: payerInfo.cardBrand || "VISA",
-        responseUrl,
         ipAddress,
         userAgent,
         cookie,
       });
     } else {
-      return NextResponse.json({ error: "Metodo de pago no soportado" }, { status: 400 });
+      return ApiResponse.badRequest("Metodo de pago no soportado");
     }
 
     // Create payment record
@@ -133,18 +125,13 @@ export async function POST(request: Request) {
       await markInvoicePaid(invoiceId);
     }
 
-    return NextResponse.json({
+    return ApiResponse.created({
       paymentId: payment.id,
       status: payment.status,
       bankUrl: paymentResult.bankUrl || null,
       responseCode: paymentResult.responseCode,
-    }, { status: 201 });
+    });
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error al crear pago:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Error al procesar el pago" },
-      { status: 500 }
-    );
+    return handleTenantHttpError(error, "Error al crear pago:");
   }
 }

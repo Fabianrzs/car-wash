@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getPSEBanksList } from "@/lib/payu";
+import { getPSEBanksList } from "@/lib/payments/payu";
 
 export const dynamic = "force-dynamic";
 

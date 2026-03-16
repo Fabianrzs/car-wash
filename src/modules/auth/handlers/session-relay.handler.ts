@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decode } from "next-auth/jwt";
-import { getProtocol, getCookieDomain } from "@/lib/domain";
+import { getProtocol, getCookieDomain } from "@/lib/utils/domain";
 
 const COOKIE_NAME = "next-auth.session-token";
 

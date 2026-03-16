@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
-import { queryTransactionByReference } from "@/lib/payu";
+import { ApiResponse } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, requireTenantAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
+import { queryTransactionByReference } from "@/lib/payments/payu";
 import { markInvoicePaid } from "@/lib/payments/invoice";
 import {
   getPaymentDetailByIdService,
@@ -15,20 +16,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    await requireTenantAccess(session.user.id, tenantId, session.user.globalRole);
 
     const { id } = await params;
 
     const payment = await getPaymentDetailByIdService(tenantId, id);
 
     if (!payment) {
-      return NextResponse.json({ error: "Pago no encontrado" }, { status: 404 });
+      return ApiResponse.notFound("Pago no encontrado");
     }
 
     // If pending, check with PayU for real-time status
@@ -59,15 +56,13 @@ export async function GET(
             await markInvoicePaid(payment.invoiceId);
           }
 
-          return NextResponse.json(updated);
+          return ApiResponse.ok(updated);
         }
       }
     }
 
-    return NextResponse.json(payment);
+    return ApiResponse.ok(payment);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error al obtener pago:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al obtener pago:");
   }
 }

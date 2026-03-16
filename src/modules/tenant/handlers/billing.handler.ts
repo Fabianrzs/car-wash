@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { handleTenantError, requireTenant, requireTenantMember, TenantError } from "@/lib";
-import {buildTenantUrl} from "@/lib/utils/domain";
+import { ApiResponse } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, requireTenantAccess, ensureManagementAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
+import { buildTenantUrl } from "@/lib/utils/domain";
 import {
     calculateNextPeriod,
     createBillingPortalSession,
@@ -22,36 +23,22 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId, tenant } = await requireTenant(request.headers);
-    await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+    const session = await requireAuth();
+    const { tenantId, tenant } = await requireTenantContext(request.headers);
+    await requireTenantAccess(session.user.id, tenantId, session.user.globalRole);
 
     const overview = await getBillingOverviewService(tenantId, tenant);
-    return NextResponse.json(overview);
+    return ApiResponse.ok(overview);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error al obtener facturacion:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al obtener facturacion:");
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId, tenant } = await requireTenant(request.headers);
-    const tenantUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
-
-    if (tenantUser.role === "EMPLOYEE") {
-      return NextResponse.json({ error: "No tienes permisos" }, { status: 403 });
-    }
+    const session = await requireAuth();
+    const { tenantId, tenant } = await requireTenantContext(request.headers);
+    await ensureManagementAccess(session.user.id, tenantId, session.user.globalRole);
 
     const body = await request.json();
     const { action, planId } = body;
@@ -62,7 +49,7 @@ export async function POST(request: Request) {
         stripeCustomerId: tenant.stripeCustomerId,
         returnUrl: buildTenantUrl(tenant.slug, "/billing"),
       });
-      return NextResponse.json({ url: portalSession.url });
+      return ApiResponse.ok({ url: portalSession.url });
     }
 
     // ========================================
@@ -71,24 +58,24 @@ export async function POST(request: Request) {
     if (action === "change-plan") {
       if (planId === null) {
         await disconnectTenantPlanService(tenantId);
-        return NextResponse.json({ success: true, message: "Plan desvinculado" });
+        return ApiResponse.ok({ success: true, message: "Plan desvinculado" });
       }
 
       const plan = await getPlanByIdService(planId);
       if (!plan) {
-        return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
+        return ApiResponse.notFound("Plan no encontrado");
       }
 
       // Free plan → assign directly with 30-day trial
       if (Number(plan.price) === 0) {
         await assignFreePlanService(tenantId, plan.id);
-        return NextResponse.json({ success: true, message: "Plan gratuito activado" });
+        return ApiResponse.ok({ success: true, message: "Plan gratuito activado" });
       }
 
       // Check if already has pending invoice for this plan
       const alreadyPending = await hasPendingInvoice(tenantId, plan.id);
       if (alreadyPending) {
-        return NextResponse.json({ error: "Ya tienes una factura pendiente para este plan" }, { status: 400 });
+        return ApiResponse.badRequest("Ya tienes una factura pendiente para este plan");
       }
 
       // Paid plan → Generate invoice
@@ -131,7 +118,7 @@ export async function POST(request: Request) {
         });
       }
 
-      return NextResponse.json({
+      return ApiResponse.ok({
         success: true,
         message: "Factura generada",
         invoiceId: invoice.id,
@@ -140,10 +127,8 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ error: "Accion no valida" }, { status: 400 });
+    return ApiResponse.badRequest("Accion no valida");
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error en facturacion:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error en facturacion:");
   }
 }

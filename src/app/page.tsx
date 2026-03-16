@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { listPublicPlansService } from "@/modules/plans/services/plans.service";
+import { getPublicStatsService } from "@/modules/public-stats/services/public-stats.service";
 import Link from "next/link";
 import {
   Droplets,
@@ -54,27 +56,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-async function getPageData() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXTAUTH_URL ??
-    "http://localhost:3000";
+export const revalidate = 300;
 
+async function getPageData() {
   const [plans, stats] = await Promise.all([
-    fetch(`${baseUrl}/api/plans`, { next: { revalidate: 300 } }).then(
-      async (response) => {
-        if (!response.ok) throw new Error("No se pudieron obtener los planes");
-        return response.json() as Promise<PublicPlan[]>;
-      }
-    ),
-    fetch(`${baseUrl}/api/public-stats`, { next: { revalidate: 300 } }).then(
-      async (response) => {
-        if (!response.ok) {
-          throw new Error("No se pudieron obtener las estadisticas publicas");
-        }
-        return response.json() as Promise<PublicStatsResponse>;
-      }
-    ),
+    listPublicPlansService().catch(() => [] as PublicPlan[]),
+    getPublicStatsService().catch(() => ({ totalTenants: 0, totalOrders: 0, totalClients: 0, totalVehicles: 0 })),
   ]);
   return {
     plans,

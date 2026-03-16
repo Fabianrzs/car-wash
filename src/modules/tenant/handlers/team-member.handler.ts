@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { ApiResponse, ForbiddenError } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, requireTenantAccess, ensureManagementAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
 import {
   deactivateTeamMemberService,
   updateTeamMemberRoleService,
@@ -11,16 +12,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    const currentUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    const currentUser = await requireTenantAccess(session.user.id, tenantId, session.user.globalRole);
 
     if (currentUser.role !== "OWNER") {
-      return NextResponse.json({ error: "Solo el propietario puede cambiar roles" }, { status: 403 });
+      throw new ForbiddenError("Solo el propietario puede cambiar roles");
     }
 
     const { id } = await params;
@@ -28,11 +25,9 @@ export async function PUT(
 
     const member = await updateTeamMemberRoleService(tenantId, id, body.role);
 
-    return NextResponse.json(member);
+    return ApiResponse.ok(member);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error al actualizar miembro:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al actualizar miembro:");
   }
 }
 
@@ -41,35 +36,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    const currentUser = await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
-
-    if (currentUser.role === "EMPLOYEE") {
-      return NextResponse.json({ error: "No tienes permisos" }, { status: 403 });
-    }
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    await ensureManagementAccess(session.user.id, tenantId, session.user.globalRole);
 
     const { id } = await params;
 
     const result = await deactivateTeamMemberService(tenantId, id);
 
-    return NextResponse.json(result);
+    return ApiResponse.ok(result);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    if (error instanceof Error) {
-      const status =
-        error.message.includes("no encontrado") ? 404 :
-        error.message.includes("propietario") ? 400 : 500;
-
-      if (status !== 500) {
-        return NextResponse.json({ error: error.message }, { status });
-      }
-    }
-    console.error("Error al remover miembro:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al remover miembro:");
   }
 }

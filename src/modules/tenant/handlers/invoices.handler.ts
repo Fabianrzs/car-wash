@@ -1,19 +1,16 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { ApiResponse } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, requireTenantAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
 import { getInvoicesPageService } from "@/modules/tenant/services/invoices.service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { tenantId } = await requireTenant(request.headers);
-    await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+    const session = await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    await requireTenantAccess(session.user.id, tenantId, session.user.globalRole);
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -21,10 +18,8 @@ export async function GET(request: Request) {
     const limit = 10;
 
     const result = await getInvoicesPageService(tenantId, { status, page, limit });
-    return NextResponse.json(result);
+    return ApiResponse.ok(result);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    console.error("Error al obtener facturas:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al obtener facturas:");
   }
 }

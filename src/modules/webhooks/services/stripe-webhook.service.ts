@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getStripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/payments/stripe";
 import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**

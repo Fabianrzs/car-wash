@@ -1,20 +1,18 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib";
+import { ApiResponse } from "@/lib/http";
+import { requireAuth } from "@/middleware/auth.middleware";
+import { requireTenantContext, requireTenantAccess } from "@/middleware/tenant.middleware";
+import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
 import { getTenantPlanStatusService } from "@/modules/tenant/services/plan-status.service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+    const session = await requireAuth();
 
     // SUPER_ADMIN is never blocked
     if (session.user.globalRole === "SUPER_ADMIN") {
-      return NextResponse.json({
+      return ApiResponse.ok({
         isBlocked: false,
         reason: null,
         trialEndsAt: null,
@@ -24,17 +22,12 @@ export async function GET(request: Request) {
       });
     }
 
-    const { tenantId } = await requireTenant(request.headers);
-    await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
+    const { tenantId } = await requireTenantContext(request.headers);
+    await requireTenantAccess(session.user.id, tenantId, session.user.globalRole);
 
     const status = await getTenantPlanStatusService(tenantId);
-    return NextResponse.json(status);
+    return ApiResponse.ok(status);
   } catch (error) {
-    if (error instanceof TenantError) return handleTenantError(error);
-    if (error instanceof Error && error.message.includes("Tenant no encontrado")) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-    console.error("Error al obtener estado del plan:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    return handleTenantHttpError(error, "Error al obtener estado del plan:");
   }
 }
