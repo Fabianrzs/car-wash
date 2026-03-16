@@ -1,1 +1,1 @@
-export { GET } from "@/modules/admin/api/admin-stats.api";
+export { GET } from "@/modules/stats/api/stats.api";

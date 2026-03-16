@@ -1,5 +1,5 @@
 import { ITEMS_PER_PAGE } from "@/lib/utils/constants";
-import { userRepository } from "@/modules/admin/repositories/user.repository";
+import { userRepository } from "@/modules/users/repositories/user.repository";
 
 interface ListAdminUsersServiceInput {
   page: number;
@@ -44,4 +44,5 @@ export async function listAdminUsersService({ page, search }: ListAdminUsersServ
     pages: Math.ceil(total / ITEMS_PER_PAGE),
   };
 }
+
 

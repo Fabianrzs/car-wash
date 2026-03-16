@@ -55,3 +55,4 @@ class TenantRepository extends BaseRepository<typeof prisma.tenant> {
 export const tenantRepository = new TenantRepository(prisma.tenant);
 
 
+

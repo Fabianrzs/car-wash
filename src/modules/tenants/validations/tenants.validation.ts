@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-export const listUsersQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  search: z.string().trim().default(""),
-});
-
 export const listTenantsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   search: z.string().trim().default(""),
@@ -37,5 +32,4 @@ export const updateTenantSchema = z.object({
   trialEndsAt: z.string().datetime().optional().nullable(),
   planId: z.string().trim().optional().nullable(),
 });
-
 

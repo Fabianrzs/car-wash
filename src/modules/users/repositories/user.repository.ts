@@ -41,3 +41,4 @@ class UserRepository extends BaseRepository<typeof prisma.user> {
 export const userRepository = new UserRepository(prisma.user);
 
 
+

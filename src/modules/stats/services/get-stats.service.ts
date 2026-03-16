@@ -1,9 +1,9 @@
 import { orderRepository } from "@/modules/orders/repositories/order.repository";
 import { planRepository } from "@/modules/plans/repositories/plan.repository";
-import { tenantRepository } from "@/modules/admin/repositories/tenant.repository";
-import { userRepository } from "@/modules/admin/repositories/user.repository";
+import { tenantRepository } from "@/modules/tenants/repositories/tenant.repository";
+import { userRepository } from "@/modules/users/repositories/user.repository";
 
-export async function getAdminStatsService() {
+export async function getStatsService() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -71,4 +71,5 @@ export async function getAdminStatsService() {
     recentTenants,
   };
 }
+
 
