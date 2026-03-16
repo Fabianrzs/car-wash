@@ -1,48 +1,56 @@
 import NextAuth from "next-auth";
 import authConfig from "@/lib/auth.config";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
 
-// Must match exactly what middleware.ts uses in getToken()
 const isProduction = process.env.NODE_ENV === "production";
+
 const sessionCookieName = isProduction
-  ? "__Secure-next-auth.session-token"
-  : "next-auth.session-token";
+    ? "__Secure-next-auth.session-token"
+    : "next-auth.session-token";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: {
-    strategy: "jwt",
-  },
-  cookies: {
-    sessionToken: {
-      name: sessionCookieName,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProduction,
-        // No domain: same-origin is sufficient (no subdomain routing)
-      },
+    adapter: PrismaAdapter(prisma),
+
+    session: {
+        strategy: "jwt",
     },
-  },
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.globalRole = user.globalRole;
-        token.tenantSlug = user.tenantSlug;
-      }
-      return token;
+
+    cookies: {
+        sessionToken: {
+            name: sessionCookieName,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: isProduction,
+            },
+        },
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.globalRole = token.globalRole as string;
-        session.user.tenantSlug = token.tenantSlug as string | undefined;
-      }
-      return session;
+
+    pages: {
+        signIn: "/login",
     },
-  },
-  ...authConfig,
+
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.globalRole = user.globalRole;
+                token.tenantSlug = user.tenantSlug;
+            }
+            return token;
+        },
+
+        async session({ session, token }) {
+            if (token) {
+                session.user.id = token.id as string;
+                session.user.globalRole = token.globalRole as string;
+                session.user.tenantSlug = token.tenantSlug as string | undefined;
+            }
+            return session;
+        },
+    },
+
+    ...authConfig,
 });
