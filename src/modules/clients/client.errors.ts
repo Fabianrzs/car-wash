@@ -1,24 +1,9 @@
-import { ApiResponse } from "@/lib/http/response";
-import { HttpError, handleApiError } from "@/lib/http/errors";
+import { createModuleErrorClass, createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export class ClientModuleError extends HttpError {
-  constructor(
-    message: string,
-    public readonly status: number
-  ) {
-    super(message, status);
-    this.name = "ClientModuleError";
-  }
-}
+export const ClientModuleError = createModuleErrorClass("Client");
 
-export function unauthorizedResponse() {
-  return ApiResponse.unauthorized();
-}
-
-export function handleClientHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de cliente invalidos",
-  });
-}
+export const handleClientHttpError = createModuleErrorHandler(
+  "Cliente",
+  "Datos de cliente inválidos"
+);
 

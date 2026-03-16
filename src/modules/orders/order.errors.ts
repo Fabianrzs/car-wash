@@ -1,20 +1,9 @@
-import { HttpError, handleApiError } from "@/lib/http/errors";
+import { createModuleErrorClass, createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export class OrderModuleError extends HttpError {
-  constructor(
-    message: string,
-    public readonly status: number,
-    public readonly details?: unknown
-  ) {
-    super(message, status, details);
-    this.name = "OrderModuleError";
-  }
-}
+export const OrderModuleError = createModuleErrorClass("Order");
 
-export function handleOrderHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de orden invalidos",
-  });
-}
+export const handleOrderHttpError = createModuleErrorHandler(
+  "Orden",
+  "Datos de orden inválidos"
+);
 

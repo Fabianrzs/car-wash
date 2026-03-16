@@ -1,16 +1,9 @@
-import { handleApiError, HttpError } from "@/lib/http";
+import { createModuleErrorClass, createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export class PlanModuleError extends HttpError {
-  constructor(message: string, status: number, details?: unknown) {
-    super(message, status, details);
-    this.name = "PlanModuleError";
-  }
-}
+export const PlanModuleError = createModuleErrorClass("Plan");
 
-export function handlePlanHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de plan invalidos",
-  });
-}
+export const handlePlanHttpError = createModuleErrorHandler(
+  "Plan",
+  "Datos de plan inválidos"
+);
 

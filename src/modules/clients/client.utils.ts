@@ -1,17 +1,9 @@
 import { type CreateClientInput } from "@/modules/clients/validations/client.validation";
-
-function normalizeText(value: string) {
-  return value.trim();
-}
-
-export function normalizeOptionalText(value?: string | null) {
-  const normalized = value?.trim();
-  return normalized ? normalized : null;
-}
-
-export function normalizePlate(value: string) {
-  return value.trim().toUpperCase();
-}
+import {
+  normalizeText,
+  normalizeOptionalText,
+  normalizePlate,
+} from "@/lib/utils/normalization";
 
 export function buildClientWritePayload(data: CreateClientInput) {
   return {

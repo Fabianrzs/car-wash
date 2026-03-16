@@ -1,16 +1,10 @@
-import { handleApiError, HttpError } from "@/lib/http";
+import { createModuleErrorClass, createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export class TenantsModuleError extends HttpError {
-  constructor(message: string, status: number, details?: unknown) {
-    super(message, status, details);
-    this.name = "TenantsModuleError";
-  }
-}
+export const TenantsModuleError = createModuleErrorClass("Tenants");
 
-export function handleTenantsHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Parametros de tenants invalidos",
-  });
-}
+export const handleTenantsHttpError = createModuleErrorHandler(
+  "Tenant",
+  "Parámetros de tenants inválidos"
+);
+
 

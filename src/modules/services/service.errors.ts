@@ -1,28 +1,16 @@
-import { ApiResponse } from "@/lib/http/response";
-import { HttpError, handleApiError } from "@/lib/http/errors";
+import {
+  createModuleErrorClass,
+  createModuleErrorHandler,
+  unauthorizedResponse,
+  forbiddenResponse,
+} from "@/lib/http/module-error-factory";
 
-export class ServiceModuleError extends HttpError {
-  constructor(
-    message: string,
-    public readonly status: number
-  ) {
-    super(message, status);
-    this.name = "ServiceModuleError";
-  }
-}
+export const ServiceModuleError = createModuleErrorClass("Service");
 
-export function unauthorizedResponse() {
-  return ApiResponse.unauthorized();
-}
+export { unauthorizedResponse, forbiddenResponse };
 
-export function forbiddenResponse() {
-  return ApiResponse.forbidden();
-}
-
-export function handleServiceHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de servicio invalidos",
-  });
-}
+export const handleServiceHttpError = createModuleErrorHandler(
+  "Servicio",
+  "Datos de servicio inválidos"
+);
 

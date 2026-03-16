@@ -35,7 +35,7 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     reportRepository.groupOrdersByStatus({
       by: ["status"],
       where: dateFilter,
-      _count: { id: true },
+      _count: true,
     }),
     reportRepository.findOrders({
       where: {
@@ -60,9 +60,7 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
         subtotal: true,
         quantity: true,
       },
-      _count: {
-        id: true,
-      },
+      _count: true,
       orderBy: {
         _sum: {
           subtotal: "desc",
@@ -76,8 +74,8 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     }),
   ]);
 
-  const statusCountMap = new Map(statusCounts.map((item) => [item.status, item._count.id]));
-  const orderCount = statusCounts.reduce((sum, item) => sum + item._count.id, 0);
+  const statusCountMap = new Map(statusCounts.map((item) => [item.status, item._count || 0]));
+  const orderCount = statusCounts.reduce((sum, item) => sum + (item._count || 0), 0);
   const completedOrdersCount = statusCountMap.get("COMPLETED") || 0;
   const inProgressOrdersCount = statusCountMap.get("IN_PROGRESS") || 0;
 
@@ -97,9 +95,9 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
   const topServices = topServicesData.map((service) => ({
     serviceTypeId: service.serviceTypeId,
     name: serviceTypeNameMap.get(service.serviceTypeId) || "Servicio desconocido",
-    totalRevenue: Number(service._sum.subtotal || 0),
-    totalQuantity: Number(service._sum.quantity || 0),
-    orderCount: service._count.id,
+    totalRevenue: Number(service._sum?.subtotal || 0),
+    totalQuantity: Number(service._sum?.quantity || 0),
+    orderCount: service._count || 0,
   }));
 
   return {

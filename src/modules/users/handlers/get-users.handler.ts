@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/lib/http";
 import { requireSuperAdmin } from "@/middleware/admin.middleware";
 import { handleUsersHttpError } from "@/modules/users/users.errors";
-import { listUsersService } from "@/modules/users/services/list-users.service";
+import { listAdminUsersService } from "@/modules/users/services/list-users.service";
 import { listUsersQuerySchema } from "@/modules/users/validations/users.validation";
 
 export async function getUsersHandler(request: Request) {
@@ -14,7 +14,7 @@ export async function getUsersHandler(request: Request) {
       search: searchParams.get("search") ?? undefined,
     });
 
-    const result = await listUsersService(query);
+    const result = await listAdminUsersService(query);
     return ApiResponse.ok(result);
   } catch (error) {
     return handleUsersHttpError(error, "Error al obtener usuarios:");

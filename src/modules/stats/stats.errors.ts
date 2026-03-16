@@ -1,9 +1,8 @@
-import { handleApiError } from "@/lib/http";
+import { createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export function handleStatsHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Error de estadisticas",
-  });
-}
+export const handleStatsHttpError = createModuleErrorHandler(
+  "Estadísticas",
+  "Error de estadísticas"
+);
+
 

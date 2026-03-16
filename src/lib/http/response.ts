@@ -31,9 +31,11 @@ export class ApiResponse {
 	return NextResponse.json<ErrorBody>({ error: message }, { status: 404 });
   }
 
+  static conflict(message = "Conflicto en el recurso") {
+	return NextResponse.json<ErrorBody>({ error: message }, { status: 409 });
+  }
+
   static serverError(message = "Error interno del servidor") {
 	return NextResponse.json<ErrorBody>({ error: message }, { status: 500 });
   }
 }
-
-

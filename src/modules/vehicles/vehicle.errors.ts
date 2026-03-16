@@ -1,24 +1,15 @@
-import { ApiResponse } from "@/lib/http/response";
-import { HttpError, handleApiError } from "@/lib/http/errors";
+import {
+  createModuleErrorClass,
+  createModuleErrorHandler,
+  unauthorizedResponse,
+} from "@/lib/http/module-error-factory";
 
-export class VehicleModuleError extends HttpError {
-  constructor(
-    message: string,
-    public readonly status: number
-  ) {
-    super(message, status);
-    this.name = "VehicleModuleError";
-  }
-}
+export const VehicleModuleError = createModuleErrorClass("Vehicle");
 
-export function unauthorizedResponse() {
-  return ApiResponse.unauthorized();
-}
+export { unauthorizedResponse };
 
-export function handleVehicleHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de vehiculo invalidos",
-  });
-}
+export const handleVehicleHttpError = createModuleErrorHandler(
+  "Vehículo",
+  "Datos de vehículo inválidos"
+);
 
