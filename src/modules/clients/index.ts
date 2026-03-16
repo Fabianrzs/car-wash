@@ -8,6 +8,18 @@ export { getClientDetailService } from "@/modules/clients/services/get-client-de
 export { getClientHistoryService } from "@/modules/clients/services/get-client-history.service";
 export { listClientsService } from "@/modules/clients/services/list-clients.service";
 export { updateClientService } from "@/modules/clients/services/update-client.service";
-export type { CreateClientInput } from "@/modules/clients/validations/client.validation";
+export {
+  clientSchema,
+  clientIdParamsSchema,
+  listClientsQuerySchema,
+  clientHistoryQuerySchema,
+} from "@/modules/clients/validations/client.validation";
+export type {
+  CreateClientInput,
+  UpdateClientInput,
+  ClientIdParams,
+  ListClientsQuery,
+  ClientHistoryQuery,
+} from "@/modules/clients/validations/client.validation";
 
 

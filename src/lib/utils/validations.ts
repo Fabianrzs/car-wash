@@ -1,10 +1,10 @@
 import { z } from "zod";
-export { clientSchema } from "@/modules/clients/validations/client.validation";
-export type { CreateClientInput as ClientInput } from "@/modules/clients/validations/client.validation";
-export { vehicleSchema } from "@/modules/vehicles/validations/vehicle.validation";
-export type { VehicleInput } from "@/modules/vehicles/validations/vehicle.validation";
-export { serviceTypeSchema } from "@/modules/services/validations/service.validation";
-export type { ServiceTypeInput } from "@/modules/services/validations/service.validation";
+export { clientSchema } from "@/modules/clients";
+export type { CreateClientInput as ClientInput } from "@/modules/clients";
+export { vehicleSchema } from "@/modules/vehicles";
+export type { VehicleInput } from "@/modules/vehicles";
+export { serviceTypeSchema } from "@/modules/services";
+export type { ServiceTypeInput } from "@/modules/services";
 export {
   orderItemSchema,
   orderSchema,
@@ -13,7 +13,7 @@ export {
   updateOrderNotesSchema,
   orderAssignmentSchema,
   listOrdersQuerySchema,
-} from "@/modules/orders/validations/order.validation";
+} from "@/modules/orders";
 export type {
   OrderItemInput,
   OrderInput,
@@ -22,7 +22,7 @@ export type {
   UpdateOrderNotesInput,
   OrderAssignmentInput,
   ListOrdersQuery,
-} from "@/modules/orders/validations/order.validation";
+} from "@/modules/orders";
 
 // =============================================
 // AUTH SCHEMAS

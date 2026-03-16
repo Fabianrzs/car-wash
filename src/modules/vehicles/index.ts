@@ -8,6 +8,19 @@ export { listVehiclesService } from "@/modules/vehicles/services/list-vehicles.s
 export { updateVehicleService } from "@/modules/vehicles/services/update-vehicle.service";
 export { attachVehicleClientService } from "@/modules/vehicles/services/attach-vehicle-client.service";
 export { detachVehicleClientService } from "@/modules/vehicles/services/detach-vehicle-client.service";
-export type { VehicleInput } from "@/modules/vehicles/validations/vehicle.validation";
+export {
+  vehicleSchema,
+  vehicleIdParamsSchema,
+  listVehiclesQuerySchema,
+  vehicleClientBodySchema,
+  vehicleClientQuerySchema,
+} from "@/modules/vehicles/validations/vehicle.validation";
+export type {
+  VehicleInput,
+  VehicleIdParams,
+  ListVehiclesQuery,
+  VehicleClientBody,
+  VehicleClientQuery,
+} from "@/modules/vehicles/validations/vehicle.validation";
 
 

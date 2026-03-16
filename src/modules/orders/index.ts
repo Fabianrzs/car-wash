@@ -8,6 +8,23 @@ export { getMyOrderStatsService } from "@/modules/orders/services/get-my-order-s
 export { listOrdersService } from "@/modules/orders/services/list-orders.service";
 export { updateOrderNotesService } from "@/modules/orders/services/update-order-notes.service";
 export { updateOrderStatusService } from "@/modules/orders/services/update-order-status.service";
-export type { OrderInput, OrderItemInput } from "@/modules/orders/validations/order.validation";
+export {
+  orderItemSchema,
+  orderSchema,
+  orderStatusSchema,
+  orderIdParamsSchema,
+  updateOrderNotesSchema,
+  orderAssignmentSchema,
+  listOrdersQuerySchema,
+} from "@/modules/orders/validations/order.validation";
+export type {
+  OrderItemInput,
+  OrderInput,
+  OrderStatusInput,
+  OrderIdParams,
+  UpdateOrderNotesInput,
+  OrderAssignmentInput,
+  ListOrdersQuery,
+} from "@/modules/orders/validations/order.validation";
 
 
