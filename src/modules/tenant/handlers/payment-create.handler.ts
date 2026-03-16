@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { generatePayUReferenceCode, markInvoicePaid } from "@/lib/payments/invoice";
 import { createPSEPayment, createCreditCardPayment } from "@/lib/payu";
 import { buildTenantUrl } from "@/lib/domain";
+import {
+  createPaymentForInvoiceService,
+  getInvoiceForPaymentService,
+} from "@/modules/tenant/services/payments.service";
 
 export async function POST(request: Request) {
   try {
@@ -24,10 +27,7 @@ export async function POST(request: Request) {
     const { invoiceId, method, payerInfo } = body;
 
     // Validate invoice exists and belongs to tenant
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId, tenantId },
-      include: { plan: true, tenant: true },
-    });
+    const invoice = await getInvoiceForPaymentService(tenantId, invoiceId);
 
     if (!invoice) {
       return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 });
@@ -109,25 +109,22 @@ export async function POST(request: Request) {
     }
 
     // Create payment record
-    const payment = await prisma.payment.create({
-      data: {
-        invoice: { connect: { id: invoiceId } },
-        tenant: { connect: { id: tenantId } },
-        amount,
-        method: method as "PSE" | "CREDIT_CARD",
-        status: paymentResult.state === "APPROVED" ? "APPROVED" : "PENDING",
-        payuOrderId: paymentResult.orderId,
-        payuTransactionId: paymentResult.transactionId,
-        payuReferenceCode: referenceCode,
-        payuResponseCode: paymentResult.responseCode,
-        pseBank: method === "PSE" ? body.payerInfo.pseBank : null,
-        pseBankUrl: method === "PSE" ? paymentResult.bankUrl : null,
-        paidAt: paymentResult.state === "APPROVED" ? new Date() : null,
-        metadata: {
-          payerName: payerInfo.fullName,
-          payerDocument: payerInfo.document,
-          payerEmail: payerInfo.email,
-        },
+    const payment = await createPaymentForInvoiceService({
+      tenantId,
+      invoiceId,
+      amount,
+      method: method as "PSE" | "CREDIT_CARD",
+      payuOrderId: paymentResult.orderId,
+      payuTransactionId: paymentResult.transactionId,
+      payuReferenceCode: referenceCode,
+      payuResponseCode: paymentResult.responseCode,
+      pseBank: method === "PSE" ? body.payerInfo.pseBank : null,
+      pseBankUrl: method === "PSE" ? paymentResult.bankUrl ?? null : null,
+      isApproved: paymentResult.state === "APPROVED",
+      metadata: {
+        payerName: payerInfo.fullName,
+        payerDocument: payerInfo.document,
+        payerEmail: payerInfo.email,
       },
     });
 

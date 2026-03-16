@@ -1,33 +1,23 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
+import { getInvitationByTokenService } from "@/modules/invite/services/invite.service";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
-  const invitation = await prisma.invitation.findUnique({
-    where: { token },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      expiresAt: true,
-      acceptedAt: true,
-      tenant: { select: { name: true, slug: true } },
-      invitedBy: { select: { name: true, email: true } },
-    },
-  });
+  try {
+    const invitation = await getInvitationByTokenService(token);
+    return NextResponse.json(invitation);
+  } catch (error) {
+    if (error instanceof Error) {
+      const status =
+        error.message.includes("no encontrada") ? 404 :
+        error.message.includes("aceptada") || error.message.includes("expirado") ? 400 : 500;
 
-  if (!invitation) {
-    return NextResponse.json({ error: "Invitación no encontrada" }, { status: 404 });
+      if (status !== 500) {
+        return NextResponse.json({ error: error.message }, { status });
+      }
+    }
+
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
-
-  if (invitation.acceptedAt) {
-    return NextResponse.json({ error: "Esta invitación ya fue aceptada" }, { status: 400 });
-  }
-
-  if (invitation.expiresAt < new Date()) {
-    return NextResponse.json({ error: "Esta invitación ha expirado" }, { status: 400 });
-  }
-
-  return NextResponse.json(invitation);
 }

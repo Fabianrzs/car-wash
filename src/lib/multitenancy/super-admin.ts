@@ -1,6 +1,5 @@
-import {prisma} from "@/database/prisma";
-
-type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+import { type TransactionClient } from "@/repositories/transaction.repository";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**
  * Asocia todos los SUPER_ADMIN como ADMIN en un tenant.
@@ -10,21 +9,19 @@ export async function associateSuperAdminsWithTenant(
     tenantId: string,
     tx?: TransactionClient
 ) {
-    const db = tx || prisma;
-
-    const superAdmins = await db.user.findMany({
+    const superAdmins = await tenantModuleRepository.findManyUsers({
         where: { globalRole: "SUPER_ADMIN" },
         select: { id: true },
-    });
+    }, tx);
 
     if (superAdmins.length === 0) return;
 
-    await db.tenantUser.createMany({
+    await tenantModuleRepository.createManyTenantUsers({
         data: superAdmins.map((admin) => ({
             userId: admin.id,
             tenantId,
             role: "ADMIN" as const,
         })),
         skipDuplicates: true,
-    });
+    }, tx);
 }

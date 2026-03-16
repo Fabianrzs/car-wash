@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
-import crypto from "crypto";
-import { sendInvitationEmail } from "@/lib/email";
+import {
+  getTeamMembersService,
+  inviteTeamMemberService,
+  updateTeamMemberRoleService,
+  removeTeamMemberService,
+} from "@/modules/tenant/services/team.service";
 
 export async function GET(request: Request) {
   try {
@@ -15,15 +18,7 @@ export async function GET(request: Request) {
     const { tenantId } = await requireTenant(request.headers);
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
-    const members = await prisma.tenantUser.findMany({
-      where: { tenantId, user: { globalRole: "USER" } },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, image: true },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    });
+    const members = await getTeamMembersService(tenantId);
 
     return NextResponse.json(members);
   } catch (error) {
@@ -54,53 +49,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email requerido" }, { status: 400 });
     }
 
-    // Check if already a member
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      const existingMember = await prisma.tenantUser.findUnique({
-        where: { userId_tenantId: { userId: existingUser.id, tenantId } },
-      });
-      if (existingMember) {
-        return NextResponse.json({ error: "El usuario ya es miembro" }, { status: 400 });
-      }
-    }
-
-    // Check for pending invitation
-    const existingInvitation = await prisma.invitation.findFirst({
-      where: { email, tenantId, acceptedAt: null, expiresAt: { gt: new Date() } },
-    });
-    if (existingInvitation) {
-      return NextResponse.json({ error: "Ya hay una invitacion pendiente para este email" }, { status: 400 });
-    }
-
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const invitation = await prisma.invitation.create({
-      data: {
-        email,
-        tenant: { connect: { id: tenantId } },
-        role: role || "EMPLOYEE",
-        token,
-        expiresAt,
-        invitedBy: { connect: { id: session.user.id } },
-      },
-      include: { tenant: { select: { name: true } } },
-    });
-
-    let emailError: string | null = null;
-    try {
-      await sendInvitationEmail(
-        email,
-        session.user.name ?? session.user.email ?? "Un administrador",
-        invitation.tenant.name,
-        token,
-        invitation.role
-      );
-    } catch (err) {
-      console.error("Error sending invitation email:", err);
-      emailError = err instanceof Error ? err.message : "Error desconocido al enviar el correo";
-    }
+    const { invitation, emailError } = await inviteTeamMemberService(
+      tenantId,
+      session.user.id,
+      session.user.name ?? session.user.email ?? "Un administrador",
+      email,
+      role || "EMPLOYEE"
+    );
 
     return NextResponse.json(
       { ...invitation, emailError },
@@ -138,19 +93,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Rol invalido" }, { status: 400 });
     }
 
-    const target = await prisma.tenantUser.findUnique({ where: { id: tenantUserId } });
-    if (!target || target.tenantId !== tenantId) {
-      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
-    }
-    if (target.role === "OWNER") {
-      return NextResponse.json({ error: "No se puede cambiar el rol del propietario" }, { status: 400 });
-    }
-
-    const updated = await prisma.tenantUser.update({
-      where: { id: tenantUserId },
-      data: { role },
-      include: { user: { select: { id: true, name: true, email: true } } },
-    });
+    const updated = await updateTeamMemberRoleService(tenantId, tenantUserId, role);
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -181,19 +124,24 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID del miembro requerido" }, { status: 400 });
     }
 
-    const target = await prisma.tenantUser.findUnique({ where: { id: tenantUserId } });
-    if (!target || target.tenantId !== tenantId) {
-      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
-    }
-    if (target.role === "OWNER") {
-      return NextResponse.json({ error: "No se puede remover al propietario" }, { status: 400 });
-    }
-
-    await prisma.tenantUser.delete({ where: { id: tenantUserId } });
+    await removeTeamMemberService(tenantId, tenantUserId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
+    if (error instanceof Error) {
+      const status =
+        error.message.includes("no encontrado") ? 404 :
+        error.message.includes("propietario") ||
+        error.message.includes("miembro") ||
+        error.message.includes("pendiente")
+          ? 400
+          : 500;
+
+      if (status !== 500) {
+        return NextResponse.json({ error: error.message }, { status });
+      }
+    }
     console.error("Error al remover miembro:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

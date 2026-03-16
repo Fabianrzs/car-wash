@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import {getTenantPlanStatus, handleTenantError, requireTenant, requireTenantMember, TenantError} from "@/lib";
+import { handleTenantError, requireTenant, requireTenantMember, TenantError } from "@/lib";
 import {buildTenantUrl} from "@/lib/utils/domain";
 import {
     calculateNextPeriod,
@@ -10,6 +9,13 @@ import {
     getCurrentPeriodEnd,
     hasPendingInvoice
 } from "@/lib/payments";
+import {
+  assignFreePlanService,
+  createScheduledPlanChangeService,
+  disconnectTenantPlanService,
+  getBillingOverviewService,
+  getPlanByIdService,
+} from "@/modules/tenant/services/billing.service";
 
 
 export const dynamic = "force-dynamic";
@@ -24,38 +30,8 @@ export async function GET(request: Request) {
     const { tenantId, tenant } = await requireTenant(request.headers);
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
-    // Get pending/overdue invoices
-    const pendingInvoice = await prisma.invoice.findFirst({
-      where: { tenantId, status: { in: ["PENDING", "OVERDUE"] } },
-      orderBy: { dueDate: "asc" },
-      select: { id: true, dueDate: true },
-    });
-
-    const planStatus = tenant ? getTenantPlanStatus(tenant, pendingInvoice) : null;
-
-    // Get recent invoices
-    const invoices = await prisma.invoice.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { plan: true },
-    });
-
-    // Get scheduled plan change
-    const scheduledChange = await prisma.scheduledPlanChange.findFirst({
-      where: { tenantId, status: "SCHEDULED" },
-      include: { toPlan: true },
-    });
-
-    return NextResponse.json({
-      plan: tenant?.plan || null,
-      stripeSubscriptionId: tenant?.stripeSubscriptionId || null,
-      stripeCustomerId: tenant?.stripeCustomerId || null,
-      trialEndsAt: tenant?.trialEndsAt || null,
-      planStatus,
-      invoices,
-      scheduledChange,
-    });
+    const overview = await getBillingOverviewService(tenantId, tenant);
+    return NextResponse.json(overview);
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener facturacion:", error);
@@ -94,37 +70,18 @@ export async function POST(request: Request) {
     // ========================================
     if (action === "change-plan") {
       if (planId === null) {
-        // Disconnect plan
-        await prisma.tenant.update({
-          where: { id: tenantId },
-          data: { plan: { disconnect: true }, trialEndsAt: null },
-        });
-        // Cancel pending invoices
-        await prisma.invoice.updateMany({
-          where: { tenantId, status: "PENDING" },
-          data: { status: "CANCELLED" },
-        });
-        // Cancel scheduled changes
-        await prisma.scheduledPlanChange.updateMany({
-          where: { tenantId, status: "SCHEDULED" },
-          data: { status: "CANCELLED" },
-        });
+        await disconnectTenantPlanService(tenantId);
         return NextResponse.json({ success: true, message: "Plan desvinculado" });
       }
 
-      const plan = await prisma.plan.findUnique({ where: { id: planId } });
+      const plan = await getPlanByIdService(planId);
       if (!plan) {
         return NextResponse.json({ error: "Plan no encontrado" }, { status: 404 });
       }
 
       // Free plan → assign directly with 30-day trial
       if (Number(plan.price) === 0) {
-        const trialEndsAt = new Date();
-        trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-        await prisma.tenant.update({
-          where: { id: tenantId },
-          data: { plan: { connect: { id: plan.id } }, trialEndsAt },
-        });
+        await assignFreePlanService(tenantId, plan.id);
         return NextResponse.json({ success: true, message: "Plan gratuito activado" });
       }
 
@@ -165,15 +122,12 @@ export async function POST(request: Request) {
 
       // If changing from an active plan, schedule the change
       if (isCurrentPlanActive && tenant.planId !== plan.id) {
-        await prisma.scheduledPlanChange.create({
-          data: {
-            tenant: { connect: { id: tenantId } },
-            fromPlan: tenant.planId ? { connect: { id: tenant.planId } } : undefined,
-            toPlan: { connect: { id: plan.id } },
-            invoice: { connect: { id: invoice.id } },
-            effectiveDate: periodStart,
-            status: "SCHEDULED",
-          },
+        await createScheduledPlanChangeService({
+          tenantId,
+          fromPlanId: tenant.planId,
+          toPlanId: plan.id,
+          invoiceId: invoice.id,
+          effectiveDate: periodStart,
         });
       }
 

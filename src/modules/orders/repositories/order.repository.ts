@@ -145,6 +145,21 @@ class OrderRepository extends BaseRepository<typeof prisma.serviceOrder> {
     return getDatabase(database).serviceOrder.findFirst(args);
   }
 
+  findLatestOrderNumberByPrefix(
+    tenantId: string,
+    prefix: string,
+    database?: OrdersDatabase
+  ) {
+    return getDatabase(database).serviceOrder.findFirst({
+      where: {
+        tenantId,
+        orderNumber: { startsWith: prefix },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { orderNumber: true },
+    });
+  }
+
   create<T extends Prisma.ServiceOrderCreateArgs>(
     args: Prisma.SelectSubset<T, Prisma.ServiceOrderCreateArgs>,
     database?: OrdersDatabase

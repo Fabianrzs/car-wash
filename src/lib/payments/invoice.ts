@@ -1,10 +1,11 @@
-
 // =============================================
 // Invoice Number Generation
 // =============================================
 
 
-import {prisma} from "@/lib/database";
+import { planRepository } from "@/modules/plans/repositories/plan.repository";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
+import { runTransaction } from "@/repositories/transaction.repository";
 
 export async function generateInvoiceNumber(tenantId: string): Promise<string> {
   const now = new Date();
@@ -12,7 +13,7 @@ export async function generateInvoiceNumber(tenantId: string): Promise<string> {
   const month = (now.getMonth() + 1).toString().padStart(2, "0");
   const prefix = `FAC-${year}${month}`;
 
-  const lastInvoice = await prisma.invoice.findFirst({
+  const lastInvoice = await tenantModuleRepository.findInvoiceFirst({
     where: { invoiceNumber: { startsWith: prefix } },
     orderBy: { invoiceNumber: "desc" },
     select: { invoiceNumber: true },
@@ -50,7 +51,7 @@ export interface CreateInvoiceParams {
 const IVA_RATE = 0.19; // Colombia IVA 19%
 
 export async function createPlanInvoice(params: CreateInvoiceParams) {
-  const plan = await prisma.plan.findUnique({
+  const plan = await planRepository.findUnique({
     where: { id: params.planId },
   });
 
@@ -74,7 +75,7 @@ export async function createPlanInvoice(params: CreateInvoiceParams) {
   const startStr = params.periodStart.toLocaleDateString("es-CO");
   const endStr = params.periodEnd.toLocaleDateString("es-CO");
 
-  const invoice = await prisma.invoice.create({
+  const invoice = await tenantModuleRepository.createInvoice({
     data: {
       invoiceNumber,
       tenant: { connect: { id: params.tenantId } },
@@ -174,7 +175,7 @@ export async function createInvoiceReminders(
   }[];
 
   if (data.length > 0) {
-    await prisma.paymentReminder.createMany({ data });
+    await tenantModuleRepository.createManyPaymentReminders({ data });
   }
 }
 
@@ -183,7 +184,7 @@ export async function createInvoiceReminders(
 // =============================================
 
 export async function markInvoicePaid(invoiceId: string) {
-  const invoice = await prisma.invoice.findUnique({
+  const invoice = await tenantModuleRepository.findInvoiceUnique({
     where: { id: invoiceId },
     include: { plan: true },
   });
@@ -191,30 +192,32 @@ export async function markInvoicePaid(invoiceId: string) {
   if (!invoice) throw new Error("Factura no encontrada");
   if (invoice.status === "PAID") return invoice;
 
-  const updated = await prisma.invoice.update({
-    where: { id: invoiceId },
-    data: { status: "PAID", paidAt: new Date() },
-    include: { plan: true },
+  const updated = await runTransaction(async (tx) => {
+    const paidInvoice = await tenantModuleRepository.updateInvoice({
+      where: { id: invoiceId },
+      data: { status: "PAID", paidAt: new Date() },
+      include: { plan: true },
+    }, tx);
+
+    // Activate the plan for the tenant
+    if (invoice.planId) {
+      await tenantModuleRepository.updateTenant({
+        where: { id: invoice.tenantId },
+        data: {
+          plan: { connect: { id: invoice.planId } },
+          isActive: true,
+          trialEndsAt: invoice.periodEnd,
+        },
+      }, tx);
+
+      await tenantModuleRepository.updateManyScheduledPlanChanges({
+        where: { invoiceId: invoice.id, status: "SCHEDULED" },
+        data: { status: "APPLIED" },
+      }, tx);
+    }
+
+    return paidInvoice;
   });
-
-  // Activate the plan for the tenant
-  if (invoice.planId) {
-    await prisma.tenant.update({
-      where: { id: invoice.tenantId },
-      data: {
-        plan: { connect: { id: invoice.planId } },
-        isActive: true,
-        // Set period end as trialEndsAt so the system knows when access expires
-        trialEndsAt: invoice.periodEnd,
-      },
-    });
-
-    // Apply any scheduled plan changes linked to this invoice
-    await prisma.scheduledPlanChange.updateMany({
-      where: { invoiceId: invoice.id, status: "SCHEDULED" },
-      data: { status: "APPLIED" },
-    });
-  }
 
   return updated;
 }
@@ -225,7 +228,7 @@ export async function markInvoicePaid(invoiceId: string) {
 
 export async function getCurrentPeriodEnd(tenantId: string): Promise<Date | null> {
   // Check the latest paid invoice
-  const lastPaidInvoice = await prisma.invoice.findFirst({
+  const lastPaidInvoice = await tenantModuleRepository.findInvoiceFirst({
     where: { tenantId, status: "PAID" },
     orderBy: { periodEnd: "desc" },
     select: { periodEnd: true },
@@ -239,7 +242,7 @@ export async function getCurrentPeriodEnd(tenantId: string): Promise<Date | null
 // =============================================
 
 export async function hasPendingInvoice(tenantId: string, planId: string): Promise<boolean> {
-  const pending = await prisma.invoice.findFirst({
+  const pending = await tenantModuleRepository.findInvoiceFirst({
     where: {
       tenantId,
       planId,

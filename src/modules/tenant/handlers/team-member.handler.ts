@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import {
+  deactivateTeamMemberService,
+  updateTeamMemberRoleService,
+} from "@/modules/tenant/services/team.service";
 
 export async function PUT(
   request: Request,
@@ -23,26 +26,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const targetMember = await prisma.tenantUser.findFirst({
-      where: { id, tenantId },
-      select: { id: true, role: true },
-    });
-
-    if (!targetMember) {
-      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
-    }
-
-    if (targetMember.role === "OWNER") {
-      return NextResponse.json({ error: "No se puede cambiar el rol del propietario" }, { status: 400 });
-    }
-
-    const member = await prisma.tenantUser.update({
-      where: { id },
-      data: { role: body.role },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-      },
-    });
+    const member = await updateTeamMemberRoleService(tenantId, id, body.role);
 
     return NextResponse.json(member);
   } catch (error) {
@@ -71,27 +55,20 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const targetMember = await prisma.tenantUser.findFirst({
-      where: { id, tenantId },
-      select: { id: true, role: true },
-    });
+    const result = await deactivateTeamMemberService(tenantId, id);
 
-    if (!targetMember) {
-      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
-    }
-
-    if (targetMember.role === "OWNER") {
-      return NextResponse.json({ error: "No se puede remover al propietario" }, { status: 400 });
-    }
-
-    await prisma.tenantUser.update({
-      where: { id },
-      data: { isActive: false },
-    });
-
-    return NextResponse.json({ message: "Miembro removido correctamente" });
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
+    if (error instanceof Error) {
+      const status =
+        error.message.includes("no encontrado") ? 404 :
+        error.message.includes("propietario") ? 400 : 500;
+
+      if (status !== 500) {
+        return NextResponse.json({ error: error.message }, { status });
+      }
+    }
     console.error("Error al remover miembro:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

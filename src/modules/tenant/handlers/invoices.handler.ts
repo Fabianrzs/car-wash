@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { getInvoicesPageService } from "@/modules/tenant/services/invoices.service";
 
 export const dynamic = "force-dynamic";
 
@@ -20,29 +20,8 @@ export async function GET(request: Request) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = 10;
 
-    const where: any = { tenantId };
-    if (status) where.status = status;
-
-    const [invoices, total] = await Promise.all([
-      prisma.invoice.findMany({
-        where,
-        include: {
-          plan: { select: { id: true, name: true } },
-          items: true,
-          _count: { select: { payments: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.invoice.count({ where }),
-    ]);
-
-    return NextResponse.json({
-      invoices,
-      total,
-      pages: Math.ceil(total / limit),
-    });
+    const result = await getInvoicesPageService(tenantId, { status, page, limit });
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
     console.error("Error al obtener facturas:", error);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { getInvitationsService } from "@/modules/tenant/services/invitations.service";
 
 export async function GET(request: Request) {
   try {
@@ -13,19 +13,7 @@ export async function GET(request: Request) {
     const { tenantId } = await requireTenant(request.headers);
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
-    const invitations = await prisma.invitation.findMany({
-      where: {
-        tenantId,
-        acceptedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-      include: {
-        invitedBy: {
-          select: { id: true, name: true, email: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const invitations = await getInvitationsService(tenantId);
 
     return NextResponse.json(invitations);
   } catch (error) {

@@ -1,4 +1,4 @@
-import { prisma } from "@/database/prisma";
-import { runTransaction } from "@/database/transaction-manager";
-
-export {prisma, runTransaction};
+export {
+  runTransaction,
+  type TransactionClient,
+} from "@/repositories/transaction.repository";

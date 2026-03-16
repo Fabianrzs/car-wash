@@ -4,50 +4,39 @@ import { BaseRepository } from "@/repositories/base.repository";
 
 export type VehiclesDatabase = typeof prisma | Prisma.TransactionClient;
 
-const vehicleListInclude = {
-  clients: {
-    include: {
-      client: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-        },
-      },
-    },
-  },
-} as const satisfies Prisma.VehicleInclude;
+const vehicleClientBaseSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+} as const;
 
-const vehicleDetailInclude = {
-  clients: {
-    include: {
-      client: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-          email: true,
-        },
-      },
-    },
-  },
-} as const satisfies Prisma.VehicleInclude;
+const vehicleListClientSelect = {
+  ...vehicleClientBaseSelect,
+  phone: true,
+} as const;
 
-const vehicleMutationInclude = {
-  clients: {
-    include: {
-      client: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
+const vehicleDetailClientSelect = {
+  ...vehicleListClientSelect,
+  email: true,
+} as const;
+
+function createVehicleClientsInclude<TSelect extends Prisma.ClientSelect>(
+  clientSelect: TSelect
+) {
+  return {
+    clients: {
+      include: {
+        client: {
+          select: clientSelect,
         },
       },
     },
-  },
-} as const satisfies Prisma.VehicleInclude;
+  } as const satisfies Prisma.VehicleInclude;
+}
+
+const vehicleListInclude = createVehicleClientsInclude(vehicleListClientSelect);
+const vehicleDetailInclude = createVehicleClientsInclude(vehicleDetailClientSelect);
+const vehicleMutationInclude = createVehicleClientsInclude(vehicleClientBaseSelect);
 
 function getDatabase(database?: VehiclesDatabase) {
   return database ?? prisma;
@@ -65,6 +54,17 @@ class VehicleRepository extends BaseRepository<typeof prisma.vehicle> {
 
   findFirst(args: Prisma.VehicleFindFirstArgs, database?: VehiclesDatabase) {
     return getDatabase(database).vehicle.findFirst(args);
+  }
+
+  findTenantVehicleById(
+    tenantId: string,
+    vehicleId: string,
+    database?: VehiclesDatabase
+  ) {
+    return getDatabase(database).vehicle.findFirst({
+      where: { id: vehicleId, tenantId },
+      select: { id: true },
+    });
   }
 
   create(args: Prisma.VehicleCreateArgs, database?: VehiclesDatabase) {
@@ -89,6 +89,17 @@ class VehicleRepository extends BaseRepository<typeof prisma.vehicle> {
 
   findFirstClient(args: Prisma.ClientFindFirstArgs, database?: VehiclesDatabase) {
     return getDatabase(database).client.findFirst(args);
+  }
+
+  findTenantClientById(
+    tenantId: string,
+    clientId: string,
+    database?: VehiclesDatabase
+  ) {
+    return getDatabase(database).client.findFirst({
+      where: { id: clientId, tenantId },
+      select: { id: true },
+    });
   }
 
   createManyClientVehicles(

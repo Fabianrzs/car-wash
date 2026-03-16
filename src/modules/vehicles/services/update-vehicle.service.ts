@@ -18,13 +18,10 @@ export async function updateVehicleService({
   vehicleId,
   data,
 }: UpdateVehicleServiceInput) {
-  const existingVehicle = await vehicleRepository.findFirst({
-    where: {
-      id: vehicleId,
-      tenantId,
-    },
-    select: { id: true },
-  });
+  const existingVehicle = await vehicleRepository.findTenantVehicleById(
+    tenantId,
+    vehicleId
+  );
 
   if (!existingVehicle) {
     throw new VehicleModuleError("Vehiculo no encontrado", 404);

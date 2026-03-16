@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
+import { getInvoiceDetailByIdService } from "@/modules/tenant/services/invoices.service";
 
 export const dynamic = "force-dynamic";
 
@@ -20,19 +20,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const invoice = await prisma.invoice.findUnique({
-      where: { id, tenantId },
-      include: {
-        plan: true,
-        items: true,
-        payments: {
-          orderBy: { createdAt: "desc" },
-        },
-        tenant: {
-          select: { name: true, slug: true, email: true, phone: true, address: true },
-        },
-      },
-    });
+    const invoice = await getInvoiceDetailByIdService(tenantId, id);
 
     if (!invoice) {
       return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 });

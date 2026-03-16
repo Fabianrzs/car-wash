@@ -1,4 +1,4 @@
-import { prisma } from "@/database/prisma";
+import { publicStatsRepository } from "@/modules/public-stats/repositories/public-stats.repository";
 
 export interface PublicStats {
   totalTenants: number;
@@ -8,12 +8,6 @@ export interface PublicStats {
 }
 
 export async function getPublicStatsService(): Promise<PublicStats> {
-  const [totalTenants, totalOrders, totalClients, totalVehicles] = await Promise.all([
-    prisma.tenant.count({ where: { isActive: true } }),
-    prisma.serviceOrder.count(),
-    prisma.client.count(),
-    prisma.vehicle.count(),
-  ]);
-  return { totalTenants, totalOrders, totalClients, totalVehicles };
+  return publicStatsRepository.getSummary();
 }
 

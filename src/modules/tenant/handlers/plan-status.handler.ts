@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus, TenantError } from "@/lib";
+import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib";
+import { getTenantPlanStatusService } from "@/modules/tenant/services/plan-status.service";
 
 export const dynamic = "force-dynamic";
 
@@ -27,29 +27,13 @@ export async function GET(request: Request) {
     const { tenantId } = await requireTenant(request.headers);
     await requireTenantMember(session.user.id, tenantId, session.user.globalRole);
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      include: { plan: true },
-    });
-
-    if (!tenant) {
-      return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
-    }
-
-    // Check for pending/overdue invoices
-    const pendingInvoice = await prisma.invoice.findFirst({
-      where: {
-        tenantId,
-        status: { in: ["PENDING", "OVERDUE"] },
-      },
-      orderBy: { dueDate: "asc" },
-      select: { id: true, dueDate: true },
-    });
-
-    const status = getTenantPlanStatus(tenant, pendingInvoice);
+    const status = await getTenantPlanStatusService(tenantId);
     return NextResponse.json(status);
   } catch (error) {
     if (error instanceof TenantError) return handleTenantError(error);
+    if (error instanceof Error && error.message.includes("Tenant no encontrado")) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
     console.error("Error al obtener estado del plan:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

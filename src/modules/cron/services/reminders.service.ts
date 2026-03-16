@@ -1,5 +1,5 @@
-import { prisma } from "@/database/prisma";
 import { sendPaymentReminderEmail } from "@/lib/email";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**
  * Processes due payment reminders and sends email notifications.
@@ -10,7 +10,7 @@ export async function processPaymentRemindersService(): Promise<{
 }> {
   const now = new Date();
 
-  const dueReminders = await prisma.paymentReminder.findMany({
+  const dueReminders = await tenantModuleRepository.findManyPaymentReminders({
     where: { sentAt: null, scheduledFor: { lte: now } },
     include: {
       tenant: { select: { id: true, name: true, email: true, slug: true } },
@@ -32,7 +32,7 @@ export async function processPaymentRemindersService(): Promise<{
 
   for (const reminder of dueReminders) {
     if (!reminder.invoice || reminder.invoice.status === "PAID" || reminder.invoice.status === "CANCELLED") {
-      await prisma.paymentReminder.update({
+      await tenantModuleRepository.updatePaymentReminder({
         where: { id: reminder.id },
         data: { sentAt: now },
       });
@@ -51,7 +51,7 @@ export async function processPaymentRemindersService(): Promise<{
           reminder.tenant.slug
         );
       }
-      await prisma.paymentReminder.update({
+      await tenantModuleRepository.updatePaymentReminder({
         where: { id: reminder.id },
         data: { sentAt: now },
       });

@@ -1,7 +1,7 @@
-import { prisma } from "@/database/prisma";
+import { inviteRepository } from "@/modules/invite/repositories/invite.repository";
 
 export async function getInvitationByTokenService(token: string) {
-  const invitation = await prisma.invitation.findUnique({
+  const invitation = await inviteRepository.findInvitationByToken({
     where: { token },
     select: {
       id: true, email: true, role: true, expiresAt: true, acceptedAt: true,

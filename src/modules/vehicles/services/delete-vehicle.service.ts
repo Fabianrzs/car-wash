@@ -10,13 +10,10 @@ export async function deleteVehicleService({
   tenantId,
   vehicleId,
 }: DeleteVehicleServiceInput) {
-  const existingVehicle = await vehicleRepository.findFirst({
-    where: {
-      id: vehicleId,
-      tenantId,
-    },
-    select: { id: true },
-  });
+  const existingVehicle = await vehicleRepository.findTenantVehicleById(
+    tenantId,
+    vehicleId
+  );
 
   if (!existingVehicle) {
     throw new VehicleModuleError("Vehiculo no encontrado", 404);

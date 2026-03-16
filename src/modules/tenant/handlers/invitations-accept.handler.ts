@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
+import { acceptInvitationForUserService } from "@/modules/tenant/services/invitations.service";
 
 export async function POST(request: Request) {
   try {
@@ -16,66 +16,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Token requerido" }, { status: 400 });
     }
 
-    const invitation = await prisma.invitation.findUnique({
-      where: { token },
-      select: {
-        id: true,
-        acceptedAt: true,
-        expiresAt: true,
-        tenantId: true,
-        role: true,
-        tenant: { select: { id: true, name: true, slug: true } },
-      },
-    });
-
-    if (!invitation) {
-      return NextResponse.json({ error: "Invitacion no encontrada" }, { status: 404 });
-    }
-
-    if (invitation.acceptedAt) {
-      return NextResponse.json({ error: "Invitacion ya fue aceptada" }, { status: 400 });
-    }
-
-    if (invitation.expiresAt < new Date()) {
-      return NextResponse.json({ error: "Invitacion expirada" }, { status: 400 });
-    }
-
-    // Check if user is already a member
-    const existingMember = await prisma.tenantUser.findUnique({
-      where: {
-        userId_tenantId: { userId: session.user.id, tenantId: invitation.tenantId },
-      },
-      select: { id: true },
-    });
-
-    if (existingMember) {
-      return NextResponse.json({ error: "Ya eres miembro de este lavadero" }, { status: 400 });
-    }
-
-    // Accept invitation
-    await prisma.$transaction([
-      prisma.tenantUser.create({
-        data: {
-          user: { connect: { id: session.user.id } },
-          tenant: { connect: { id: invitation.tenantId } },
-          role: invitation.role,
-        },
-      }),
-      prisma.invitation.update({
-        where: { id: invitation.id },
-        data: { acceptedAt: new Date() },
-      }),
-    ]);
-
-    return NextResponse.json({
-      message: "Invitacion aceptada",
-      tenant: {
-        id: invitation.tenant.id,
-        name: invitation.tenant.name,
-        slug: invitation.tenant.slug,
-      },
-    });
+    const result = await acceptInvitationForUserService(token, session.user.id);
+    return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof Error) {
+      const status =
+        error.message.includes("no encontrada") ? 404 :
+        error.message.includes("expirada") ||
+        error.message.includes("aceptada") ||
+        error.message.includes("miembro")
+          ? 400
+          : 500;
+
+      if (status !== 500) {
+        return NextResponse.json({ error: error.message }, { status });
+      }
+    }
     console.error("Error al aceptar invitacion:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }

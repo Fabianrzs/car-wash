@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/database/prisma";
-import { generateOrderNumber } from "@/lib/utils/order-number";
+import { runTransaction } from "@/repositories/transaction.repository";
+import { buildNextOrderNumber } from "@/lib/utils/order-number";
 import type { OrderInput } from "@/modules/orders/validations/order.validation";
 import { OrderModuleError } from "@/modules/orders/order.errors";
 import { orderRepository } from "@/modules/orders/repositories/order.repository";
@@ -13,9 +13,21 @@ interface CreateOrderServiceInput {
 }
 
 export async function createOrderService({ tenantId, createdById, data }: CreateOrderServiceInput) {
-  const runTransaction = () =>
-    prisma.$transaction(async (tx) => {
-      const orderNumber = await generateOrderNumber(tenantId, tx);
+  const executeCreateOrder = () =>
+    runTransaction(async (tx) => {
+      const datePrefix = `ORD-${new Intl.DateTimeFormat("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date()).replaceAll("-", "")}-`;
+
+      const lastOrder = await orderRepository.findLatestOrderNumberByPrefix(
+        tenantId,
+        datePrefix,
+        tx
+      );
+
+      const orderNumber = buildNextOrderNumber(lastOrder?.orderNumber);
 
       const serviceTypeIds = data.items.map((item) => item.serviceTypeId);
       const serviceTypes = await orderRepository.findManyServiceTypes({
@@ -68,7 +80,7 @@ export async function createOrderService({ tenantId, createdById, data }: Create
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return await runTransaction();
+      return await executeCreateOrder();
     } catch (error) {
       const isOrderNumberConflict =
         error instanceof Prisma.PrismaClientKnownRequestError &&

@@ -1,8 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/database/prisma";
 import {checkRateLimit} from "@/lib/security/rate-limit";
+import { authRepository } from "@/modules/auth/repositories/auth.repository";
 
 export default {
   providers: [
@@ -24,7 +24,7 @@ export default {
         if (!rl.allowed) return null;
 
         try {
-          const user = await prisma.user.findUnique({
+          const user = await authRepository.findUserByEmail({
             where: { email },
             include: {
               tenantUsers: {
@@ -42,9 +42,10 @@ export default {
           // Only embed tenantSlug in JWT for single-tenant users.
           // Multi-tenant users will select via TenantGuard → cookie.
           const activeTenants = user.tenantUsers;
+          const firstActiveTenant = activeTenants.at(0);
           const tenantSlug =
-            activeTenants.length === 1
-              ? activeTenants[0].tenant.slug
+            activeTenants.length === 1 && firstActiveTenant
+              ? firstActiveTenant.tenant.slug
               : undefined;
 
           return {

@@ -21,14 +21,31 @@ import {
   Lock,
   DollarSign,
   Smartphone,
-  Settings,
   Bell,
   Award,
   Star,
   X,
   ChevronRight,
 } from "lucide-react";
-import { prisma } from "@/database/prisma";
+
+interface PublicPlan {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number;
+  interval: string;
+  maxUsers: number;
+  maxOrdersPerMonth: number;
+  features: string[];
+}
+
+interface PublicStatsResponse {
+  totalTenants: number;
+  totalOrders: number;
+  totalClients: number;
+  totalVehicles: number;
+}
 
 export const metadata: Metadata = {
   title: "CarWashPro — Software de Gestión para Autolavados en Colombia",
@@ -38,21 +55,35 @@ export const metadata: Metadata = {
 };
 
 async function getPageData() {
-  const [plans, totalTenants, totalOrders, totalClients] = await Promise.all([
-    prisma.plan.findMany({
-      where: { isActive: true },
-      select: {
-        id: true, name: true, slug: true, description: true,
-        price: true, interval: true, maxUsers: true,
-        maxOrdersPerMonth: true, features: true,
-      },
-      orderBy: { price: "asc" },
-    }),
-    prisma.tenant.count({ where: { isActive: true } }),
-    prisma.serviceOrder.count(),
-    prisma.client.count(),
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.NEXTAUTH_URL ??
+    "http://localhost:3000";
+
+  const [plans, stats] = await Promise.all([
+    fetch(`${baseUrl}/api/plans`, { next: { revalidate: 300 } }).then(
+      async (response) => {
+        if (!response.ok) throw new Error("No se pudieron obtener los planes");
+        return response.json() as Promise<PublicPlan[]>;
+      }
+    ),
+    fetch(`${baseUrl}/api/public-stats`, { next: { revalidate: 300 } }).then(
+      async (response) => {
+        if (!response.ok) {
+          throw new Error("No se pudieron obtener las estadisticas publicas");
+        }
+        return response.json() as Promise<PublicStatsResponse>;
+      }
+    ),
   ]);
-  return { plans, stats: { totalTenants, totalOrders, totalClients } };
+  return {
+    plans,
+    stats: {
+      totalTenants: stats.totalTenants,
+      totalOrders: stats.totalOrders,
+      totalClients: stats.totalClients,
+    },
+  };
 }
 
 const jsonLd = {

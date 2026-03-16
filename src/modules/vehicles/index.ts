@@ -1,5 +1,6 @@
 // Public API exports for vehicles module
 export { handleVehicleHttpError } from "@/modules/vehicles/vehicle.errors";
+export { buildVehicleFilter } from "@/modules/vehicles/filters/vehicle.filter";
 export { vehicleRepository } from "@/modules/vehicles/repositories/vehicle.repository";
 export { createVehicleService } from "@/modules/vehicles/services/create-vehicle.service";
 export { deleteVehicleService } from "@/modules/vehicles/services/delete-vehicle.service";

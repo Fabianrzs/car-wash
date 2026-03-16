@@ -1,5 +1,5 @@
-import { Prisma } from "@/generated/prisma/client";
 import { vehicleRepository } from "@/modules/vehicles/repositories/vehicle.repository";
+import { buildVehicleFilter } from "@/modules/vehicles/filters/vehicle.filter";
 
 interface ListVehiclesServiceInput {
   tenantId: string;
@@ -16,15 +16,7 @@ export async function listVehiclesService({
   search,
   clientId,
 }: ListVehiclesServiceInput) {
-  const where: Prisma.VehicleWhereInput = { tenantId };
-
-  if (search) {
-    where.plate = { contains: search, mode: Prisma.QueryMode.insensitive };
-  }
-
-  if (clientId) {
-    where.clients = { some: { clientId } };
-  }
+  const where = buildVehicleFilter({ tenantId, search, clientId });
 
   const skip = (page - 1) * take;
 

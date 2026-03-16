@@ -1,6 +1,6 @@
 import { headers, cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import {prisma} from "@/database/prisma";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 export interface TenantPlanStatus {
     isBlocked: boolean;
@@ -70,7 +70,7 @@ export async function requireActivePlan(
     // SUPER_ADMIN is never blocked
     if (globalRole === "SUPER_ADMIN") return;
 
-    const tenant = preloadedTenant ?? await prisma.tenant.findUnique({
+    const tenant = preloadedTenant ?? await tenantModuleRepository.findTenantUnique({
         where: { id: tenantId },
         include: { plan: true },
     });
@@ -80,7 +80,7 @@ export async function requireActivePlan(
     }
 
     // Check for overdue invoices
-    const pendingInvoice = await prisma.invoice.findFirst({
+    const pendingInvoice = await tenantModuleRepository.findInvoiceFirst({
         where: {
             tenantId,
             status: { in: ["PENDING", "OVERDUE"] },
@@ -113,7 +113,7 @@ export async function getTenantSlugFromHeaders(): Promise<string | null> {
 }
 
 export async function resolveTenant(slug: string) {
-    return prisma.tenant.findUnique({
+    return tenantModuleRepository.findTenantUnique({
         where: { slug, isActive: true },
         include: { plan: true },
     });
@@ -150,7 +150,7 @@ export async function requireTenantMember(userId: string, tenantId: string, glob
         return { role: "OWNER" as const, userId, tenantId, isActive: true, id: "super-admin" };
     }
 
-    const tenantUser = await prisma.tenantUser.findUnique({
+    const tenantUser = await tenantModuleRepository.findTenantUserUnique({
         where: {
             userId_tenantId: { userId, tenantId },
             isActive: true,

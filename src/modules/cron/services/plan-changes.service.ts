@@ -1,4 +1,4 @@
-import { prisma } from "@/database/prisma";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**
  * Processes scheduled plan changes that are due.
@@ -11,7 +11,7 @@ export async function processScheduledPlanChangesService(): Promise<{
 }> {
   const now = new Date();
 
-  const dueChanges = await prisma.scheduledPlanChange.findMany({
+  const dueChanges = await tenantModuleRepository.findManyScheduledPlanChanges({
     where: { status: "SCHEDULED", effectiveDate: { lte: now } },
     include: {
       toPlan: true,
@@ -35,7 +35,7 @@ export async function processScheduledPlanChangesService(): Promise<{
   }
 
   if (toCancelIds.length > 0) {
-    await prisma.scheduledPlanChange.updateMany({
+    await tenantModuleRepository.updateManyScheduledPlanChanges({
       where: { id: { in: toCancelIds } },
       data: { status: "CANCELLED" },
     });
@@ -43,26 +43,27 @@ export async function processScheduledPlanChangesService(): Promise<{
 
   let applied = 0;
   if (toApply.length > 0) {
-    await prisma.$transaction(
-      toApply.flatMap((change) => [
-        prisma.tenant.update({
+    await tenantModuleRepository.transaction(async (tx) => {
+      for (const change of toApply) {
+        await tenantModuleRepository.updateTenant({
           where: { id: change.tenantId },
           data: {
             plan: { connect: { id: change.toPlanId } },
             trialEndsAt: change.invoice?.periodEnd ?? null,
           },
-        }),
-        prisma.scheduledPlanChange.update({
+        }, tx);
+
+        await tenantModuleRepository.updateScheduledPlanChange({
           where: { id: change.id },
           data: { status: "APPLIED" },
-        }),
-      ])
-    );
+        }, tx);
+      }
+    });
     applied = toApply.length;
   }
 
   // Check expired plans without renewal
-  const expiredTenants = await prisma.tenant.findMany({
+  const expiredTenants = await tenantModuleRepository.findManyTenants({
     where: { isActive: true, planId: { not: null }, trialEndsAt: { lt: now }, stripeSubscriptionId: null },
     select: { id: true },
   });
@@ -70,7 +71,7 @@ export async function processScheduledPlanChangesService(): Promise<{
   let blocked = 0;
   if (expiredTenants.length > 0) {
     const expiredIds = expiredTenants.map((t) => t.id);
-    const renewed = await prisma.invoice.findMany({
+    const renewed = await tenantModuleRepository.findManyInvoices({
       where: { tenantId: { in: expiredIds }, status: "PAID", periodEnd: { gt: now } },
       select: { tenantId: true },
       distinct: ["tenantId"],

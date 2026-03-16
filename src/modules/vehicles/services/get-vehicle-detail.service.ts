@@ -11,10 +11,7 @@ export async function getVehicleDetailService({
   vehicleId,
 }: GetVehicleDetailServiceInput) {
   const vehicle = await vehicleRepository.findFirst({
-    where: {
-      id: vehicleId,
-      tenantId,
-    },
+    where: { id: vehicleId, tenantId },
     include: vehicleRepository.detailInclude,
   });
 

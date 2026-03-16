@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import { queryTransactionByReference } from "@/lib/payu";
 import { markInvoicePaid } from "@/lib/payments/invoice";
+import {
+  getPaymentDetailByIdService,
+  updatePaymentStatusService,
+} from "@/modules/tenant/services/payments.service";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +25,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const payment = await prisma.payment.findUnique({
-      where: { id, tenantId },
-      include: {
-        invoice: {
-          select: { id: true, invoiceNumber: true, totalAmount: true, status: true },
-        },
-      },
-    });
+    const payment = await getPaymentDetailByIdService(tenantId, id);
 
     if (!payment) {
       return NextResponse.json({ error: "Pago no encontrado" }, { status: 404 });
@@ -52,18 +48,10 @@ export async function GET(
         }
 
         if (newStatus !== payment.status) {
-          const updated = await prisma.payment.update({
-            where: { id: payment.id },
-            data: {
-              status: newStatus as any,
-              payuResponseCode: payuStatus.responseCode || payment.payuResponseCode,
-              paidAt: newStatus === "APPROVED" ? new Date() : null,
-            },
-            include: {
-              invoice: {
-                select: { id: true, invoiceNumber: true, totalAmount: true, status: true },
-              },
-            },
+          const updated = await updatePaymentStatusService(payment.id, {
+            status: newStatus,
+            payuResponseCode: payuStatus.responseCode || payment.payuResponseCode,
+            paidAt: newStatus === "APPROVED" ? new Date() : null,
           });
 
           // If approved, mark invoice as paid and activate plan

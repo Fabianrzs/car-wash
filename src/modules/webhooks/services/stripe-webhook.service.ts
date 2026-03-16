@@ -1,6 +1,6 @@
 import Stripe from "stripe";
-import { prisma } from "@/database/prisma";
 import { getStripe } from "@/lib/stripe";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**
  * Process a Stripe webhook event.
@@ -25,10 +25,10 @@ export async function processStripeEventService(
         const priceId = sub.items.data[0]?.price?.id;
         let planId: string | undefined;
         if (priceId) {
-          const plan = await prisma.plan.findFirst({ where: { stripePriceId: priceId } });
+          const plan = await tenantModuleRepository.findPlanFirst({ where: { stripePriceId: priceId } });
           if (plan) planId = plan.id;
         }
-        await prisma.tenant.update({
+        await tenantModuleRepository.updateTenant({
           where: { id: tenantId },
           data: {
             stripeCustomerId: session.customer as string,
@@ -43,19 +43,19 @@ export async function processStripeEventService(
 
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
-      const tenant = await prisma.tenant.findFirst({ where: { stripeSubscriptionId: sub.id } });
+      const tenant = await tenantModuleRepository.findTenantFirst({ where: { stripeSubscriptionId: sub.id } });
       if (tenant) {
         const isActive = sub.status === "active" || sub.status === "trialing";
-        await prisma.tenant.update({ where: { id: tenant.id }, data: { isActive } });
+        await tenantModuleRepository.updateTenant({ where: { id: tenant.id }, data: { isActive } });
       }
       break;
     }
 
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
-      const tenant = await prisma.tenant.findFirst({ where: { stripeSubscriptionId: sub.id } });
+      const tenant = await tenantModuleRepository.findTenantFirst({ where: { stripeSubscriptionId: sub.id } });
       if (tenant) {
-        await prisma.tenant.update({
+        await tenantModuleRepository.updateTenant({
           where: { id: tenant.id },
           data: { isActive: false, stripeSubscriptionId: null, plan: { disconnect: true } },
         });
@@ -66,7 +66,7 @@ export async function processStripeEventService(
     case "invoice.payment_failed": {
       const inv = event.data.object as Stripe.Invoice;
       if (inv.customer) {
-        const tenant = await prisma.tenant.findFirst({
+        const tenant = await tenantModuleRepository.findTenantFirst({
           where: { stripeCustomerId: inv.customer as string },
         });
         if (tenant) console.warn(`Stripe payment failed for tenant ${tenant.slug}`);

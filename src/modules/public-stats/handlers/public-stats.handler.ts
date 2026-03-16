@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
+import { getPublicStatsService } from "@/modules/public-stats/services/public-stats.service";
 
 export async function GET() {
   try {
-    const [totalTenants, totalOrders, totalClients, totalVehicles] = await Promise.all([
-      prisma.tenant.count({ where: { isActive: true } }),
-      prisma.serviceOrder.count(),
-      prisma.client.count(),
-      prisma.vehicle.count(),
-    ]);
+    const { totalTenants, totalOrders, totalClients, totalVehicles } =
+      await getPublicStatsService();
 
     return NextResponse.json({
       totalTenants,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/database/prisma";
+import { isSlugAvailable } from "@/modules/auth/services/auth.service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,15 +13,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ available: false, reason: "Formato invalido" });
   }
 
-  const reserved = ["admin", "api", "app", "www", "mail", "ftp", "blog", "help", "support"];
-  if (reserved.includes(slug)) {
-    return NextResponse.json({ available: false, reason: "Slug reservado" });
-  }
-
-  const existingTenant = await prisma.tenant.findUnique({ where: { slug } });
+  const result = await isSlugAvailable(slug);
 
   return NextResponse.json({
-    available: !existingTenant,
-    reason: existingTenant ? "Ya esta en uso" : null,
+    available: result.available,
+    reason: result.reason,
   });
 }

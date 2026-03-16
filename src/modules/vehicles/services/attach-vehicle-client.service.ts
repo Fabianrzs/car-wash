@@ -13,14 +13,8 @@ export async function attachVehicleClientService({
   clientId,
 }: AttachVehicleClientServiceInput) {
   const [vehicle, client] = await Promise.all([
-    vehicleRepository.findFirst({
-      where: { id: vehicleId, tenantId },
-      select: { id: true },
-    }),
-    vehicleRepository.findFirstClient({
-      where: { id: clientId, tenantId },
-      select: { id: true },
-    }),
+    vehicleRepository.findTenantVehicleById(tenantId, vehicleId),
+    vehicleRepository.findTenantClientById(tenantId, clientId),
   ]);
 
   if (!vehicle) {

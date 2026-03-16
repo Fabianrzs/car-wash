@@ -1,13 +1,13 @@
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import type { Prisma } from "@/generated/prisma/client";
-import { prisma } from "@/database/prisma";
 import { ITEMS_PER_PAGE } from "@/lib/utils/constants";
 import { associateSuperAdminsWithTenant } from "@/lib";
 import { TenantsModuleError } from "@/modules/tenants/tenants.errors";
 import { planRepository } from "@/modules/plans/repositories/plan.repository";
 import { tenantRepository } from "@/modules/tenants/repositories/tenant.repository";
 import { userRepository } from "@/modules/users/repositories/user.repository";
+import { runTransaction } from "@/repositories/transaction.repository";
 
 interface ListTenantsInput {
   page: number;
@@ -86,7 +86,7 @@ export async function createTenantService(data: CreateTenantInput) {
     }
   }
 
-  return prisma.$transaction(async (tx) => {
+  return runTransaction(async (tx) => {
     const tenant = await tenantRepository.create({
       data: {
         name: data.name,

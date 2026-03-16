@@ -1,10 +1,10 @@
-import { prisma } from "@/database/prisma";
 import {
   getPayUStateLabel,
   markInvoicePaid,
   parsePayUConfirmation,
   verifyPayUSignature,
 } from "@/lib/payments";
+import { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 
 /**
  * Process a PayU payment confirmation webhook.
@@ -22,7 +22,7 @@ export async function processPayUConfirmationService(
   );
   if (!isValid) throw new Error("Firma PayU inválida");
 
-  const payment = await prisma.payment.findUnique({
+  const payment = await tenantModuleRepository.findPaymentUnique({
     where: { payuReferenceCode: confirmation.referenceCode },
     include: { invoice: true },
   });
@@ -37,7 +37,7 @@ export async function processPayUConfirmationService(
   };
   const newStatus = statusMap[stateLabel] ?? "PENDING";
 
-  await prisma.payment.update({
+  await tenantModuleRepository.updatePayment({
     where: { id: payment.id },
     data: {
       status: newStatus,
@@ -53,12 +53,12 @@ export async function processPayUConfirmationService(
   }
 
   if (["DECLINED", "EXPIRED", "ERROR"].includes(newStatus)) {
-    const otherPending = await prisma.payment.count({
+    const otherPending = await tenantModuleRepository.countPayments({
       where: { invoiceId: payment.invoiceId, id: { not: payment.id }, status: "PENDING" },
     });
     if (otherPending === 0 && payment.invoice.status !== "PAID") {
       if (new Date() > payment.invoice.dueDate) {
-        await prisma.invoice.update({ where: { id: payment.invoiceId }, data: { status: "OVERDUE" } });
+        await tenantModuleRepository.updateInvoice({ where: { id: payment.invoiceId }, data: { status: "OVERDUE" } });
       }
     }
   }
