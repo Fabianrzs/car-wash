@@ -1,8 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
-import { checkRateLimit } from "./rate-limit";
+import { prisma } from "@/database/prisma";
+import {checkRateLimit} from "@/lib/security/rate-limit";
 
 export default {
   providers: [
@@ -62,3 +62,4 @@ export default {
     }),
   ],
 } satisfies NextAuthConfig;
+

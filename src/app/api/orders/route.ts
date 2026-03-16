@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import { orderSchema } from "@/lib/validations";
-import { ITEMS_PER_PAGE } from "@/lib/constants";
-import { generateOrderNumber } from "@/lib/order-number";
-import { Prisma } from "@/generated/prisma/client";
-import { requireTenant, requireActivePlan, handleTenantError, TenantError } from "@/lib/tenant";
+import { Prisma } from "@/database/prisma";
+import {handleTenantError, requireTenant, TenantError} from "@/lib";
 
 export async function GET(request: Request) {
   try {

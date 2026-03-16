@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { requireTenant, requireTenantMember, handleTenantError, TenantError } from "@/lib/tenant";
 import crypto from "crypto";

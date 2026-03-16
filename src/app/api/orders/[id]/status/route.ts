@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
 import { orderStatusSchema } from "@/lib/validations";
-import type { OrderStatus } from "@/generated/prisma/client";
+import type { OrderStatus } from "@/database/prisma";
 import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
 import { sendOrderStatusChangeEmail } from "@/lib/email";
 

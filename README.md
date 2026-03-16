@@ -1,33 +1,111 @@
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
-
-First, run the development server:
+### Instalación
 
 ```bash
+# Instalar dependencias
+npm install
+
+# Generar Prisma Client
+npm run prisma:generate
+
+# Ejecutar migraciones
+npm run prisma:migrate
+
+# (Opcional) Seed de datos
+npm run prisma:seed
+```
+
+### Desarrollo
+
+```bash
+# Iniciar servidor de desarrollo
 npm run dev
+
+# Abrir en navegador
+# http://localhost:3000
+```
+
+### Build para Producción
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+```
+src/
+├── app/                 # Next.js App Router (pages + API routes)
+├── modules/             # Dominios funcionales (clients, services, vehicles)
+├── shared/              # 🆕 Código compartido centralizado
+## Getting Started
+First, run the development server:
+
+Centraliza todo el código reutilizable:
+
+- `http/` - HTTP responses, errors, client
+- `auth/` - NextAuth configuration
+- `multitenancy/` - Tenant resolution & cookies
+- `security/` - Rate limiting
+- `email/` - Email service
 # or
 yarn dev
 # or
 pnpm dev
 # or
 bun dev
-```
+3. **Vehicles** - CRUD de vehículos + asignación a clientes
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### En Desarrollo
 
+- Orders (órdenes de servicio)
+- Billing (facturación y pagos)
+- Team (gestión de equipo)
+- Reports (reportes)
+- Admin (panel de administración)
+
+**[Ver ARCHITECTURE.md para crear nuevos módulos](./ARCHITECTURE.md)**
+
+---
+
+## 🔐 Autenticación y Multi-Tenancy
+
+- **NextAuth.js** - Autenticación con credenciales
+- **Multi-tenant** - Soporta múltiples lavaderos por usuario
+- **Roles** - SUPER_ADMIN, ADMIN, MEMBER
+- **Plans** - Trial, Pagado, Activo/Inactivo
+
+---
+
+## 💳 Integraciones
+
+- **Stripe** - Pagos y subscripciones
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+✅ **Build optimizado** - 0 errores, 0 warnings  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[Ver FINAL_REPORT.md para detalles completos](./FINAL_REPORT.md)
 
+---
+
+## 🤝 Contribuir
+
+Consulta [ARCHITECTURE.md](./ARCHITECTURE.md) para:
+- Patrones de módulos
 ## Learn More
+- Mejores prácticas
+- Checklist de code review
 
-To learn more about Next.js, take a look at the following resources:
+---
+
+## 📞 Soporte
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
 

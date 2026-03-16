@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, handleTenantError, TenantError } from "@/lib/tenant";
+import {handleTenantError, requireTenant, TenantError} from "@/lib";
 
 export async function GET(request: Request) {
   try {

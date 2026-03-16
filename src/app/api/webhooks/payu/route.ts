@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { parsePayUConfirmation, verifyPayUSignature, getPayUStateLabel } from "@/lib/payu";
-import { markInvoicePaid } from "@/lib/invoice";
+import { prisma } from "@/database/prisma";
+import {getPayUStateLabel, markInvoicePaid, parsePayUConfirmation, verifyPayUSignature} from "@/lib/payments";
 
 export async function POST(request: Request) {
   try {

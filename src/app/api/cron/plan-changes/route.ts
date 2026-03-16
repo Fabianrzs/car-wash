@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 
 // Called by cron job to apply scheduled plan changes
 export async function POST(request: Request) {

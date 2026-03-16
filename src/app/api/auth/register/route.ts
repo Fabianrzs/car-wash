@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { registerSchema } from "@/lib/validations";
 import { associateSuperAdminsWithTenant } from "@/lib/super-admin-tenant";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: Request) {

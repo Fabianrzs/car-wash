@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { auth } from "@/lib/auth";
-import { requireTenant, requireTenantMember, handleTenantError, getTenantPlanStatus, TenantError } from "@/lib/tenant";
-import { createPlanInvoice, calculateNextPeriod, getCurrentPeriodEnd, hasPendingInvoice, createInvoiceReminders } from "@/lib/invoice";
-import { createBillingPortalSession } from "@/lib/stripe";
-import { buildTenantUrl } from "@/lib/domain";
+import {getTenantPlanStatus, handleTenantError, requireTenant, requireTenantMember, TenantError} from "@/lib";
+import {buildTenantUrl} from "@/lib/utils/domain";
+import {
+    calculateNextPeriod,
+    createBillingPortalSession,
+    createInvoiceReminders, createPlanInvoice,
+    getCurrentPeriodEnd,
+    hasPendingInvoice
+} from "@/lib/payments";
+
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {

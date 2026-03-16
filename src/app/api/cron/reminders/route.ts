@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/database/prisma";
 import { sendPaymentReminderEmail } from "@/lib/email";
 
 // Called by cron job to process pending reminders
