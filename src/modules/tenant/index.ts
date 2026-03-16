@@ -1,5 +1,6 @@
 // Public API exports for tenant module
 export { TenantModuleError, handleTenantHttpError } from "@/modules/tenant/tenant.errors";
+export { tenantModuleRepository } from "@/modules/tenant/repositories/tenant.repository";
 export {
   tenantSettingsSchema,
   inviteTeamMemberSchema,
@@ -17,4 +18,12 @@ export { getTeamMembersService, inviteTeamMemberService, updateTeamMemberRoleSer
 export { getInvitationsService, acceptInvitationService } from "@/modules/tenant/services/invitations.service";
 export { getInvoicesService, getInvoiceByIdService } from "@/modules/tenant/services/invoices.service";
 export { getPaymentByIdService, getBanksListService, checkPaymentStatusService } from "@/modules/tenant/services/payments.service";
+export {
+  getBillingOverviewService,
+  disconnectTenantPlanService,
+  assignFreePlanService,
+  getPlanByIdService,
+  createScheduledPlanChangeService,
+} from "@/modules/tenant/services/billing.service";
+export { getTenantPlanStatusService } from "@/modules/tenant/services/plan-status.service";
 
