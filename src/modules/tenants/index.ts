@@ -1,5 +1,5 @@
 // Public API exports for tenants module
-export { handleTenantsHttpError } from "@/modules/tenants/tenants.errors";
+export { TenantsModuleError, handleTenantsHttpError } from "@/modules/tenants/tenants.errors";
 export { tenantRepository } from "@/modules/tenants/repositories/tenant.repository";
 export {
   listTenantsService,

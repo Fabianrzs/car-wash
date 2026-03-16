@@ -1,9 +1,10 @@
-import { handleApiError } from "@/lib/http";
+import { createModuleErrorClass, createModuleErrorHandler } from "@/lib/http/module-error-factory";
 
-export function handleOnboardingHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Parametros de onboarding invalidos",
-  });
-}
+export const OnboardingModuleError = createModuleErrorClass("Onboarding");
+
+export const handleOnboardingHttpError = createModuleErrorHandler(
+  "Onboarding",
+  "Parametros de onboarding invalidos"
+);
+
 

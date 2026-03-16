@@ -1,17 +1,9 @@
-import { handleApiError, HttpError } from "@/lib/http";
+// Re-exports from canonical onboarding errors for admin handlers
+export {
+  OnboardingModuleError,
+  OnboardingModuleError as OnboardingError,
+  handleOnboardingHttpError,
+} from "@/modules/onboarding/onboarding.errors";
 
-export class OnboardingError extends HttpError {
-  constructor(message: string, status: number, details?: unknown) {
-    super(message, status, details);
-    this.name = "OnboardingError";
-  }
-}
-
-export function handleOnboardingHttpError(error: unknown, contextMessage: string) {
-  return handleApiError(error, {
-    contextMessage,
-    validationMessage: "Datos de onboarding invalidos",
-  });
-}
 
 

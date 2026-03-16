@@ -5,3 +5,5 @@ export const listUsersQuerySchema = z.object({
   search: z.string().trim().default(""),
 });
 
+export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
+

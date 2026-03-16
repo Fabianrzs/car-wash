@@ -46,4 +46,15 @@ export const flowTenantDeleteQuerySchema = z.object({
   tenantId: z.string().trim().min(1),
 });
 
+export type FlowIdParams = z.infer<typeof flowIdParamsSchema>;
+export type FlowStepParams = z.infer<typeof flowStepParamsSchema>;
+export type CreateFlowInput = z.infer<typeof createFlowSchema>;
+export type UpdateFlowInput = z.infer<typeof updateFlowSchema>;
+export type CreateStepInput = z.infer<typeof createStepSchema>;
+export type UpdateStepInput = z.infer<typeof updateStepSchema>;
+export type UpdateFlowPlansInput = z.infer<typeof updateFlowPlansSchema>;
+export type UpsertFlowTenantOverrideInput = z.infer<typeof upsertFlowTenantOverrideSchema>;
+export type FlowTenantDeleteQuery = z.infer<typeof flowTenantDeleteQuerySchema>;
+
+
 

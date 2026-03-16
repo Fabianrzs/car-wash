@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/src/modules/onboarding/admin-onboarding.errors.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/onboarding/admin-onboarding.errors.ts" />
+              <option name="originalContent" value="import { handleApiError, HttpError } from &quot;@/lib/http&quot;;&#10;&#10;export class OnboardingError extends HttpError {&#10;  constructor(message: string, status: number, details?: unknown) {&#10;    super(message, status, details);&#10;    this.name = &quot;OnboardingError&quot;;&#10;  }&#10;}&#10;&#10;export function handleOnboardingHttpError(error: unknown, contextMessage: string) {&#10;  return handleApiError(error, {&#10;    contextMessage,&#10;    validationMessage: &quot;Datos de onboarding invalidos&quot;,&#10;  });&#10;}&#10;&#10;&#10;" />
+              <option name="updatedContent" value="// Re-exports from canonical onboarding errors for admin handlers&#10;export {&#10;  OnboardingModuleError,&#10;  OnboardingModuleError as OnboardingError,&#10;  handleOnboardingHttpError,&#10;} from &quot;@/modules/onboarding/onboarding.errors&quot;;&#10;&#10;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/onboarding/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/onboarding/index.ts" />
+              <option name="originalContent" value="// Public API exports for onboarding module&#10;export { handleOnboardingHttpError } from &quot;@/modules/onboarding/onboarding.errors&quot;;&#10;export { onboardingRepository } from &quot;@/modules/onboarding/repositories/onboarding.repository&quot;;&#10;export { getOnboardingFlowService } from &quot;@/modules/onboarding/services/onboarding.service&quot;;&#10;export { onboardingKeyParamsSchema } from &quot;@/modules/onboarding/validations/onboarding.validation&quot;;&#10;" />
+              <option name="updatedContent" value="// Public API exports for onboarding module&#10;export { OnboardingModuleError, handleOnboardingHttpError } from &quot;@/modules/onboarding/onboarding.errors&quot;;&#10;export { onboardingRepository } from &quot;@/modules/onboarding/repositories/onboarding.repository&quot;;&#10;export { getOnboardingFlowService } from &quot;@/modules/onboarding/services/onboarding.service&quot;;&#10;export { onboardingKeyParamsSchema } from &quot;@/modules/onboarding/validations/onboarding.validation&quot;;&#10;export {&#10;  flowIdParamsSchema,&#10;  flowStepParamsSchema,&#10;  createFlowSchema,&#10;  updateFlowSchema,&#10;  createStepSchema,&#10;  updateStepSchema,&#10;  updateFlowPlansSchema,&#10;  upsertFlowTenantOverrideSchema,&#10;  flowTenantDeleteQuerySchema,&#10;} from &quot;@/modules/onboarding/validations/admin-onboarding.validation&quot;;&#10;export type {&#10;  FlowIdParams,&#10;  FlowStepParams,&#10;  CreateFlowInput,&#10;  UpdateFlowInput,&#10;  CreateStepInput,&#10;  UpdateStepInput,&#10;  UpdateFlowPlansInput,&#10;  UpsertFlowTenantOverrideInput,&#10;  FlowTenantDeleteQuery,&#10;} from &quot;@/modules/onboarding/validations/admin-onboarding.validation&quot;;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/onboarding/onboarding.errors.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/onboarding/onboarding.errors.ts" />
+              <option name="originalContent" value="import { handleApiError } from &quot;@/lib/http&quot;;&#10;&#10;export function handleOnboardingHttpError(error: unknown, contextMessage: string) {&#10;  return handleApiError(error, {&#10;    contextMessage,&#10;    validationMessage: &quot;Parametros de onboarding invalidos&quot;,&#10;  });&#10;}&#10;&#10;" />
+              <option name="updatedContent" value="import { createModuleErrorClass, createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const OnboardingModuleError = createModuleErrorClass(&quot;Onboarding&quot;);&#10;&#10;export const handleOnboardingHttpError = createModuleErrorHandler(&#10;  &quot;Onboarding&quot;,&#10;  &quot;Parametros de onboarding invalidos&quot;&#10;);&#10;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/onboarding/validations/admin-onboarding.validation.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/onboarding/validations/admin-onboarding.validation.ts" />
+              <option name="originalContent" value="import { z } from &quot;zod&quot;;&#10;&#10;const idSchema = z.string().trim().min(1);&#10;&#10;export const flowIdParamsSchema = z.object({ id: idSchema });&#10;export const flowStepParamsSchema = z.object({ id: idSchema, stepId: idSchema });&#10;&#10;export const createFlowSchema = z.object({&#10;  key: z.string().trim().min(1),&#10;  title: z.string().trim().min(1),&#10;  description: z.string().trim().optional().nullable(),&#10;});&#10;&#10;export const updateFlowSchema = z.object({&#10;  title: z.string().trim().min(1).optional(),&#10;  description: z.string().trim().optional().nullable(),&#10;  isActive: z.boolean().optional(),&#10;});&#10;&#10;export const createStepSchema = z.object({&#10;  title: z.string().trim().min(1),&#10;  description: z.string().trim().optional().nullable(),&#10;  target: z.string().trim().min(1),&#10;  placement: z.string().trim().default(&quot;bottom&quot;),&#10;  order: z.number().int().optional(),&#10;});&#10;&#10;export const updateStepSchema = z.object({&#10;  title: z.string().trim().min(1).optional(),&#10;  description: z.string().trim().optional().nullable(),&#10;  target: z.string().trim().min(1).optional(),&#10;  placement: z.string().trim().optional(),&#10;  order: z.number().int().optional(),&#10;});&#10;&#10;export const updateFlowPlansSchema = z.object({&#10;  planIds: z.array(z.string().trim().min(1)).default([]),&#10;});&#10;&#10;export const upsertFlowTenantOverrideSchema = z.object({&#10;  tenantId: z.string().trim().min(1),&#10;  isEnabled: z.boolean().optional(),&#10;});&#10;&#10;export const flowTenantDeleteQuerySchema = z.object({&#10;  tenantId: z.string().trim().min(1),&#10;});&#10;&#10;&#10;" />
+              <option name="updatedContent" value="import { z } from &quot;zod&quot;;&#10;&#10;const idSchema = z.string().trim().min(1);&#10;&#10;export const flowIdParamsSchema = z.object({ id: idSchema });&#10;export const flowStepParamsSchema = z.object({ id: idSchema, stepId: idSchema });&#10;&#10;export const createFlowSchema = z.object({&#10;  key: z.string().trim().min(1),&#10;  title: z.string().trim().min(1),&#10;  description: z.string().trim().optional().nullable(),&#10;});&#10;&#10;export const updateFlowSchema = z.object({&#10;  title: z.string().trim().min(1).optional(),&#10;  description: z.string().trim().optional().nullable(),&#10;  isActive: z.boolean().optional(),&#10;});&#10;&#10;export const createStepSchema = z.object({&#10;  title: z.string().trim().min(1),&#10;  description: z.string().trim().optional().nullable(),&#10;  target: z.string().trim().min(1),&#10;  placement: z.string().trim().default(&quot;bottom&quot;),&#10;  order: z.number().int().optional(),&#10;});&#10;&#10;export const updateStepSchema = z.object({&#10;  title: z.string().trim().min(1).optional(),&#10;  description: z.string().trim().optional().nullable(),&#10;  target: z.string().trim().min(1).optional(),&#10;  placement: z.string().trim().optional(),&#10;  order: z.number().int().optional(),&#10;});&#10;&#10;export const updateFlowPlansSchema = z.object({&#10;  planIds: z.array(z.string().trim().min(1)).default([]),&#10;});&#10;&#10;export const upsertFlowTenantOverrideSchema = z.object({&#10;  tenantId: z.string().trim().min(1),&#10;  isEnabled: z.boolean().optional(),&#10;});&#10;&#10;export const flowTenantDeleteQuerySchema = z.object({&#10;  tenantId: z.string().trim().min(1),&#10;});&#10;&#10;export type FlowIdParams = z.infer&lt;typeof flowIdParamsSchema&gt;;&#10;export type FlowStepParams = z.infer&lt;typeof flowStepParamsSchema&gt;;&#10;export type CreateFlowInput = z.infer&lt;typeof createFlowSchema&gt;;&#10;export type UpdateFlowInput = z.infer&lt;typeof updateFlowSchema&gt;;&#10;export type CreateStepInput = z.infer&lt;typeof createStepSchema&gt;;&#10;export type UpdateStepInput = z.infer&lt;typeof updateStepSchema&gt;;&#10;export type UpdateFlowPlansInput = z.infer&lt;typeof updateFlowPlansSchema&gt;;&#10;export type UpsertFlowTenantOverrideInput = z.infer&lt;typeof upsertFlowTenantOverrideSchema&gt;;&#10;export type FlowTenantDeleteQuery = z.infer&lt;typeof flowTenantDeleteQuerySchema&gt;;&#10;&#10;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/plans/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/plans/index.ts" />
+              <option name="originalContent" value="// Public API exports for plans module&#10;export { planRepository } from &quot;@/modules/plans/repositories/plan.repository&quot;;&#10;export { listPublicPlansService, listAdminPlansService, createPlanService, getAdminPlanByIdService, updatePlanService } from &quot;@/modules/plans/services/plans.service&quot;;&#10;export type { CreatePlanInput, UpdatePlanInput } from &quot;@/modules/plans/validations/plan.validation&quot;;&#10;&#10;" />
+              <option name="updatedContent" value="// Public API exports for plans module&#10;export { PlanModuleError, handlePlanHttpError } from &quot;@/modules/plans/plan.errors&quot;;&#10;export { planRepository } from &quot;@/modules/plans/repositories/plan.repository&quot;;&#10;export { listPublicPlansService, listAdminPlansService, createPlanService, getAdminPlanByIdService, updatePlanService } from &quot;@/modules/plans/services/plans.service&quot;;&#10;export type { CreatePlanInput, UpdatePlanInput } from &quot;@/modules/plans/validations/plan.validation&quot;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/reports/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/reports/index.ts" />
+              <option name="originalContent" value="// Public API exports for reports module&#10;export { ReportModuleError, handleReportHttpError } from &quot;@/modules/reports/report.errors&quot;;&#10;export { reportRepository } from &quot;@/modules/reports/repositories/report.repository&quot;;&#10;export { getReportSummaryService } from &quot;@/modules/reports/services/get-report-summary.service&quot;;&#10;export { getOrderReportService } from &quot;@/modules/reports/services/get-order-report.service&quot;;&#10;export type { ReportQuery, OrderReportQuery } from &quot;@/modules/reports/validations/report.validation&quot;;&#10;&#10;" />
+              <option name="updatedContent" value="// Public API exports for reports module&#10;export { ReportModuleError, handleReportHttpError } from &quot;@/modules/reports/report.errors&quot;;&#10;export { reportRepository } from &quot;@/modules/reports/repositories/report.repository&quot;;&#10;export { getReportSummaryService } from &quot;@/modules/reports/services/get-report-summary.service&quot;;&#10;export { getOrderReportService } from &quot;@/modules/reports/services/get-order-report.service&quot;;&#10;export {&#10;  reportQuerySchema,&#10;  orderReportQuerySchema,&#10;} from &quot;@/modules/reports/validations/report.validation&quot;;&#10;export type { ReportQuery, OrderReportQuery } from &quot;@/modules/reports/validations/report.validation&quot;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/stats/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/stats/index.ts" />
+              <option name="originalContent" value="// Public API exports for stats module&#10;export { getStatsService } from &quot;@/modules/stats/services/get-stats.service&quot;;&#10;&#10;" />
+              <option name="updatedContent" value="// Public API exports for stats module&#10;export { StatsModuleError, handleStatsHttpError } from &quot;@/modules/stats/stats.errors&quot;;&#10;export { getStatsService } from &quot;@/modules/stats/services/get-stats.service&quot;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/stats/stats.errors.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/stats/stats.errors.ts" />
+              <option name="originalContent" value="import { createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const handleStatsHttpError = createModuleErrorHandler(&#10;  &quot;Estadísticas&quot;,&#10;  &quot;Error de estadísticas&quot;&#10;);&#10;&#10;&#10;" />
+              <option name="updatedContent" value="import { createModuleErrorClass, createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const StatsModuleError = createModuleErrorClass(&quot;Stats&quot;);&#10;&#10;export const handleStatsHttpError = createModuleErrorHandler(&#10;  &quot;Estadísticas&quot;,&#10;  &quot;Error de estadísticas&quot;&#10;);&#10;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/tenant/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/tenant/index.ts" />
+              <option name="originalContent" value="// Public API exports for tenant module&#10;export { TenantModuleError, handleTenantModuleHttpError } from &quot;@/modules/tenant/tenant.errors&quot;;&#10;export {&#10;  tenantSettingsSchema,&#10;  inviteTeamMemberSchema,&#10;  updateTeamMemberRoleSchema,&#10;  changePlanSchema,&#10;} from &quot;@/modules/tenant/validations/tenant.validation&quot;;&#10;export type {&#10;  TenantSettingsInput,&#10;  InviteTeamMemberInput,&#10;  UpdateTeamMemberRoleInput,&#10;  ChangePlanInput,&#10;} from &quot;@/modules/tenant/validations/tenant.validation&quot;;&#10;export { getTenantSettingsService, updateTenantSettingsService } from &quot;@/modules/tenant/services/settings.service&quot;;&#10;export { getTeamMembersService, inviteTeamMemberService, updateTeamMemberRoleService, removeTeamMemberService } from &quot;@/modules/tenant/services/team.service&quot;;&#10;export { getInvitationsService, acceptInvitationService } from &quot;@/modules/tenant/services/invitations.service&quot;;&#10;export { getInvoicesService, getInvoiceByIdService } from &quot;@/modules/tenant/services/invoices.service&quot;;&#10;export { getPaymentByIdService, getBanksListService, checkPaymentStatusService } from &quot;@/modules/tenant/services/payments.service&quot;;&#10;&#10;" />
+              <option name="updatedContent" value="// Public API exports for tenant module&#10;export { TenantModuleError, handleTenantHttpError } from &quot;@/modules/tenant/tenant.errors&quot;;&#10;export {&#10;  tenantSettingsSchema,&#10;  inviteTeamMemberSchema,&#10;  updateTeamMemberRoleSchema,&#10;  changePlanSchema,&#10;} from &quot;@/modules/tenant/validations/tenant.validation&quot;;&#10;export type {&#10;  TenantSettingsInput,&#10;  InviteTeamMemberInput,&#10;  UpdateTeamMemberRoleInput,&#10;  ChangePlanInput,&#10;} from &quot;@/modules/tenant/validations/tenant.validation&quot;;&#10;export { getTenantSettingsService, updateTenantSettingsService } from &quot;@/modules/tenant/services/settings.service&quot;;&#10;export { getTeamMembersService, inviteTeamMemberService, updateTeamMemberRoleService, removeTeamMemberService } from &quot;@/modules/tenant/services/team.service&quot;;&#10;export { getInvitationsService, acceptInvitationService } from &quot;@/modules/tenant/services/invitations.service&quot;;&#10;export { getInvoicesService, getInvoiceByIdService } from &quot;@/modules/tenant/services/invoices.service&quot;;&#10;export { getPaymentByIdService, getBanksListService, checkPaymentStatusService } from &quot;@/modules/tenant/services/payments.service&quot;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/tenant/tenant.errors.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/tenant/tenant.errors.ts" />
+              <option name="originalContent" value="import { createModuleErrorClass, createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const TenantModuleError = createModuleErrorClass(&quot;Tenant&quot;);&#10;&#10;export const handleTenantModuleHttpError = createModuleErrorHandler(&#10;  &quot;Tenant&quot;,&#10;  &quot;Datos de tenant inválidos&quot;&#10;);&#10;&#10;" />
+              <option name="updatedContent" value="import { createModuleErrorClass, createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const TenantModuleError = createModuleErrorClass(&quot;Tenant&quot;);&#10;&#10;export const handleTenantHttpError = createModuleErrorHandler(&#10;  &quot;Tenant&quot;,&#10;  &quot;Datos de tenant inválidos&quot;&#10;);&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/tenants/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/tenants/index.ts" />
+              <option name="originalContent" value="// Public API exports for tenants module&#10;export { handleTenantsHttpError } from &quot;@/modules/tenants/tenants.errors&quot;;&#10;export { tenantRepository } from &quot;@/modules/tenants/repositories/tenant.repository&quot;;&#10;export {&#10;  listTenantsService,&#10;  createTenantService,&#10;  listTenantOptionsService,&#10;  getTenantByIdService,&#10;  updateTenantService,&#10;  deactivateTenantService,&#10;} from &quot;@/modules/tenants/services/tenants.service&quot;;&#10;export {&#10;  listTenantsQuerySchema,&#10;  listTenantOptionsQuerySchema,&#10;  tenantIdParamsSchema,&#10;  createTenantSchema,&#10;  updateTenantSchema,&#10;} from &quot;@/modules/tenants/validations/tenants.validation&quot;;&#10;" />
+              <option name="updatedContent" value="// Public API exports for tenants module&#10;export { TenantsModuleError, handleTenantsHttpError } from &quot;@/modules/tenants/tenants.errors&quot;;&#10;export { tenantRepository } from &quot;@/modules/tenants/repositories/tenant.repository&quot;;&#10;export {&#10;  listTenantsService,&#10;  createTenantService,&#10;  listTenantOptionsService,&#10;  getTenantByIdService,&#10;  updateTenantService,&#10;  deactivateTenantService,&#10;} from &quot;@/modules/tenants/services/tenants.service&quot;;&#10;export {&#10;  listTenantsQuerySchema,&#10;  listTenantOptionsQuerySchema,&#10;  tenantIdParamsSchema,&#10;  createTenantSchema,&#10;  updateTenantSchema,&#10;} from &quot;@/modules/tenants/validations/tenants.validation&quot;;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/users/index.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/users/index.ts" />
+              <option name="originalContent" value="// Public API exports for users module&#10;export { handleUsersHttpError } from &quot;@/modules/users/users.errors&quot;;&#10;export { userRepository } from &quot;@/modules/users/repositories/user.repository&quot;;&#10;export { listAdminUsersService } from &quot;@/modules/users/services/list-users.service&quot;;&#10;&#10;" />
+              <option name="updatedContent" value="// Public API exports for users module&#10;export { UsersModuleError, handleUsersHttpError } from &quot;@/modules/users/users.errors&quot;;&#10;export { userRepository } from &quot;@/modules/users/repositories/user.repository&quot;;&#10;export { listAdminUsersService } from &quot;@/modules/users/services/list-users.service&quot;;&#10;export { listUsersQuerySchema } from &quot;@/modules/users/validations/users.validation&quot;;&#10;export type { ListUsersQuery } from &quot;@/modules/users/validations/users.validation&quot;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/users/users.errors.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/users/users.errors.ts" />
+              <option name="originalContent" value="import { createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const handleUsersHttpError = createModuleErrorHandler(&#10;  &quot;Usuario&quot;,&#10;  &quot;Parámetros de usuarios inválidos&quot;&#10;);&#10;&#10;&#10;" />
+              <option name="updatedContent" value="import { createModuleErrorClass, createModuleErrorHandler } from &quot;@/lib/http/module-error-factory&quot;;&#10;&#10;export const UsersModuleError = createModuleErrorClass(&quot;Users&quot;);&#10;&#10;export const handleUsersHttpError = createModuleErrorHandler(&#10;  &quot;Usuario&quot;,&#10;  &quot;Parámetros de usuarios inválidos&quot;&#10;);&#10;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/src/modules/users/validations/users.validation.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/src/modules/users/validations/users.validation.ts" />
+              <option name="originalContent" value="import { z } from &quot;zod&quot;;&#10;&#10;export const listUsersQuerySchema = z.object({&#10;  page: z.coerce.number().int().min(1).default(1),&#10;  search: z.string().trim().default(&quot;&quot;),&#10;});&#10;&#10;" />
+              <option name="updatedContent" value="import { z } from &quot;zod&quot;;&#10;&#10;export const listUsersQuerySchema = z.object({&#10;  page: z.coerce.number().int().min(1).default(1),&#10;  search: z.string().trim().default(&quot;&quot;),&#10;});&#10;&#10;export type ListUsersQuery = z.infer&lt;typeof listUsersQuerySchema&gt;;&#10;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
