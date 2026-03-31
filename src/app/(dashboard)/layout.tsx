@@ -2,6 +2,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import PlanBlockingGuard from "@/components/guards/PlanBlockingGuard";
 import TenantGuard from "@/components/guards/TenantSelectorModal";
+import EmployeeRouteGuard from "@/components/guards/EmployeeRouteGuard";
 
 export default function DashboardLayout({
   children,
@@ -15,7 +16,9 @@ export default function DashboardLayout({
         <Navbar />
         <main className="flex-1 p-5 md:p-6">
           <TenantGuard>
-            <PlanBlockingGuard>{children}</PlanBlockingGuard>
+            <PlanBlockingGuard>
+              <EmployeeRouteGuard>{children}</EmployeeRouteGuard>
+            </PlanBlockingGuard>
           </TenantGuard>
         </main>
       </div>

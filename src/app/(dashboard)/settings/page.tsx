@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Copy, Check } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
@@ -12,6 +12,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [tenantSlug, setTenantSlug] = useState("");
+  const [slugCopied, setSlugCopied] = useState(false);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -25,6 +27,7 @@ export default function SettingsPage() {
     fetch("/api/tenant/settings")
       .then((res) => res.json())
       .then((data) => {
+        setTenantSlug(data.slug || "");
         setForm({
           name: data.name || "",
           phone: data.phone || "",
@@ -79,6 +82,24 @@ export default function SettingsPage() {
           Configuracion del Lavadero
         </h1>
       </div>
+
+      {/* Tenant slug — share with employees for login */}
+      {tenantSlug && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-3 dark:border-blue-800/50 dark:bg-blue-950/20">
+          <div>
+            <p className="text-xs font-medium text-blue-700 dark:text-blue-400">Código del lavadero (para login de lavadores)</p>
+            <p className="mt-0.5 font-mono text-sm font-semibold text-blue-900 dark:text-blue-200">{tenantSlug}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(tenantSlug); setSlugCopied(true); setTimeout(() => setSlugCopied(false), 2000); }}
+            className="ml-4 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/30"
+          >
+            {slugCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {slugCopied ? "Copiado" : "Copiar"}
+          </button>
+        </div>
+      )}
 
       <form data-onboarding="settings-form" onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:p-6">
         <div>
