@@ -15,6 +15,7 @@ export type {
 } from "@/modules/tenant/validations/tenant.validation";
 export { getTenantSettingsService, updateTenantSettingsService } from "@/modules/tenant/services/settings.service";
 export { getTeamMembersService, inviteTeamMemberService, updateTeamMemberRoleService, removeTeamMemberService } from "@/modules/tenant/services/team.service";
+export { createDirectEmployeeService } from "@/modules/tenant/services/create-direct-employee.service";
 export { getInvitationsService, acceptInvitationService } from "@/modules/tenant/services/invitations.service";
 export { getInvoicesService, getInvoiceByIdService } from "@/modules/tenant/services/invoices.service";
 export { getPaymentByIdService, getBanksListService, checkPaymentStatusService } from "@/modules/tenant/services/payments.service";

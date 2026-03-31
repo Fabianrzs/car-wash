@@ -62,17 +62,20 @@ model Tenant {
 }
 
 model TenantUser {
-  id        String     @id @default(cuid())
-  userId    String
-  tenantId  String
-  role      TenantRole @default(EMPLOYEE)
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
+  id           String     @id @default(cuid())
+  userId       String
+  tenantId     String
+  role         TenantRole @default(EMPLOYEE)
+  isActive     Boolean    @default(true)
+  employeeCode String?
+  employeePin  String?
+  createdAt    DateTime   @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tenantId])
+  @@unique([tenantId, employeeCode])
   @@index([tenantId])
   @@map("tenant_users")
 }

@@ -22,6 +22,15 @@ import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/lib/utils/constants"
 import { fetchApi } from "@/lib/utils/api";
 import { useTenantRole } from "@/hooks/useTenantRole";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface ReportStats {
   totalIncome: number;
@@ -30,6 +39,8 @@ interface ReportStats {
   uniqueClients: number;
   completedOrders: number;
   averageOrderValue: number;
+  topServices: Array<{ name: string; totalQuantity: number; totalRevenue: number }>;
+  dailyBreakdown: Array<{ date: string; income: number; orders: number }>;
 }
 
 interface CommissionStats {
@@ -50,10 +61,32 @@ interface Order {
   items: { serviceType: { name: string } }[];
 }
 
+function shortDate(dateStr: string) {
+  const parts = dateStr.split("-");
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+  return dateStr;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CurrencyTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md dark:border-slate-700 dark:bg-slate-800">
+      <p className="font-medium text-slate-700 dark:text-slate-300">{label}</p>
+      {payload.map((p: { name: string; value: number; color: string }, i: number) => (
+        <p key={i} style={{ color: p.color }} className="mt-0.5">
+          {p.name}: <span className="font-semibold">{formatCurrency(p.value)}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const role = useTenantRole();
   const [stats, setStats] = useState<ReportStats | null>(null);
+  const [weeklyStats, setWeeklyStats] = useState<ReportStats | null>(null);
   const [commissionStats, setCommissionStats] = useState<CommissionStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,13 +99,15 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [dailyData, ordersData, commissionData] = await Promise.all([
+        const [dailyData, weeklyData, ordersData, commissionData] = await Promise.all([
           fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
+          fetchApi<ReportStats>("/api/reports?period=weekly").catch(() => null),
           fetchApi<{ orders: Order[] }>("/api/orders?page=1").catch(() => null),
           fetchApi<CommissionStats>("/api/commissions/stats").catch(() => null),
         ]);
         if (dailyData) setStats(dailyData);
         else setError("No se pudieron cargar las estadísticas del día.");
+        if (weeklyData) setWeeklyStats(weeklyData);
         if (ordersData) setRecentOrders((ordersData.orders || []).slice(0, 10));
         if (commissionData) setCommissionStats(commissionData);
       } catch (err) {
@@ -83,6 +118,23 @@ export default function DashboardPage() {
     }
     fetchData();
   }, []);
+
+  // Compute trend vs yesterday from weekly breakdown
+  const weeklyBreakdown = weeklyStats?.dailyBreakdown ?? [];
+  const todayData = weeklyBreakdown[weeklyBreakdown.length - 1];
+  const yesterdayData = weeklyBreakdown[weeklyBreakdown.length - 2];
+
+  const incomeTrend = yesterdayData && yesterdayData.income > 0
+    ? { value: Math.abs(((todayData?.income ?? 0) - yesterdayData.income) / yesterdayData.income) * 100, isPositive: (todayData?.income ?? 0) >= yesterdayData.income }
+    : undefined;
+
+  const ordersTrend = yesterdayData && yesterdayData.orders > 0
+    ? { value: Math.abs(((todayData?.orders ?? 0) - yesterdayData.orders) / yesterdayData.orders) * 100, isPositive: (todayData?.orders ?? 0) >= yesterdayData.orders }
+    : undefined;
+
+  // Top services from weekly for visual bars
+  const topServices = weeklyStats?.topServices ?? [];
+  const maxRevenue = Math.max(...topServices.map((s) => s.totalRevenue), 1);
 
   if (loading) {
     return (
@@ -102,18 +154,21 @@ export default function DashboardPage() {
 
       {error && <Alert variant="error" className="mb-6">{error}</Alert>}
 
-      <div data-onboarding="dashboard-stats" className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards */}
+      <div data-onboarding="dashboard-stats" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Ingresos Hoy"
           value={formatCurrency(stats?.totalIncome || 0)}
           icon={DollarSign}
           description="Total facturado del día"
+          trend={incomeTrend}
         />
         <StatsCard
           title="Órdenes Hoy"
           value={stats?.orderCount || 0}
           icon={ClipboardList}
           description="Órdenes registradas hoy"
+          trend={ordersTrend}
         />
         <StatsCard
           title="En Proceso"
@@ -129,8 +184,54 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Charts row */}
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* 7-day income chart */}
+        {weeklyBreakdown.length > 1 && (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Ingresos — últimos 7 días</h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart
+                data={weeklyBreakdown.map((d) => ({ date: shortDate(d.date), income: d.income }))}
+                margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={44} />
+                <Tooltip content={<CurrencyTooltip />} />
+                <Bar dataKey="income" name="Ingresos" fill="#18181b" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Top services this week */}
+        {topServices.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Servicios más vendidos — semana</h3>
+            <div className="space-y-3">
+              {topServices.slice(0, 5).map((s, i) => (
+                <div key={i}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-medium text-slate-700 dark:text-slate-300 truncate mr-2">{s.name}</span>
+                    <span className="shrink-0 text-slate-500 dark:text-slate-400">{formatCurrency(s.totalRevenue)} · {s.totalQuantity}x</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-zinc-800 dark:bg-zinc-300"
+                      style={{ width: `${(s.totalRevenue / maxRevenue) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Commission KPIs */}
       {commissionStats && commissionStats.commissionRate > 0 && (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatsCard
             title="Comisiones Pendientes"
             value={formatCurrency(commissionStats.totalPending)}
@@ -146,6 +247,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Recent orders */}
       <div data-onboarding="dashboard-recent-orders">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-900">Órdenes Recientes</h3>

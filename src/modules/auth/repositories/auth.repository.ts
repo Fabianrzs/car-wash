@@ -54,6 +54,17 @@ class AuthRepository {
     return getDatabase(database).plan.findUnique(args);
   }
 
+  findTenantUserByEmployeeCode(
+    tenantId: string,
+    employeeCode: string,
+    database?: AuthDatabase
+  ) {
+    return getDatabase(database).tenantUser.findFirst({
+      where: { tenantId, employeeCode, isActive: true },
+      include: { user: true },
+    });
+  }
+
   findInvitationByToken<T extends Prisma.InvitationFindUniqueArgs>(
     args: Prisma.SelectSubset<T, Prisma.InvitationFindUniqueArgs>,
     database?: AuthDatabase

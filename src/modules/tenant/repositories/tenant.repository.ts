@@ -229,6 +229,13 @@ class TenantModuleRepository {
     return getDatabase(database).user.findUnique(args);
   }
 
+  createUser<T extends Prisma.UserCreateArgs>(
+    args: Prisma.SelectSubset<T, Prisma.UserCreateArgs>,
+    database?: TenantModuleDatabase
+  ) {
+    return getDatabase(database).user.create(args);
+  }
+
   findManyUsers<T extends Prisma.UserFindManyArgs>(
     args: Prisma.SelectSubset<T, Prisma.UserFindManyArgs>,
     database?: TenantModuleDatabase

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Users, UserPlus, Mail, Trash2 } from "lucide-react";
+import { Users, UserPlus, Mail, Trash2, Copy, Check } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { PageLoader } from "@/components/ui/Spinner";
 import Modal from "@/components/ui/Modal";
@@ -13,6 +13,7 @@ interface TeamMember {
   id: string;
   role: string;
   isActive: boolean;
+  employeeCode: string | null;
   user: { id: string; name: string | null; email: string; image: string | null };
 }
 
@@ -24,10 +25,16 @@ interface InvitationItem {
   invitedBy: { name: string | null; email: string };
 }
 
+interface CreatedCredentials {
+  employeeCode: string;
+  pin: string;
+  name: string;
+}
+
 const ROLE_LABEL: Record<string, string> = {
   OWNER: "Propietario",
   ADMIN: "Admin",
-  EMPLOYEE: "Empleado",
+  EMPLOYEE: "Lavador",
 };
 
 const ROLE_BADGE: Record<string, string> = {
@@ -41,23 +48,32 @@ export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Invite admin flow
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("EMPLOYEE");
+  const [inviteRole] = useState("ADMIN");
   const [inviting, setInviting] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+
+  // Create employee direct flow
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [empForm, setEmpForm] = useState({ name: "", employeeCode: "", pin: "" });
+  const [creatingEmployee, setCreatingEmployee] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<CreatedCredentials | null>(null);
+  const [copied, setCopied] = useState(false);
+
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [removeModal, setRemoveModal] = useState<{ open: boolean; id: string; name: string }>({
-    open: false,
-    id: "",
-    name: "",
+    open: false, id: "", name: "",
   });
   const [removing, setRemoving] = useState(false);
 
   const currentMember = members.find((m) => m.user.id === session?.user?.id);
   const isOwner = currentMember?.role === "OWNER";
+  const isManager = isOwner || currentMember?.role === "ADMIN";
 
   const inputClass = "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-zinc-300";
-  const selectClass = "h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-zinc-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 
   const loadData = async () => {
     const [membersRes, invitationsRes] = await Promise.all([
@@ -78,11 +94,10 @@ export default function TeamPage() {
     setIsError(error);
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleInviteAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setInviting(true);
     setMessage("");
-
     try {
       const res = await fetch("/api/tenant/team", {
         method: "POST",
@@ -92,11 +107,12 @@ export default function TeamPage() {
       const data = await res.json();
       if (res.ok) {
         if (data.emailError) {
-          showMessage(`Invitacion creada pero el correo no se pudo enviar: ${data.emailError}. Comparte el enlace manualmente.`, true);
+          showMessage(`Invitación creada pero el correo no se pudo enviar. Comparte el enlace manualmente.`, true);
         } else {
-          showMessage("Invitacion enviada correctamente");
+          showMessage("Invitación enviada correctamente");
         }
         setInviteEmail("");
+        setShowInviteModal(false);
         loadData();
       } else {
         showMessage(data.error || "Error al invitar", true);
@@ -104,6 +120,37 @@ export default function TeamPage() {
     } finally {
       setInviting(false);
     }
+  };
+
+  const handleCreateEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingEmployee(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/tenant/team/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(empForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCreatedCredentials(data);
+        setEmpForm({ name: "", employeeCode: "", pin: "" });
+        loadData();
+      } else {
+        showMessage(data.error || "Error al crear empleado", true);
+      }
+    } finally {
+      setCreatingEmployee(false);
+    }
+  };
+
+  const copyCredentials = () => {
+    if (!createdCredentials) return;
+    const text = `Código del lavadero: (tu slug)\nCódigo de empleado: ${createdCredentials.employeeCode}\nPIN: ${createdCredentials.pin}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleChangeRole = async (tenantUserId: string, newRole: string) => {
@@ -122,15 +169,11 @@ export default function TeamPage() {
     }
   };
 
-  const confirmRemove = (id: string, name: string) => {
-    setRemoveModal({ open: true, id, name });
-  };
+  const confirmRemove = (id: string, name: string) => setRemoveModal({ open: true, id, name });
 
   const handleRemove = async () => {
     setRemoving(true);
-    const res = await fetch(`/api/tenant/team?id=${removeModal.id}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`/api/tenant/team?id=${removeModal.id}`, { method: "DELETE" });
     const data = await res.json();
     setRemoveModal({ open: false, id: "", name: "" });
     setRemoving(false);
@@ -142,49 +185,31 @@ export default function TeamPage() {
     }
   };
 
-  if (loading) {
-    return <PageLoader />;
-  }
+  if (loading) return <PageLoader />;
 
   return (
     <div className="mx-auto max-w-3xl">
       <OnboardingTour flowKey="team" />
-      <div className="mb-6 flex items-center gap-2">
-        <Users className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Equipo</h1>
-      </div>
-
-      {/* Invite form - only for OWNER */}
-      {isOwner && (
-        <form data-onboarding="team-invite-form" onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:flex-row">
-          <div className="flex-1">
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="email@ejemplo.com"
-              className={inputClass}
-            />
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Equipo</h1>
+        </div>
+        {isManager && (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setShowEmployeeModal(true)}>
+              <UserPlus className="mr-1.5 h-4 w-4" />
+              Agregar lavador
+            </Button>
+            {isOwner && (
+              <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
+                <Mail className="mr-1.5 h-4 w-4" />
+                Invitar admin
+              </Button>
+            )}
           </div>
-          <select
-            value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value)}
-            className={selectClass}
-          >
-            <option value="EMPLOYEE">Empleado</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-          <Button
-            type="submit"
-            disabled={inviting || !inviteEmail}
-            loading={inviting}
-            className="w-full sm:w-auto"
-          >
-            <UserPlus className="h-4 w-4" />
-            Invitar
-          </Button>
-        </form>
-      )}
+        )}
+      </div>
 
       {message && (
         <div className="mb-4">
@@ -202,7 +227,11 @@ export default function TeamPage() {
             <div key={m.id} className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{m.user.name || m.user.email}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{m.user.email}</p>
+                {m.employeeCode ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Código: <span className="font-mono font-medium">{m.employeeCode}</span></p>
+                ) : (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{m.user.email}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {isOwner && m.role !== "OWNER" ? (
@@ -213,7 +242,7 @@ export default function TeamPage() {
                       className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     >
                       <option value="ADMIN">Admin</option>
-                      <option value="EMPLOYEE">Empleado</option>
+                      <option value="EMPLOYEE">Lavador</option>
                     </select>
                     <button
                       onClick={() => confirmRemove(m.id, m.user.name || m.user.email)}
@@ -263,15 +292,104 @@ export default function TeamPage() {
         </div>
       )}
 
+      {/* Modal: Agregar lavador */}
+      <Modal isOpen={showEmployeeModal} onClose={() => { setShowEmployeeModal(false); setCreatedCredentials(null); }} title="Agregar lavador">
+        {createdCredentials ? (
+          <div>
+            <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+              Lavador <strong className="text-slate-900 dark:text-slate-100">{createdCredentials.name}</strong> creado. Entrega estas credenciales:
+            </p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 font-mono text-sm dark:border-slate-700 dark:bg-slate-800">
+              <p className="text-slate-600 dark:text-slate-400">Código de empleado: <span className="font-semibold text-slate-900 dark:text-slate-100">{createdCredentials.employeeCode}</span></p>
+              <p className="mt-1 text-slate-600 dark:text-slate-400">PIN: <span className="font-semibold text-slate-900 dark:text-slate-100">{createdCredentials.pin}</span></p>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">El lavador necesita también el código del lavadero (slug) para entrar.</p>
+            <div className="mt-4 flex justify-between">
+              <Button variant="secondary" onClick={copyCredentials}>
+                {copied ? <Check className="mr-1.5 h-4 w-4" /> : <Copy className="mr-1.5 h-4 w-4" />}
+                {copied ? "Copiado" : "Copiar"}
+              </Button>
+              <Button onClick={() => { setCreatedCredentials(null); setShowEmployeeModal(false); }}>
+                Listo
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleCreateEmployee} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Nombre completo *</label>
+              <input
+                value={empForm.name}
+                onChange={(e) => setEmpForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Juan Pérez"
+                required
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Código de empleado *</label>
+              <input
+                value={empForm.employeeCode}
+                onChange={(e) => setEmpForm((f) => ({ ...f, employeeCode: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") }))}
+                placeholder="juan01"
+                required
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-slate-400">Solo letras minúsculas, números y guión bajo.</p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">PIN (4 dígitos) *</label>
+              <input
+                value={empForm.pin}
+                onChange={(e) => setEmpForm((f) => ({ ...f, pin: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                placeholder="1234"
+                required
+                inputMode="numeric"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" type="button" onClick={() => setShowEmployeeModal(false)}>Cancelar</Button>
+              <Button type="submit" loading={creatingEmployee} disabled={empForm.pin.length !== 4}>
+                Crear lavador
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Modal: Invitar admin */}
+      <Modal isOpen={showInviteModal} onClose={() => setShowInviteModal(false)} title="Invitar administrador">
+        <form onSubmit={handleInviteAdmin} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Correo electrónico *</label>
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="admin@ejemplo.com"
+              required
+              className={inputClass}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setShowInviteModal(false)}>Cancelar</Button>
+            <Button type="submit" loading={inviting} disabled={!inviteEmail}>
+              <Mail className="mr-1.5 h-4 w-4" />
+              Enviar invitación
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Remove confirmation modal */}
       <Modal
         isOpen={removeModal.open}
         onClose={() => setRemoveModal({ open: false, id: "", name: "" })}
-        title="Confirmar eliminacion"
+        title="Confirmar eliminación"
       >
         <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-          Estas seguro de remover a <strong className="text-slate-900 dark:text-slate-100">{removeModal.name}</strong> del equipo?
-          Esta accion no se puede deshacer.
+          ¿Estás seguro de remover a <strong className="text-slate-900 dark:text-slate-100">{removeModal.name}</strong> del equipo?
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setRemoveModal({ open: false, id: "", name: "" })}>
