@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { DollarSign, User, CheckCircle, Clock } from "lucide-react";
+import { DollarSign, User, CheckCircle, Trash2 } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
@@ -51,6 +51,7 @@ export default function CommissionsPage() {
   const [payNotes, setPayNotes] = useState("");
   const [showPayModal, setShowPayModal] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [cancellingPayoutId, setCancellingPayoutId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -124,6 +125,24 @@ export default function CommissionsPage() {
       setError(err instanceof Error ? err.message : "Error al registrar pago");
     } finally {
       setPaying(false);
+    }
+  };
+
+  const handleCancelPayout = async (payoutId: string) => {
+    if (!confirm("¿Cancelar este pago? Las ganancias volverán a estado pendiente.")) return;
+    setCancellingPayoutId(payoutId);
+    setError("");
+    try {
+      await fetchApi(`/api/commissions/payouts/${payoutId}`, { method: "DELETE" });
+      setSuccess("Pago cancelado correctamente");
+      const updatedPayouts = await fetchApi<Payout[]>("/api/commissions/payouts");
+      setPayouts(updatedPayouts ?? []);
+      if (selectedUserId) await loadEarnings(selectedUserId);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cancelar pago");
+    } finally {
+      setCancellingPayoutId(null);
     }
   };
 
@@ -256,6 +275,7 @@ export default function CommissionsPage() {
                 <TableHead>Órdenes</TableHead>
                 <TableHead>Registrado por</TableHead>
                 <TableHead>Fecha</TableHead>
+                <TableHead className="w-10">{" "}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -276,6 +296,16 @@ export default function CommissionsPage() {
                   <TableCell className="text-xs text-slate-500">{p.paidBy.name ?? "—"}</TableCell>
                   <TableCell className="text-xs text-slate-500">
                     {new Date(p.paidAt).toLocaleDateString("es-CO")}
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleCancelPayout(p.id)}
+                      disabled={cancellingPayoutId === p.id}
+                      title="Cancelar pago"
+                      className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-40 dark:hover:bg-red-950/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}

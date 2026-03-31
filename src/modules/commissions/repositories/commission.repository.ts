@@ -61,6 +61,20 @@ class CommissionRepository {
     return getDatabase(database).washerPayout.create(args);
   }
 
+  findPayoutFirst<T extends Prisma.WasherPayoutFindFirstArgs>(
+    args: Prisma.SelectSubset<T, Prisma.WasherPayoutFindFirstArgs>,
+    database?: CommissionsDatabase
+  ) {
+    return getDatabase(database).washerPayout.findFirst(args);
+  }
+
+  deletePayout<T extends Prisma.WasherPayoutDeleteArgs>(
+    args: Prisma.SelectSubset<T, Prisma.WasherPayoutDeleteArgs>,
+    database?: CommissionsDatabase
+  ) {
+    return getDatabase(database).washerPayout.delete(args);
+  }
+
   findTenantFirst<T extends Prisma.TenantFindFirstArgs>(
     args: Prisma.SelectSubset<T, Prisma.TenantFindFirstArgs>,
     database?: CommissionsDatabase

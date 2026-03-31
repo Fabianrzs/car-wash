@@ -7,4 +7,5 @@ export { listEarningsService } from "@/modules/commissions/services/list-earning
 export { getMyEarningsService } from "@/modules/commissions/services/get-my-earnings.service";
 export { createPayoutService } from "@/modules/commissions/services/create-payout.service";
 export { listPayoutsService } from "@/modules/commissions/services/list-payouts.service";
+export { deletePayoutService } from "@/modules/commissions/services/delete-payout.service";
 export { getCommissionStatsService } from "@/modules/commissions/services/get-commission-stats.service";

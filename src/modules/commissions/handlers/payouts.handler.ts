@@ -5,6 +5,7 @@ import { handleCommissionHttpError } from "@/modules/commissions/commission.erro
 import { createPayoutSchema } from "@/modules/commissions/validations/commission.validation";
 import { listPayoutsService } from "@/modules/commissions/services/list-payouts.service";
 import { createPayoutService } from "@/modules/commissions/services/create-payout.service";
+import { deletePayoutService } from "@/modules/commissions/services/delete-payout.service";
 
 export async function GET(request: Request) {
   try {
@@ -42,5 +43,19 @@ export async function POST(request: Request) {
     return ApiResponse.created(payout);
   } catch (error) {
     return handleCommissionHttpError(error, "Error al registrar pago:");
+  }
+}
+
+export async function deletePayoutHandler(request: Request, payoutId: string) {
+  try {
+    await requireAuth();
+    const { tenantId } = await requireTenantContext(request.headers);
+    const session = await requireAuth();
+    await ensureManagementAccess(session.user.id, tenantId, session.user.globalRole);
+
+    await deletePayoutService({ tenantId, payoutId });
+    return ApiResponse.ok({ message: "Pago cancelado correctamente" });
+  } catch (error) {
+    return handleCommissionHttpError(error, "Error al cancelar pago:");
   }
 }

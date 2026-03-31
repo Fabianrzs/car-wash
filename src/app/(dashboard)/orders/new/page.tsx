@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { VEHICLE_TYPE_LABELS } from "@/lib/utils/constants";
 import { useDebounce } from "@/hooks/useDebounce";
 import Alert from "@/components/ui/Alert";
-import { ArrowLeft, ArrowRight, Check, Search, UserCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Search, UserCheck, UserPlus, X } from "lucide-react";
 
 interface VehicleItem {
   id: string;
@@ -74,6 +74,12 @@ export default function NewOrderPage() {
   // Step 4: Services
   const [services, setServices] = useState<ServiceType[]>([]);
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+
+  // Quick registration
+  const [showQuickRegister, setShowQuickRegister] = useState(false);
+  const [quickForm, setQuickForm] = useState({ firstName: "", lastName: "", phone: "", plate: "" });
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [quickError, setQuickError] = useState("");
 
   // Step 5: Notes + submit
   const [notes, setNotes] = useState("");
@@ -142,6 +148,45 @@ export default function NewOrderPage() {
   const clientVehicles = selectedClient?.vehicles.map((cv) => cv.vehicle) || [];
 
   const selectedAssignee = employees.find((e) => e.user.id === selectedAssigneeId);
+
+  const handleQuickRegister = async () => {
+    const { firstName, lastName, phone, plate } = quickForm;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !plate.trim()) {
+      setQuickError("Todos los campos son obligatorios");
+      return;
+    }
+    setQuickSaving(true);
+    setQuickError("");
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone: phone.trim(),
+          vehicle: { plate: plate.trim().toUpperCase(), brand: "-", model: "-", vehicleType: "SEDAN" },
+        }),
+      });
+      const created = await res.json();
+      if (!res.ok) {
+        setQuickError(created.error || "Error al registrar");
+        return;
+      }
+      const clientRes = await fetch(`/api/clients/${created.id}`);
+      const clientData = await clientRes.json();
+      const newVehicle = clientData.vehicles?.[0]?.vehicle;
+      setSelectedClient(clientData);
+      if (newVehicle) setSelectedVehicleId(newVehicle.id);
+      setShowQuickRegister(false);
+      setQuickForm({ firstName: "", lastName: "", phone: "", plate: "" });
+      setStep(newVehicle ? 3 : 2);
+    } catch {
+      setQuickError("Error de conexión");
+    } finally {
+      setQuickSaving(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!selectedClient || !selectedVehicleId || selectedServices.length === 0) return;
@@ -231,6 +276,71 @@ export default function NewOrderPage() {
               ))}
               {clients.length === 0 && clientSearch.length >= 3 && !loading && (
                 <p className="text-center text-sm text-slate-500 dark:text-slate-400">No se encontraron clientes</p>
+              )}
+            </div>
+
+            <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+              {!showQuickRegister ? (
+                <button
+                  onClick={() => setShowQuickRegister(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Registrar cliente nuevo
+                </button>
+              ) : (
+                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800/50 dark:bg-blue-950/20">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Registro rápido</p>
+                    <button onClick={() => { setShowQuickRegister(false); setQuickError(""); }} className="text-slate-400 hover:text-slate-600">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {quickError && <p className="mb-2 text-xs text-red-500">{quickError}</p>}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-500">Nombre *</label>
+                      <Input
+                        placeholder="Juan"
+                        value={quickForm.firstName}
+                        onChange={(e) => setQuickForm((f) => ({ ...f, firstName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-500">Apellido *</label>
+                      <Input
+                        placeholder="Pérez"
+                        value={quickForm.lastName}
+                        onChange={(e) => setQuickForm((f) => ({ ...f, lastName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-500">Teléfono *</label>
+                      <Input
+                        placeholder="3001234567"
+                        value={quickForm.phone}
+                        onChange={(e) => setQuickForm((f) => ({ ...f, phone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-500">Placa *</label>
+                      <Input
+                        placeholder="ABC123"
+                        value={quickForm.plate}
+                        onChange={(e) => setQuickForm((f) => ({ ...f, plate: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">Los demás datos del vehículo se pueden completar luego.</p>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <Button variant="secondary" onClick={() => { setShowQuickRegister(false); setQuickError(""); }}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleQuickRegister} loading={quickSaving}>
+                      Registrar y continuar
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           </Card>
