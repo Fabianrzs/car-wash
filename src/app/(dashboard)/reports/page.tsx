@@ -9,8 +9,18 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import StatsCard from "@/components/dashboard/StatsCard";
 import { formatCurrency } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/utils/constants";
-import { DollarSign, ClipboardList, TrendingUp, CheckCircle, Download, Calendar, Search } from "lucide-react";
+import { DollarSign, ClipboardList, TrendingUp, CheckCircle, Download, Calendar, Search, Wallet, TrendingDown } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 const PERIODS = [
   { label: "Hoy", value: "daily" },
@@ -24,6 +34,8 @@ interface ReportData {
   orderCount: number;
   averageOrderValue: number;
   completedOrders: number;
+  commissionsPaid: number;
+  netIncome: number;
   topServices: Array<{ name: string; totalQuantity: number; totalRevenue: number; orderCount: number }>;
   dailyBreakdown: Array<{ date: string; income: number; orders: number }>;
 }
@@ -59,6 +71,30 @@ function formatDateShort(iso: string | null) {
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit",
   });
+}
+
+function shortDate(dateStr: string) {
+  // dateStr is like "2025-03-31"
+  const parts = dateStr.split("-");
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+  return dateStr;
+}
+
+const CHART_COLORS = ["#18181b", "#3f3f46", "#71717a", "#a1a1aa", "#d4d4d8"];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CurrencyTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md dark:border-slate-700 dark:bg-slate-800">
+      <p className="font-medium text-slate-700 dark:text-slate-300">{label}</p>
+      {payload.map((p: { name: string; value: number; color: string }, i: number) => (
+        <p key={i} style={{ color: p.color }} className="mt-0.5">
+          {p.name}: <span className="font-semibold">{typeof p.value === "number" && p.name !== "Órdenes" ? formatCurrency(p.value) : p.value}</span>
+        </p>
+      ))}
+    </div>
+  );
 }
 
 export default function ReportsPage() {
@@ -111,14 +147,12 @@ export default function ReportsPage() {
     }
   }, [buildParams, statusFilter, searchQuery]);
 
-  // Fetch on period change (skip custom until user explicitly triggers)
   useEffect(() => {
     if (period !== "custom") {
       fetchReport();
     }
   }, [period, fetchReport]);
 
-  // Fetch orders when switching to detail tab (if not already loaded for this period)
   useEffect(() => {
     if (tab === "detalle" && period !== "custom") {
       fetchOrders();
@@ -136,7 +170,6 @@ export default function ReportsPage() {
     fetchOrders();
   };
 
-  // Flatten orders for Excel-style view: one row per item
   const flatRows = ordersData?.orders.flatMap((order) =>
     order.items.map((item) => ({ ...order, item }))
   ) || [];
@@ -148,7 +181,9 @@ export default function ReportsPage() {
     lines.push(`Periodo: ${period === "custom" ? `${startDate} a ${endDate}` : PERIODS.find(p => p.value === period)?.label}`);
     lines.push("");
     lines.push("Resumen");
-    lines.push(`Ingresos Totales,${data.totalIncome}`);
+    lines.push(`Ingresos Brutos,${data.totalIncome}`);
+    lines.push(`Comisiones Pagadas,${data.commissionsPaid}`);
+    lines.push(`Ingreso Neto,${data.netIncome}`);
     lines.push(`Total Ordenes,${data.orderCount}`);
     lines.push(`Ticket Promedio,${data.averageOrderValue}`);
     lines.push(`Ordenes Completadas,${data.completedOrders}`);
@@ -296,16 +331,96 @@ export default function ReportsPage() {
             </div>
           ) : data ? (
             <>
-              <div data-onboarding="reports-stats" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatsCard title="Ingresos Totales" value={formatCurrency(data.totalIncome)} icon={DollarSign} />
-                <StatsCard title="Total Ordenes" value={String(data.orderCount)} icon={ClipboardList} />
+              {/* KPI row 1: ingresos */}
+              <div data-onboarding="reports-stats" className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard title="Ingresos Brutos" value={formatCurrency(data.totalIncome)} icon={DollarSign} description="Solo órdenes completadas" />
+                <StatsCard title="Total Órdenes" value={String(data.orderCount)} icon={ClipboardList} description={`${data.completedOrders} completadas`} />
                 <StatsCard title="Ticket Promedio" value={formatCurrency(data.averageOrderValue)} icon={TrendingUp} />
                 <StatsCard title="Completadas" value={String(data.completedOrders)} icon={CheckCircle} />
               </div>
 
+              {/* KPI row 2: flujo financiero */}
+              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatsCard
+                  title="Comisiones Pagadas"
+                  value={formatCurrency(data.commissionsPaid)}
+                  icon={Wallet}
+                  description="Egresos por pagos a lavadores"
+                />
+                <StatsCard
+                  title="Ingreso Neto"
+                  value={formatCurrency(data.netIncome)}
+                  icon={TrendingDown}
+                  description="Ingresos brutos − comisiones"
+                />
+                <div className="flex flex-col justify-center rounded-xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Margen de comisiones</p>
+                  {data.totalIncome > 0 ? (
+                    <>
+                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        {((data.commissionsPaid / data.totalIncome) * 100).toFixed(1)}%
+                      </p>
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div
+                          className="h-full rounded-full bg-amber-400"
+                          style={{ width: `${Math.min((data.commissionsPaid / data.totalIncome) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">del ingreso bruto</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-400">Sin ingresos en el período</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Charts row */}
+              <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* Daily breakdown chart */}
+                {data.dailyBreakdown && data.dailyBreakdown.length > 0 && (
+                  <Card>
+                    <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Ingresos por día</h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={data.dailyBreakdown.map(d => ({ ...d, date: shortDate(d.date) }))} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={46} />
+                        <Tooltip content={<CurrencyTooltip />} />
+                        <Bar dataKey="income" name="Ingresos" fill="#18181b" radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Card>
+                )}
+
+                {/* Top services chart */}
+                {data.topServices && data.topServices.length > 0 && (
+                  <Card>
+                    <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Servicios más vendidos</h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart
+                        layout="vertical"
+                        data={data.topServices.slice(0, 6).map(s => ({ name: s.name, revenue: s.totalRevenue, qty: s.totalQuantity }))}
+                        margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={90} />
+                        <Tooltip content={<CurrencyTooltip />} />
+                        <Bar dataKey="revenue" name="Ingresos" radius={[0, 3, 3, 0]}>
+                          {data.topServices.slice(0, 6).map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Card>
+                )}
+              </div>
+
+              {/* Detailed tables (collapsed) */}
               {data.topServices && data.topServices.length > 0 && (
-                <Card>
-                  <h3 className="mb-4 text-lg font-semibold">Servicios Mas Vendidos</h3>
+                <Card className="mb-6">
+                  <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Detalle de servicios</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -327,14 +442,14 @@ export default function ReportsPage() {
                 </Card>
               )}
 
-              {data.dailyBreakdown && data.dailyBreakdown.length > 0 && (
-                <Card className="mt-6">
-                  <h3 className="mb-4 text-lg font-semibold">Desglose Diario</h3>
+              {data.dailyBreakdown && data.dailyBreakdown.length > 1 && (
+                <Card>
+                  <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Desglose diario</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Fecha</TableHead>
-                        <TableHead>Ordenes</TableHead>
+                        <TableHead>Órdenes</TableHead>
                         <TableHead>Ingresos</TableHead>
                       </TableRow>
                     </TableHeader>

@@ -43,6 +43,13 @@ class ReportRepository extends BaseRepository<typeof prisma.serviceOrder> {
   ) {
     return getDatabase(database).serviceType.findMany(args);
   }
+
+  aggregatePayouts<T extends Prisma.WasherPayoutAggregateArgs>(
+    args: Prisma.SelectSubset<T, Prisma.WasherPayoutAggregateArgs>,
+    database?: ReportsDatabase
+  ) {
+    return getDatabase(database).washerPayout.aggregate(args);
+  }
 }
 
 export const reportRepository = new ReportRepository(prisma.serviceOrder);

@@ -22,7 +22,7 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     },
   };
 
-  const [completedOrdersAgg, statusCounts, allCompletedOrders, topServicesData, uniqueClientsData] = await Promise.all([
+  const [completedOrdersAgg, statusCounts, allCompletedOrders, topServicesData, uniqueClientsData, payoutsAgg] = await Promise.all([
     reportRepository.aggregateOrders({
       where: {
         ...dateFilter,
@@ -74,6 +74,10 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
       by: ["clientId"],
       where: dateFilter,
     }),
+    reportRepository.aggregatePayouts({
+      where: { tenantId, paidAt: { gte: startDate, lte: endDate } },
+      _sum: { totalAmount: true },
+    }),
   ]);
 
   const statusCountMap = new Map(statusCounts.map((item) => [item.status, (item._count as any)?.id || 0]));
@@ -102,6 +106,9 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     orderCount: (service._count as any)?.id || 0,
   }));
 
+  const commissionsPaid = Number(payoutsAgg._sum?.totalAmount || 0);
+  const netIncome = roundMoney(totalIncome - commissionsPaid);
+
   return {
     totalIncome,
     orderCount,
@@ -109,6 +116,8 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     completedOrders: completedOrdersCount,
     inProgressOrders: inProgressOrdersCount,
     uniqueClients: uniqueClientsData.length,
+    commissionsPaid,
+    netIncome,
     dailyBreakdown,
     topServices,
   };
