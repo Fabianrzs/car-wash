@@ -16,21 +16,25 @@ import {
   UserPlus,
   CreditCard,
   ListTodo,
+  DollarSign,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTenantRole } from "@/hooks/useTenantRole";
 
 const managerNavigation = [
-  { name: "Dashboard",  href: "/dashboard", icon: LayoutDashboard },
-  { name: "Órdenes",   href: "/orders",    icon: ClipboardList },
-  { name: "Clientes",  href: "/clients",   icon: Users },
-  { name: "Vehículos", href: "/vehicles",  icon: Car },
-  { name: "Servicios", href: "/services",  icon: Sparkles },
+  { name: "Dashboard",    href: "/dashboard",    icon: LayoutDashboard },
+  { name: "Órdenes",      href: "/orders",       icon: ClipboardList },
+  { name: "Clientes",     href: "/clients",      icon: Users },
+  { name: "Vehículos",    href: "/vehicles",     icon: Car },
+  { name: "Servicios",    href: "/services",     icon: Sparkles },
+  { name: "Comisiones",   href: "/commissions",  icon: DollarSign },
 ];
 
 const employeeNavigation = [
-  { name: "Mis Órdenes", href: "/mis-ordenes", icon: ListTodo },
+  { name: "Mis Órdenes",   href: "/mis-ordenes",   icon: ListTodo },
+  { name: "Mis Ganancias", href: "/mis-ganancias",  icon: Wallet },
 ];
 
 function NavItem({

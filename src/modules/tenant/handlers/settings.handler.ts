@@ -36,6 +36,7 @@ export async function PUT(request: Request) {
       email: validatedData.email,
       address: validatedData.address,
       logoUrl: validatedData.logoUrl,
+      commissionRate: validatedData.commissionRate,
     });
 
     return ApiResponse.ok(tenant);

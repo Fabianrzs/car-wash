@@ -63,3 +63,8 @@ enum VehicleType {
   VAN
   OTHER
 }
+
+enum EarningStatus {
+  PENDING
+  PAID
+}

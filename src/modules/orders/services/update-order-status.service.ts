@@ -6,6 +6,7 @@ import {
   buildStatusUpdateData,
   resolveActorName,
 } from "@/modules/orders/order.utils";
+import { createEarningService } from "@/modules/commissions";
 
 interface UpdateOrderStatusServiceInput {
   tenantId: string;
@@ -45,6 +46,15 @@ export async function updateOrderStatusService({
 
   const changedByName = resolveActorName(changedBy);
   const clientName = `${existingOrder.client.firstName} ${existingOrder.client.lastName}`;
+
+  if (newStatus === "COMPLETED" && existingOrder.assignedTo?.id) {
+    createEarningService({
+      tenantId,
+      orderId,
+      userId: existingOrder.assignedTo.id,
+      orderTotal: existingOrder.totalAmount,
+    }).catch((err) => console.error("Error creando earning de lavador:", err));
+  }
 
   Promise.all([
     orderRepository.findManyTenantUsers({

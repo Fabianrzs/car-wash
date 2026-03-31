@@ -6,6 +6,7 @@ export const tenantSettingsSchema = z.object({
   email: z.string().email("Email inválido").max(255).optional().or(z.literal("")),
   address: z.string().max(500).optional().or(z.literal("")),
   logoUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  commissionRate: z.coerce.number().min(0, "Mínimo 0%").max(100, "Máximo 100%").default(0),
 });
 
 export const inviteTeamMemberSchema = z.object({

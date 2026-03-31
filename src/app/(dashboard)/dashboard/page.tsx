@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { DollarSign, ClipboardList, Clock, Users } from "lucide-react";
+import { DollarSign, ClipboardList, Clock, Users, Wallet, BadgeDollarSign } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
@@ -32,6 +32,13 @@ interface ReportStats {
   averageOrderValue: number;
 }
 
+interface CommissionStats {
+  totalPending: number;
+  totalPaid: number;
+  pendingCount: number;
+  commissionRate: number;
+}
+
 interface Order {
   id: string;
   orderNumber: string;
@@ -47,6 +54,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const role = useTenantRole();
   const [stats, setStats] = useState<ReportStats | null>(null);
+  const [commissionStats, setCommissionStats] = useState<CommissionStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -58,13 +66,15 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [dailyData, ordersData] = await Promise.all([
+        const [dailyData, ordersData, commissionData] = await Promise.all([
           fetchApi<ReportStats>("/api/reports?period=daily").catch(() => null),
           fetchApi<{ orders: Order[] }>("/api/orders?page=1").catch(() => null),
+          fetchApi<CommissionStats>("/api/commissions/stats").catch(() => null),
         ]);
         if (dailyData) setStats(dailyData);
         else setError("No se pudieron cargar las estadísticas del día.");
         if (ordersData) setRecentOrders((ordersData.orders || []).slice(0, 10));
+        if (commissionData) setCommissionStats(commissionData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar datos");
       } finally {
@@ -118,6 +128,23 @@ export default function DashboardPage() {
           description="Clientes únicos del día"
         />
       </div>
+
+      {commissionStats && commissionStats.commissionRate > 0 && (
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <StatsCard
+            title="Comisiones Pendientes"
+            value={formatCurrency(commissionStats.totalPending)}
+            icon={Wallet}
+            description={`${commissionStats.pendingCount} lavador(es) por cobrar`}
+          />
+          <StatsCard
+            title="Comisiones Pagadas"
+            value={formatCurrency(commissionStats.totalPaid)}
+            icon={BadgeDollarSign}
+            description={`Tasa de comisión: ${commissionStats.commissionRate}%`}
+          />
+        </div>
+      )}
 
       <div data-onboarding="dashboard-recent-orders">
         <div className="mb-3 flex items-center justify-between">

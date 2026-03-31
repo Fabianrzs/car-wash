@@ -18,6 +18,7 @@ export default function SettingsPage() {
     email: "",
     address: "",
     logoUrl: "",
+    commissionRate: 0,
   });
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function SettingsPage() {
           email: data.email || "",
           address: data.address || "",
           logoUrl: data.logoUrl || "",
+          commissionRate: Number(data.commissionRate ?? 0),
         });
       })
       .finally(() => setLoading(false));
@@ -114,6 +116,26 @@ export default function SettingsPage() {
             onChange={(e) => setForm({ ...form, address: e.target.value })}
             className={inputClass}
           />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Porcentaje de comision lavadores (%)
+          </label>
+          <p className="mb-1.5 text-xs text-slate-500 dark:text-slate-400">
+            Porcentaje del valor de la orden que recibe cada lavador al completarla. 0 = sin comision.
+          </p>
+          <div className="relative">
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              value={form.commissionRate}
+              onChange={(e) => setForm({ ...form, commissionRate: Number(e.target.value) })}
+              className={inputClass + " pr-8"}
+            />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
+          </div>
         </div>
 
         {success && (

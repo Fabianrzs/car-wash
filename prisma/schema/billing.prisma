@@ -111,3 +111,45 @@ model PaymentReminder {
   @@index([sentAt, scheduledFor])
   @@map("payment_reminders")
 }
+
+model WasherEarning {
+  id             String        @id @default(cuid())
+  tenantId       String
+  userId         String
+  orderId        String        @unique
+  amount         Decimal       @db.Decimal(10, 2)
+  commissionRate Decimal       @db.Decimal(5, 2)
+  status         EarningStatus @default(PENDING)
+  payoutId       String?
+  createdAt      DateTime      @default(now())
+
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user    User          @relation("UserEarnings", fields: [userId], references: [id])
+  order   ServiceOrder  @relation(fields: [orderId], references: [id])
+  payout  WasherPayout? @relation(fields: [payoutId], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([payoutId])
+  @@map("washer_earnings")
+}
+
+model WasherPayout {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String
+  totalAmount Decimal  @db.Decimal(10, 2)
+  notes       String?  @db.Text
+  paidById    String
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User            @relation("UserPayouts", fields: [userId], references: [id])
+  paidBy   User            @relation("PayoutPaidBy", fields: [paidById], references: [id])
+  earnings WasherEarning[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@map("washer_payouts")
+}

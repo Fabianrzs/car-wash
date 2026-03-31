@@ -13,9 +13,12 @@ model User {
   sessions        Session[]
   ordersCreated   ServiceOrder[] @relation("CreatedByUser")
   ordersAssigned  ServiceOrder[] @relation("AssignedToUser")
-  tenantUsers     TenantUser[]
-  invitationsSent      Invitation[]               @relation("InvitedByUser")
+  tenantUsers           TenantUser[]
+  invitationsSent       Invitation[]               @relation("InvitedByUser")
   onboardingCompletions UserOnboardingCompletion[]
+  washerEarnings        WasherEarning[]            @relation("UserEarnings")
+  washerPayouts         WasherPayout[]             @relation("UserPayouts")
+  payoutsMade           WasherPayout[]             @relation("PayoutPaidBy")
 
   @@map("users")
 }

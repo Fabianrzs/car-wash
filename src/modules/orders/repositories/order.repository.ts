@@ -115,6 +115,7 @@ const statusSelect = {
   id: true,
   status: true,
   orderNumber: true,
+  totalAmount: true,
   assignedTo: { select: { id: true, email: true } },
   client: { select: { firstName: true, lastName: true } },
   tenant: { select: { name: true } },
