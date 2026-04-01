@@ -17,6 +17,7 @@ export default {
       },
       async authorize(credentials) {
         const mode = (credentials?.mode as string) || "email";
+        const isProduction = process.env.NODE_ENV === "production";
 
         // ── Employee PIN login ──────────────────────────────────────────
         if (mode === "employee") {
@@ -57,7 +58,12 @@ export default {
               tenantSlug: tenant.slug,
             };
           } catch (err) {
-            console.error("[auth] employee authorize error:", err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            if (isProduction) {
+              console.error("[auth] employee authorize error:", { tenantSlug, employeeCode, error: errorMsg });
+            } else {
+              console.error("[auth] employee authorize error:", err);
+            }
             return null;
           }
         }
@@ -84,10 +90,28 @@ export default {
               },
             },
           });
-          if (!user || !user.password) return null;
+          
+          if (!user) {
+            if (isProduction) {
+              console.warn("[auth] user not found:", { email });
+            }
+            return null;
+          }
+          
+          if (!user.password) {
+            if (isProduction) {
+              console.warn("[auth] user has no password:", { email });
+            }
+            return null;
+          }
 
           const passwordMatch = await bcrypt.compare(password, user.password);
-          if (!passwordMatch) return null;
+          if (!passwordMatch) {
+            if (isProduction) {
+              console.warn("[auth] password mismatch:", { email });
+            }
+            return null;
+          }
 
           const activeTenants = user.tenantUsers;
           const firstActiveTenant = activeTenants.at(0);
@@ -104,7 +128,12 @@ export default {
             tenantSlug,
           };
         } catch (err) {
-          console.error("[auth] authorize error:", err);
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          if (isProduction) {
+            console.error("[auth] authorize error:", { email, error: errorMsg });
+          } else {
+            console.error("[auth] authorize error:", err);
+          }
           return null;
         }
       },
