@@ -50,7 +50,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/api/plans") ||
     pathname.startsWith("/api/public-stats") ||
-    pathname.startsWith("/api/invite")
+    pathname.startsWith("/api/invite") ||
+    pathname.startsWith("/api/debug")
   ) {
     return NextResponse.next();
   }
