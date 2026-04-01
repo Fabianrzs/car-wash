@@ -212,29 +212,6 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
         )}
-
-        {stats && stats.orderCount > 0 && (() => {
-          const pending = Math.max(0, stats.orderCount - stats.completedOrders - stats.inProgressOrders);
-          const statusData = [
-            { name: "Completadas", value: stats.completedOrders, color: "#10b981" },
-            { name: "En Proceso", value: stats.inProgressOrders, color: "#3b82f6" },
-            { name: "Pendientes", value: pending, color: "#f59e0b" },
-          ].filter((d) => d.value > 0);
-          return (
-            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Estado órdenes — hoy</h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="45%" innerRadius={48} outerRadius={72} dataKey="value" paddingAngle={3}>
-                    {statusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip />
-                  <Legend iconType="circle" iconSize={8} formatter={(value) => <span style={{ fontSize: 10 }}>{value}</span>} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          );
-        })()}
       </div>
 
       {/* Charts row 2: Top services + Employee leaderboard */}

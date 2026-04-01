@@ -20,13 +20,13 @@ export default {
 
         // ── Employee PIN login ──────────────────────────────────────────
         if (mode === "employee") {
-          const tenantSlug   = credentials?.tenantSlug   as string;
-          const employeeCode = credentials?.employeeCode as string;
-          const pin          = credentials?.pin          as string;
+          const tenantSlug = (credentials?.tenantSlug as string | undefined)?.trim().toLowerCase() ?? "";
+          const employeeCode = (credentials?.employeeCode as string | undefined)?.trim().toLowerCase() ?? "";
+          const pin          = credentials?.pin as string;
 
           if (!tenantSlug || !employeeCode || !pin) return null;
 
-          const rl = checkRateLimit(`login_employee:${tenantSlug}:${employeeCode.toLowerCase()}`, {
+          const rl = checkRateLimit(`login_employee:${tenantSlug}:${employeeCode}`, {
             limit: 5,
             windowMs: 15 * 60 * 1000,
           });
@@ -41,7 +41,7 @@ export default {
 
             const tenantUser = await authRepository.findTenantUserByEmployeeCode(
               tenant.id,
-              employeeCode.toLowerCase()
+              employeeCode
             );
             if (!tenantUser || !tenantUser.employeePin) return null;
 
@@ -63,11 +63,11 @@ export default {
         }
 
         // ── Email + password login ──────────────────────────────────────
-        const email    = credentials?.email    as string;
+        const email = (credentials?.email as string | undefined)?.trim().toLowerCase() ?? "";
         const password = credentials?.password as string;
         if (!email || !password) return null;
 
-        const rl = checkRateLimit(`login:${email.toLowerCase()}`, {
+        const rl = checkRateLimit(`login:${email}`, {
           limit: 5,
           windowMs: 15 * 60 * 1000,
         });
