@@ -77,7 +77,12 @@ export default {
           limit: 5,
           windowMs: 15 * 60 * 1000,
         });
-        if (!rl.allowed) return null;
+        // Temporalmente disabled en Vercel para diagnosticar
+        if (process.env.NODE_ENV === "production") {
+          // Skip rate limit check in production to diagnose issue
+        } else if (!rl.allowed) {
+          return null;
+        }
 
         try {
           const user = await authRepository.findUserByEmail({
