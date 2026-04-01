@@ -34,21 +34,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     callbacks: {
         async jwt({ token, user }) {
-            if (user) {
-                token.id = user.id;
-                token.globalRole = user.globalRole;
-                token.tenantSlug = user.tenantSlug;
+            try {
+                if (user) {
+                    token.id = user.id ?? token.id;
+                    token.globalRole = user.globalRole ?? token.globalRole;
+                    token.tenantSlug = user.tenantSlug;
+                }
+                return token;
+            } catch (error) {
+                console.error("[auth] jwt callback error:", error);
+                return token;
             }
-            return token;
         },
 
         async session({ session, token }) {
-            if (token) {
-                session.user.id = token.id as string;
-                session.user.globalRole = token.globalRole as string;
-                session.user.tenantSlug = token.tenantSlug as string | undefined;
+            try {
+                if (token?.id) {
+                    session.user.id = token.id as string;
+                }
+                if (token?.globalRole) {
+                    session.user.globalRole = token.globalRole as string;
+                }
+                if (token?.tenantSlug) {
+                    session.user.tenantSlug = token.tenantSlug as string;
+                }
+                return session;
+            } catch (error) {
+                console.error("[auth] session callback error:", error);
+                return session;
             }
-            return session;
         },
     },
 
