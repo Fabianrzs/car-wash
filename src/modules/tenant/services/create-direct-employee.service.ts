@@ -18,37 +18,36 @@ export async function createDirectEmployeeService({
   employeeCode,
   pin,
 }: CreateDirectEmployeeInput) {
+  const normalizedName = name.trim();
+  const normalizedEmployeeCode = employeeCode.trim().toLowerCase();
+  const normalizedPin = pin.trim();
+
+  if (normalizedPin.length !== 4 || !/^\d{4}$/.test(normalizedPin)) {
+    throw new TenantModuleError("El PIN debe ser de 4 dígitos numéricos", 400);
+  }
+
   // Check code is unique within this tenant
   const existing = await tenantModuleRepository.findTenantUserFirst({
-    where: { tenantId, employeeCode },
+    where: { tenantId, employeeCode: normalizedEmployeeCode },
     select: { id: true },
   });
   if (existing) {
     throw new TenantModuleError("Ya existe un empleado con ese código en este lavadero", 400);
   }
 
-  // Generate internal email (never used for login)
-  const internalEmail = `${employeeCode}@${tenantSlug}.internal`;
-
-  // Check email not taken (safety)
-  const emailTaken = await tenantModuleRepository.findUserUnique({
-    where: { email: internalEmail },
-    select: { id: true },
-  });
-  if (emailTaken) {
-    throw new TenantModuleError("Código de empleado no disponible, elige otro", 400);
-  }
+  // Internal email is only a technical identifier, so we keep it unique per creation.
+  const internalEmail = `${normalizedEmployeeCode}.${crypto.randomUUID()}@${tenantSlug}.internal`;
 
   const [hashedPassword, hashedPin] = await Promise.all([
     bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10),
-    bcrypt.hash(pin, 10),
+    bcrypt.hash(normalizedPin, 10),
   ]);
 
   return tenantModuleRepository.transaction(async (tx) => {
     const user = await tenantModuleRepository.createUser(
       {
         data: {
-          name,
+          name: normalizedName,
           email: internalEmail,
           password: hashedPassword,
         },
@@ -62,13 +61,13 @@ export async function createDirectEmployeeService({
           userId: user.id,
           tenantId,
           role: "EMPLOYEE",
-          employeeCode,
+          employeeCode: normalizedEmployeeCode,
           employeePin: hashedPin,
         },
       },
       tx
     );
 
-    return { employeeCode, pin, name };
+    return { employeeCode: normalizedEmployeeCode, pin: normalizedPin, name: normalizedName };
   });
 }

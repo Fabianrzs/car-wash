@@ -1,8 +1,7 @@
 import { ApiResponse } from "@/lib/http";
 import { requireAuth } from "@/middleware/auth.middleware";
 import { requireTenantContext, ensureManagementAccess } from "@/middleware/tenant.middleware";
-import { handleTenantHttpError } from "@/modules/tenant/tenant.errors";
-import { createDirectEmployeeService } from "@/modules/tenant/services/create-direct-employee.service";
+import { createDirectEmployeeService, handleTenantHttpError } from "@/modules/tenant";
 import { z } from "zod";
 
 const createEmployeeSchema = z.object({

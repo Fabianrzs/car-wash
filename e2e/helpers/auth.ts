@@ -5,6 +5,12 @@ interface LoginCredentials {
   password: string;
 }
 
+interface EmployeeLoginCredentials {
+  tenantSlug: string;
+  employeeCode: string;
+  pin: string;
+}
+
 /**
  * Login via the UI form at /login.
  * Waits for the full redirect chain (including session relay) to complete.
@@ -56,4 +62,26 @@ export async function loginAndCapture(
     cookies: await page.context().cookies(),
     url: page.url(),
   };
+}
+
+/**
+ * Login in employee mode via code + PIN.
+ */
+export async function loginAsEmployee(
+  page: Page,
+  { tenantSlug, employeeCode, pin }: EmployeeLoginCredentials
+): Promise<Cookie[]> {
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Lavador" }).click();
+  await page.locator("#tenantSlug").fill(tenantSlug);
+  await page.locator("#employeeCode").fill(employeeCode);
+  await page.locator("#pin").fill(pin);
+  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  await page.waitForURL((url) => !url.pathname.endsWith("/login"), {
+    timeout: 20_000,
+  });
+  await page.waitForLoadState("domcontentloaded");
+
+  return page.context().cookies();
 }

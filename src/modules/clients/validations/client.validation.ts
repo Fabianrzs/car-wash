@@ -29,7 +29,7 @@ export const clientSchema = z.object({
     .max(100),
   email: optionalStringField.pipe(
     z.union([z.string().email("Email invalido").max(255), z.literal("")])
-  ),
+  ).optional(),
   phone: z
     .string()
     .trim()

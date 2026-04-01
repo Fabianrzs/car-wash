@@ -32,6 +32,7 @@ interface Client {
 interface Employee {
   id: string;
   role: string;
+  isActive: boolean;
   user: { id: string; name: string | null; email: string };
 }
 
@@ -117,7 +118,11 @@ export default function NewOrderPage() {
     setEmployeesLoading(true);
     fetch("/api/tenant/team")
       .then((r) => r.json())
-      .then((data) => setEmployees(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const teamMembers = Array.isArray(data) ? data : [];
+        const activeEmployees = teamMembers.filter((member) => member?.role === "EMPLOYEE" && member?.isActive);
+        setEmployees(activeEmployees);
+      })
       .catch(() => setEmployees([]))
       .finally(() => setEmployeesLoading(false));
   }, [step]);

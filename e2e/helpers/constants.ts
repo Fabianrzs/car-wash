@@ -12,3 +12,5 @@ export const TENANT_USER = {
 export const APP_DOMAIN = "localhost:3000";
 
 export const TENANT_BASE_URL = `http://${TENANT_USER.slug}.${APP_DOMAIN}`;
+
+export const E2E_EMPLOYEE_CODE_PREFIX = "e2e_emp";

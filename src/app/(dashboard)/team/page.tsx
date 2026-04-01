@@ -140,6 +140,8 @@ export default function TeamPage() {
       } else {
         showMessage(data.error || "Error al crear empleado", true);
       }
+    } catch {
+      showMessage("Error de conexión al crear empleado", true);
     } finally {
       setCreatingEmployee(false);
     }
@@ -147,7 +149,8 @@ export default function TeamPage() {
 
   const copyCredentials = () => {
     if (!createdCredentials) return;
-    const text = `Código del lavadero: (tu slug)\nCódigo de empleado: ${createdCredentials.employeeCode}\nPIN: ${createdCredentials.pin}`;
+    const tenantCode = session?.user?.tenantSlug || "(tu slug)";
+    const text = `Código del lavadero: ${tenantCode}\nCódigo de empleado: ${createdCredentials.employeeCode}\nPIN: ${createdCredentials.pin}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -303,7 +306,9 @@ export default function TeamPage() {
               <p className="text-slate-600 dark:text-slate-400">Código de empleado: <span className="font-semibold text-slate-900 dark:text-slate-100">{createdCredentials.employeeCode}</span></p>
               <p className="mt-1 text-slate-600 dark:text-slate-400">PIN: <span className="font-semibold text-slate-900 dark:text-slate-100">{createdCredentials.pin}</span></p>
             </div>
-            <p className="mt-2 text-xs text-slate-400">El lavador necesita también el código del lavadero (slug) para entrar.</p>
+            <p className="mt-2 text-xs text-slate-400">
+              El lavador necesita también el código del lavadero ({session?.user?.tenantSlug || "tu slug"}) para entrar.
+            </p>
             <div className="mt-4 flex justify-between">
               <Button variant="secondary" onClick={copyCredentials}>
                 {copied ? <Check className="mr-1.5 h-4 w-4" /> : <Copy className="mr-1.5 h-4 w-4" />}
