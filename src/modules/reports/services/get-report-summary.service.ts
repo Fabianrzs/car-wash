@@ -22,7 +22,7 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     },
   };
 
-  const [completedOrdersAgg, statusCounts, allCompletedOrders, topServicesData, uniqueClientsData, payoutsAgg] = await Promise.all([
+  const [completedOrdersAgg, statusCounts, allCompletedOrders, topServicesData, uniqueClientsData, payoutsAgg, topEmployeesData] = await Promise.all([
     reportRepository.aggregateOrders({
       where: {
         ...dateFilter,
@@ -78,6 +78,18 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
       where: { tenantId, paidAt: { gte: startDate, lte: endDate } },
       _sum: { totalAmount: true },
     }),
+    reportRepository.groupOrdersByStatus({
+      by: ["assignedToId"],
+      where: {
+        ...dateFilter,
+        status: "COMPLETED",
+        assignedToId: { not: null },
+      },
+      _count: { id: true },
+      _sum: { totalAmount: true },
+      orderBy: { _count: { id: "desc" } },
+      take: 5,
+    } as never),
   ]);
 
   const statusCountMap = new Map(statusCounts.map((item) => [item.status, (item._count as any)?.id || 0]));
@@ -109,6 +121,24 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
   const commissionsPaid = Number(payoutsAgg._sum?.totalAmount || 0);
   const netIncome = roundMoney(totalIncome - commissionsPaid);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const employeeRows = topEmployeesData as any[];
+  const employeeIds = employeeRows.map((r: { assignedToId: string }) => r.assignedToId).filter(Boolean);
+  const employeeUsers = employeeIds.length
+    ? await reportRepository.findUsers({
+        where: { id: { in: employeeIds } },
+        select: { id: true, name: true },
+      })
+    : [];
+  const userNameMap = new Map(employeeUsers.map((u) => [u.id, u.name]));
+
+  const topEmployees = employeeRows.map((r) => ({
+    userId: r.assignedToId as string,
+    name: userNameMap.get(r.assignedToId) ?? null,
+    completedOrders: (r._count?.id as number) ?? 0,
+    totalRevenue: Number(r._sum?.totalAmount ?? 0),
+  }));
+
   return {
     totalIncome,
     orderCount,
@@ -120,6 +150,7 @@ export async function getReportSummaryService({ tenantId, query }: GetReportSumm
     netIncome,
     dailyBreakdown,
     topServices,
+    topEmployees,
   };
 }
 

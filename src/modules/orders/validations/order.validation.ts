@@ -40,6 +40,7 @@ export const listOrdersQuerySchema = z.object({
   clientId: z.string().trim().optional(),
   assignedToMe: z.enum(["true", "false"]).optional().transform((v) => v === "true"),
   unassigned: z.enum(["true", "false"]).optional().transform((v) => v === "true"),
+  board: z.enum(["true", "false"]).optional().transform((v) => v === "true"),
 });
 
 export type OrderItemInput = z.infer<typeof orderItemSchema>;

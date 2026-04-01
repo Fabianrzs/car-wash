@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { DollarSign, User, CheckCircle, Trash2 } from "lucide-react";
+import { DollarSign, User, CheckCircle, Trash2, Wallet, AlertCircle } from "lucide-react";
 import { PageLoader } from "@/components/ui/Spinner";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
@@ -40,8 +40,17 @@ interface EarningsData {
   pendingTotal: number;
 }
 
+interface EmployeeSummary {
+  userId: string;
+  name: string | null;
+  email: string;
+  pendingTotal: number;
+  pendingCount: number;
+}
+
 export default function CommissionsPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeeSummary, setEmployeeSummary] = useState<EmployeeSummary[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>([]);
@@ -55,17 +64,24 @@ export default function CommissionsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const reloadSummary = useCallback(async () => {
+    const data = await fetchApi<EmployeeSummary[]>("/api/commissions/employees-summary").catch(() => []);
+    setEmployeeSummary(data ?? []);
+  }, []);
+
   useEffect(() => {
     Promise.all([
       fetchApi<Array<{ role: string; user: Employee }>>("/api/tenant/team"),
       fetchApi<Payout[]>("/api/commissions/payouts"),
+      fetchApi<EmployeeSummary[]>("/api/commissions/employees-summary").catch(() => []),
     ])
-      .then(([teamData, payoutsData]) => {
+      .then(([teamData, payoutsData, summaryData]) => {
         const emps = (teamData ?? [])
           .filter((m) => m.role === "EMPLOYEE")
           .map((m) => m.user);
         setEmployees(emps);
         setPayouts(payoutsData ?? []);
+        setEmployeeSummary(summaryData ?? []);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -117,7 +133,10 @@ export default function CommissionsPage() {
       setShowPayModal(false);
       setPayNotes("");
       setSelectedEarningIds([]);
-      await loadEarnings(selectedUserId);
+      await Promise.all([
+        loadEarnings(selectedUserId),
+        reloadSummary(),
+      ]);
       const updatedPayouts = await fetchApi<Payout[]>(`/api/commissions/payouts?userId=${selectedUserId}`);
       setPayouts(updatedPayouts);
       setTimeout(() => setSuccess(""), 3000);
@@ -135,9 +154,12 @@ export default function CommissionsPage() {
     try {
       await fetchApi(`/api/commissions/payouts/${payoutId}`, { method: "DELETE" });
       setSuccess("Pago cancelado correctamente");
+      await Promise.all([
+        reloadSummary(),
+        ...(selectedUserId ? [loadEarnings(selectedUserId)] : []),
+      ]);
       const updatedPayouts = await fetchApi<Payout[]>("/api/commissions/payouts");
       setPayouts(updatedPayouts ?? []);
-      if (selectedUserId) await loadEarnings(selectedUserId);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cancelar pago");
@@ -165,6 +187,51 @@ export default function CommissionsPage() {
 
       {success && <Alert variant="success">{success}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
+
+      {/* Resumen por empleado */}
+      {employeeSummary.length > 0 ? (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Pendientes por cobrar
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {employeeSummary.map((s) => (
+              <button
+                key={s.userId}
+                type="button"
+                onClick={() => handleSelectEmployee(s.userId)}
+                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
+                  selectedUserId === s.userId
+                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                    : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                }`}
+              >
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                  selectedUserId === s.userId ? "bg-white/20 text-white dark:bg-zinc-900/20 dark:text-zinc-900" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                }`}>
+                  {(s.name ?? s.email).slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-sm font-medium ${selectedUserId === s.userId ? "text-white dark:text-zinc-900" : "text-slate-900 dark:text-slate-100"}`}>
+                    {s.name ?? s.email}
+                  </p>
+                  <p className={`text-xs ${selectedUserId === s.userId ? "text-white/70 dark:text-zinc-900/70" : "text-amber-600 dark:text-amber-400"}`}>
+                    {formatCurrency(s.pendingTotal)} · {s.pendingCount} orden{s.pendingCount !== 1 ? "es" : ""}
+                  </p>
+                </div>
+                <Wallet className={`h-4 w-4 shrink-0 ${selectedUserId === s.userId ? "text-white/60 dark:text-zinc-900/60" : "text-slate-300 dark:text-slate-600"}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        !loading && (
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            No hay comisiones pendientes de pago
+          </div>
+        )
+      )}
 
       {/* Selector de empleado */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">

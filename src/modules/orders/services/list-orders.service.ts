@@ -17,7 +17,13 @@ export async function listOrdersService({ tenantId, userId, query }: ListOrdersS
   }
 
   if (query.search) {
-    where.orderNumber = { contains: query.search, mode: "insensitive" };
+    const s = query.search.trim();
+    where.OR = [
+      { orderNumber: { contains: s, mode: "insensitive" } },
+      { vehicle: { plate: { contains: s, mode: "insensitive" } } },
+      { client: { firstName: { contains: s, mode: "insensitive" } } },
+      { client: { lastName: { contains: s, mode: "insensitive" } } },
+    ];
   }
 
   if (query.clientId) {
@@ -31,6 +37,22 @@ export async function listOrdersService({ tenantId, userId, query }: ListOrdersS
   if (query.unassigned) {
     where.assignedToId = null;
     if (!query.status) where.status = "PENDING";
+  }
+
+  if (query.board) {
+    // Board mode: no pagination; completed column is capped to today
+    if (query.status === "COMPLETED") {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      where.completedAt = { gte: todayStart };
+    }
+    const orders = await orderRepository.findMany({
+      where,
+      include: orderRepository.listInclude,
+      orderBy: { createdAt: "asc" },
+      take: 100,
+    });
+    return { orders, total: orders.length, pages: 1 };
   }
 
   const [orders, total] = await Promise.all([

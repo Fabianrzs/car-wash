@@ -9,3 +9,5 @@ export { createPayoutService } from "@/modules/commissions/services/create-payou
 export { listPayoutsService } from "@/modules/commissions/services/list-payouts.service";
 export { deletePayoutService } from "@/modules/commissions/services/delete-payout.service";
 export { getCommissionStatsService } from "@/modules/commissions/services/get-commission-stats.service";
+export { getEmployeesCommissionSummaryService } from "@/modules/commissions/services/get-employees-commission-summary.service";
+export type { EmployeeCommissionSummary } from "@/modules/commissions/services/get-employees-commission-summary.service";

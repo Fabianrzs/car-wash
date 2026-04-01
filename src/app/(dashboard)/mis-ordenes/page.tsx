@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Badge from "@/components/ui/Badge";
@@ -20,6 +20,7 @@ import {
   DollarSign,
   CalendarDays,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
@@ -68,6 +69,9 @@ export default function MisOrdenesPage() {
   const [statsLoading, setStatsLoading]         = useState(true);
   const [error, setError]         = useState("");
   const [updating, setUpdating]   = useState<string | null>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [secondsAgo, setSecondsAgo] = useState(0);
+  const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStats = useCallback(() => {
     setStatsLoading(true);
@@ -103,9 +107,38 @@ export default function MisOrdenesPage() {
     }
   }, []);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
-  useEffect(() => { fetchMyOrders(); }, [fetchMyOrders]);
-  useEffect(() => { fetchUnassigned(); }, [fetchUnassigned]);
+  const refreshAll = useCallback(() => {
+    fetchStats();
+    fetchMyOrders();
+    fetchUnassigned();
+    setLastRefreshed(new Date());
+    setSecondsAgo(0);
+  }, [fetchStats, fetchMyOrders, fetchUnassigned]);
+
+  useEffect(() => { refreshAll(); }, [refreshAll]);
+
+  // Auto-refresh every 30 s
+  useEffect(() => {
+    autoRefreshRef.current = setInterval(() => {
+      fetchStats();
+      fetchUnassigned();
+      // Only silently reload orders list (won't reset loading spinner)
+      fetchApi<{ orders: typeof myOrders[0][] }>(`/api/orders?assignedToMe=true&status=${statusTab}&page=1`)
+        .then((d) => { setMyOrders(d.orders || []); setLastRefreshed(new Date()); setSecondsAgo(0); })
+        .catch(() => null);
+    }, 30_000);
+    return () => { if (autoRefreshRef.current) clearInterval(autoRefreshRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusTab]);
+
+  // Seconds-ago counter
+  useEffect(() => {
+    if (!lastRefreshed) return;
+    const id = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastRefreshed.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [lastRefreshed]);
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     setUpdating(orderId);
@@ -163,9 +196,23 @@ export default function MisOrdenesPage() {
   return (
     <div>
       <OnboardingTour flowKey="mis-ordenes" />
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Mis Órdenes</h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Mis Órdenes</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Gestiona tus órdenes asignadas y toma nuevas del pool</p>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          {lastRefreshed && (
+            <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">hace {secondsAgo}s</span>
+          )}
+          <button
+            onClick={refreshAll}
+            className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

@@ -81,6 +81,22 @@ class CommissionRepository {
   ) {
     return getDatabase(database).tenant.findFirst(args);
   }
+
+  groupEarningsByUser(tenantId: string, status: "PENDING" | "PAID") {
+    return prisma.washerEarning.groupBy({
+      by: ["userId"],
+      where: { tenantId, status },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
+  }
+
+  findUsersByIds(userIds: string[]) {
+    return prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, email: true },
+    });
+  }
 }
 
 export const commissionRepository = new CommissionRepository();

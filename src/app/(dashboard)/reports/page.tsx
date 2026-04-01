@@ -11,16 +11,6 @@ import { formatCurrency } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/utils/constants";
 import { DollarSign, ClipboardList, TrendingUp, CheckCircle, Download, Calendar, Search, Wallet, TrendingDown } from "lucide-react";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
 
 const PERIODS = [
   { label: "Hoy", value: "daily" },
@@ -73,29 +63,6 @@ function formatDateShort(iso: string | null) {
   });
 }
 
-function shortDate(dateStr: string) {
-  // dateStr is like "2025-03-31"
-  const parts = dateStr.split("-");
-  if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
-  return dateStr;
-}
-
-const CHART_COLORS = ["#18181b", "#3f3f46", "#71717a", "#a1a1aa", "#d4d4d8"];
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CurrencyTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-md dark:border-slate-700 dark:bg-slate-800">
-      <p className="font-medium text-slate-700 dark:text-slate-300">{label}</p>
-      {payload.map((p: { name: string; value: number; color: string }, i: number) => (
-        <p key={i} style={{ color: p.color }} className="mt-0.5">
-          {p.name}: <span className="font-semibold">{typeof p.value === "number" && p.name !== "Órdenes" ? formatCurrency(p.value) : p.value}</span>
-        </p>
-      ))}
-    </div>
-  );
-}
 
 export default function ReportsPage() {
   const [tab, setTab] = useState<"resumen" | "detalle">("resumen");
@@ -372,49 +339,6 @@ export default function ReportsPage() {
                     <p className="text-sm text-slate-400">Sin ingresos en el período</p>
                   )}
                 </div>
-              </div>
-
-              {/* Charts row */}
-              <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Daily breakdown chart */}
-                {data.dailyBreakdown && data.dailyBreakdown.length > 0 && (
-                  <Card>
-                    <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Ingresos por día</h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <BarChart data={data.dailyBreakdown.map(d => ({ ...d, date: shortDate(d.date) }))} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={46} />
-                        <Tooltip content={<CurrencyTooltip />} />
-                        <Bar dataKey="income" name="Ingresos" fill="#18181b" radius={[3, 3, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Card>
-                )}
-
-                {/* Top services chart */}
-                {data.topServices && data.topServices.length > 0 && (
-                  <Card>
-                    <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Servicios más vendidos</h3>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <BarChart
-                        layout="vertical"
-                        data={data.topServices.slice(0, 6).map(s => ({ name: s.name, revenue: s.totalRevenue, qty: s.totalQuantity }))}
-                        margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={90} />
-                        <Tooltip content={<CurrencyTooltip />} />
-                        <Bar dataKey="revenue" name="Ingresos" radius={[0, 3, 3, 0]}>
-                          {data.topServices.slice(0, 6).map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Card>
-                )}
               </div>
 
               {/* Detailed tables (collapsed) */}
