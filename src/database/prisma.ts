@@ -19,6 +19,7 @@ if (!connectionString.includes("sslmode")) {
 
 const adapter = new PrismaPg({
     connectionString,
+    max: 1,
 });
 
 export const prisma =
@@ -27,6 +28,4 @@ export const prisma =
         adapter,
     });
 
-if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;
