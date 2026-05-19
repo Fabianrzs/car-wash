@@ -62,13 +62,9 @@ export default function Navbar() {
   };
 
   const handleSignOut = () => {
+    // Limpiamos selección de tenant para que el próximo login no la herede.
+    // Cookies de NextAuth (HttpOnly) las maneja signOut(); document.cookie no las puede tocar.
     clearSelectedTenant();
-    sessionStorage.clear();
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
-    });
     signOut({ callbackUrl: "/login" });
   };
 

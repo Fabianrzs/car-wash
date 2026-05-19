@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decode } from "next-auth/jwt";
 import { getProtocol, getCookieDomain } from "@/lib/utils/domain";
+import { sessionCookieName } from "@/lib/auth";
 
-const COOKIE_NAME = "next-auth.session-token";
+const COOKIE_NAME = sessionCookieName;
+// Salt en NextAuth v5 deriva del nombre de la cookie. Si COOKIE_NAME cambia (dev ↔ prod), el salt debe seguirle.
+const COOKIE_SALT = sessionCookieName;
 
 /**
  * Session relay for cross-subdomain auth on localhost.
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
       await decode({
         token,
         secret: process.env.AUTH_SECRET!,
-        salt: COOKIE_NAME,
+        salt: COOKIE_SALT,
       });
     } catch {
       return NextResponse.redirect(
@@ -67,10 +70,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const target = new URL(callbackUrl);
+  // El callbackUrl en step 1 DEBE ser absoluto (vamos a redirigir al subdomain).
+  // Si no parsea o el host no pertenece a nuestro dominio base, rechazar.
+  let target: URL;
+  try {
+    target = new URL(callbackUrl);
+  } catch {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (!isSameAppDomain(target.host, request.headers.get("host"))) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const relayUrl = new URL("/api/auth/session-relay", target.origin);
   relayUrl.searchParams.set("token", sessionToken);
   relayUrl.searchParams.set("callbackUrl", target.pathname + target.search);
 
   return NextResponse.redirect(relayUrl.toString());
+}
+
+/**
+ * Comprueba que `targetHost` (de la URL callback) sea el mismo dominio base
+ * que el host actual. Acepta subdomains: ej. `demo.example.com` para host `example.com`.
+ * Evita relay hacia hosts arbitrarios (`evil.com`).
+ */
+function isSameAppDomain(targetHost: string, currentHost: string | null): boolean {
+  if (!currentHost) return false;
+  const t = targetHost.replace(/:\d+$/, "").toLowerCase();
+  const c = currentHost.replace(/:\d+$/, "").toLowerCase();
+  if (t === c) return true;
+  // Permitir subdomain del host actual: `demo.example.com` ↔ `example.com`
+  if (t.endsWith(`.${c}`)) return true;
+  if (c.endsWith(`.${t}`)) return true;
+  // Mismo root domain (a.example.com ↔ b.example.com)
+  const tRoot = t.split(".").slice(-2).join(".");
+  const cRoot = c.split(".").slice(-2).join(".");
+  return tRoot === cRoot && tRoot.includes(".");
 }

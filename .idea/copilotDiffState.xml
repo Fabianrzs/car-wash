@@ -56,15 +56,6 @@
             </PendingDiffInfo>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/src/database/prisma.ts">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/src/database/prisma.ts" />
-              <option name="originalContent" value="import { PrismaPg } from &quot;@prisma/adapter-pg&quot;;&#10;import { PrismaClient } from &quot;@/generated/prisma/client&quot;;&#10;&#10;const globalForPrisma = global as unknown as {&#10;    prisma: PrismaClient | undefined;&#10;};&#10;&#10;const connectionString = process.env.DATABASE_URL;&#10;&#10;if (!connectionString) {&#10;    throw new Error(&quot;DATABASE_URL is not defined&quot;);&#10;}&#10;&#10;const adapter = new PrismaPg({&#10;    connectionString,&#10;});&#10;&#10;export const prisma =&#10;    globalForPrisma.prisma ??&#10;    new PrismaClient({&#10;        adapter,&#10;    });&#10;&#10;if (process.env.NODE_ENV !== &quot;production&quot;) {&#10;    globalForPrisma.prisma = prisma;&#10;}" />
-              <option name="updatedContent" value="import { PrismaPg } from &quot;@prisma/adapter-pg&quot;;&#10;import { PrismaClient } from &quot;@/generated/prisma/client&quot;;&#10;&#10;const globalForPrisma = global as unknown as {&#10;    prisma: PrismaClient | undefined;&#10;};&#10;&#10;const connectionString = process.env.DATABASE_URL;&#10;&#10;if (!connectionString) {&#10;    throw new Error(&quot;DATABASE_URL is not defined&quot;);&#10;}&#10;&#10;const isLocalhost =&#10;    connectionString.includes(&quot;localhost&quot;) || connectionString.includes(&quot;127.0.0.1&quot;);&#10;&#10;const adapter = new PrismaPg({&#10;    connectionString,&#10;    ...(!isLocalhost &amp;&amp; { ssl: { rejectUnauthorized: false } }),&#10;});&#10;&#10;export const prisma =&#10;    globalForPrisma.prisma ??&#10;    new PrismaClient({&#10;        adapter,&#10;    });&#10;&#10;if (process.env.NODE_ENV !== &quot;production&quot;) {&#10;    globalForPrisma.prisma = prisma;&#10;}" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
         <entry key="$PROJECT_DIR$/src/lib/auth/config.ts">
           <value>
             <PendingDiffInfo>

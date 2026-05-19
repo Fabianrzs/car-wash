@@ -65,9 +65,11 @@ export async function middleware(request: NextRequest) {
   );
 
   const isSecure = process.env.NODE_ENV === "production";
+  // Mantener consistencia con `sessionCookieName` exportado en src/lib/auth.
+  // NextAuth v5 usa el prefijo `authjs.` (no `next-auth.`).
   const cookieName = isSecure
-    ? "__Secure-next-auth.session-token"
-    : "next-auth.session-token";
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
 
   const token = await getToken({
     req: request,

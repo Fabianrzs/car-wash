@@ -1,13 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Droplets, User } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
+
+const API_PREFIX = "/api/";
+
+/**
+ * Sanitiza un callbackUrl recibido por query string para evitar open-redirect.
+ * - Solo acepta paths absolutos locales: deben empezar con `/` seguido de un char que no sea `/` ni `\`.
+ * - Rechaza `//evil.com`, `/\\evil.com`, y URLs absolutas (`http://`, `https://`).
+ * - Rechaza endpoints `/api/*` (no son páginas navegables).
+ */
+function safeCallback(raw: string | null, fallback: string): string {
+  if (!raw) return fallback;
+  if (!/^\/[^/\\]/.test(raw)) return fallback;
+  if (raw.startsWith(API_PREFIX)) return fallback;
+  return raw;
+}
 
 export default function LoginForm() {
   const [mode, setMode] = useState<"email" | "employee">("email");
@@ -58,9 +73,16 @@ export default function LoginForm() {
           setError("Credenciales inválidas. Verifica tu correo y contraseña.");
         }
       } else {
-        const rawCallback = searchParams.get("callbackUrl");
-        const destination =
-          rawCallback && rawCallback.startsWith("/") ? rawCallback : "/dashboard";
+        // Destino default según rol resuelto post-login.
+        const session = await getSession();
+        const role = session?.user?.globalRole;
+        const hasTenant = !!session?.user?.tenantSlug;
+        const fallback = role === "SUPER_ADMIN"
+          ? "/admin"
+          : hasTenant
+            ? "/dashboard"
+            : "/dashboard"; // multi-tenant: dashboard activa TenantSelectorModal
+        const destination = safeCallback(searchParams.get("callbackUrl"), fallback);
         window.location.href = destination;
       }
     } catch {
